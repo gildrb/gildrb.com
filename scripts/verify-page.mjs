@@ -1727,7 +1727,7 @@ assert(
             ".case-meta dt,\n.case-caption,\n.case-code-label {\n    color: var(--text-tertiary);",
         ) &&
         caseStyles.includes(
-            ".case-copy .external-link:hover,\n    .case-copy .internal-link:hover {\n        color: var(--text-tertiary);",
+            ".case-copy .external-link:hover,\n    .case-copy .internal-link:hover {\n        text-decoration-color: var(--text-primary);",
         ) &&
     "Case-study prose must read at the article text color and theme-tuned weight with underlined arrow-free links and bordered mono code chips, while media captions keep the darker gray.",
 );
