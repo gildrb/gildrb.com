@@ -97,12 +97,6 @@ export const siteConfig = Object.freeze({
             styles: sharedCaseStyles,
             scripts: sharedCaseScripts,
         }),
-        Object.freeze({
-            slug: "site",
-            title: "gildrb.com",
-            styles: sharedCaseStyles,
-            scripts: sharedCaseScripts,
-        }),
     ]),
     allPage: Object.freeze({
         styles: Object.freeze([

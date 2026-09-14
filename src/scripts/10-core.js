@@ -7,22 +7,6 @@ const scrollPositionKey = `gildrb:scroll:${window.location.pathname}${window.loc
 const navigationType = window.performance
     .getEntriesByType("navigation")[0]?.type;
 
-function updateHomepageDates() {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, "0");
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const year = String(now.getFullYear());
-    const isoDate = `${year}-${month}-${day}`;
-    const portfolioSiteDate = document.querySelector("#portfolio-site-date");
-
-    if (!portfolioSiteDate) return;
-
-    portfolioSiteDate.querySelector(".portfolio-date-full").textContent =
-        isoDate;
-    portfolioSiteDate.querySelector(".portfolio-date-year").textContent =
-        `${year}-${month}`;
-    portfolioSiteDate.setAttribute("datetime", isoDate);
-}
 
 const mobileLinks = document.querySelector(
     ".case-page .case-mobile-links .links, body:not(.case-page) .links",
@@ -186,7 +170,6 @@ function updateMobileLayout(preserveHomepageLock = false) {
 }
 
 const portfolioSection = document.querySelector(".portfolio-section");
-const portfolioSiteDate = document.querySelector("#portfolio-site-date");
 function updatePortfolioScrollIndicators() {
     if (!portfolioSection) return;
 
@@ -211,7 +194,6 @@ portfolioSection?.addEventListener(
 const mobileLayoutTargets = [
     portfolioSection,
     document.querySelector(".case-next-list"),
-    portfolioSiteDate,
     document.querySelector(".profile-summary"),
     document.querySelector(".sidebar .links"),
     document.querySelector(".content"),
@@ -226,20 +208,9 @@ if ("ResizeObserver" in window) {
     mobileLayoutTargets.forEach((target) => updateOnResize.observe(target));
 }
 
-function prepareHomepageFirstPaint() {
-    const body = document.body;
-
-    if (!body) return;
-
-    updateHomepageDates();
-    updateMobileLayout();
-}
-
-prepareHomepageFirstPaint();
 document.fonts.addEventListener("loadingdone", updateDesktopIntroHeight);
 
 window.addEventListener("load", () => {
-    updateHomepageDates();
     updateMobileLayout();
 });
 window.addEventListener("resize", () => updateMobileLayout(true));

@@ -300,10 +300,9 @@
     font-size: 14px;
     font-weight: 400;
     line-height: 18px;
-    padding: 2px 5px;
-    border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent);
+    padding: 1px 5px;
     border-radius: 4px;
-    background: color-mix(in srgb, var(--text-primary) 8%, var(--bg));
+    background: color-mix(in srgb, var(--text-primary) 9%, var(--bg));
     color: var(--text-primary);
 }
 
