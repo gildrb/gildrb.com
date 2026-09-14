@@ -1839,16 +1839,16 @@ assert(
 );
 assert(
     caseStyles.includes(
-        ".case-media {\n    width: 100%;\n    margin-top: var(--text-media-gap);",
+        ".case-media {\n    width: 100%;\n    margin-top: 24px;",
     ) &&
         caseStyles.includes(
             ".case-media-grid {\n    display: grid;",
         ) &&
         caseStyles.includes(
-            ".case-media + .case-copy,\n.case-media-grid + .case-copy {\n    margin-top: var(--text-media-gap);",
+            ".case-media + .case-copy,\n.case-media-grid + .case-copy {\n    margin-top: 48px;",
         ) &&
         !caseStyles.includes("padding-top: var(--text-media-gap);"),
-    "Case media must use the shared optical text-media gap before and after each figure.",
+    "Case media must attach tightly to the paragraph it illustrates and separate clearly from the next one.",
 );
 const sharedSidebarTargets = [
     "https://behance.net/gildrb",
