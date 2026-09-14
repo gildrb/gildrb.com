@@ -311,7 +311,7 @@
 
     .case-copy .external-link:hover,
     .case-copy .internal-link:hover {
-        color: var(--text-tertiary);
+        text-decoration-color: var(--text-primary);
     }
 }
 
