@@ -43,9 +43,6 @@
       },
       "hasPart": [
         {
-          "@id": "https://gildrb.com/site#case-study"
-        },
-        {
           "@id": "https://gildrb.com/heph#case-study"
         },
         {
@@ -405,30 +402,6 @@
         "Article",
         "CreativeWork"
       ],
-      "@id": "https://gildrb.com/site#case-study",
-      "url": "https://gildrb.com/site",
-      "name": "gildrb.com",
-      "headline": "The site you are on is the case study",
-      "description": "The portfolio system behind Gil Rodrigues's site, documented, generated, and verified from source.",
-      "inLanguage": "en",
-      "creator": {
-        "@id": "https://gildrb.com/#person"
-      },
-      "author": {
-        "@id": "https://gildrb.com/#person"
-      },
-      "publisher": {
-        "@id": "https://gildrb.com/#person"
-      },
-      "isPartOf": {
-        "@id": "https://gildrb.com/#website"
-      }
-    },
-    {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
       "@id": "https://gildrb.com/filen#case-study",
       "url": "https://gildrb.com/filen",
       "name": "Filen identity system",
@@ -621,9 +594,6 @@
       "isBasedOn": [
         {
           "@id": "https://gildrb.com/index.html.md#homepage-markdown"
-        },
-        {
-          "@id": "https://gildrb.com/site#case-study"
         },
         {
           "@id": "https://gildrb.com/heph#case-study"

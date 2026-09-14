@@ -10,16 +10,6 @@
     <lastBuildDate>Sun, 26 Jul 2026 11:08:53 +0000</lastBuildDate>
     <atom:link href="https://gildrb.com/feed.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>gildrb.com</title>
-      <link>https://gildrb.com/site</link>
-      <guid isPermaLink="true">https://gildrb.com/site</guid>
-      <pubDate>Thu, 16 Jul 2026 14:14:43 +0000</pubDate>
-      <author>hi@gildrb.com (Gil Rodrigues)</author>
-      <category>Product/Design Engineering</category>
-      <category>Web development</category>
-      <description>How the portfolio is authored, generated, verified, and published as a static site.</description>
-    </item>
-    <item>
       <title>T3 logomark exploration</title>
       <link>https://gildrb.com/t3</link>
       <guid isPermaLink="true">https://gildrb.com/t3</guid>
