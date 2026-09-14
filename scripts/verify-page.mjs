@@ -533,8 +533,8 @@ assert(
 );
 
 assert(
-    baseStyles.includes("--highlight-bg: #b3b3b3;") &&
-        baseStyles.includes("--highlight-text: #ffffff;") &&
+        baseStyles.includes("--highlight-bg: var(--text-primary);") &&
+        baseStyles.includes("--highlight-text: var(--bg);") &&
         baseStyles.includes("color: var(--highlight-text);") &&
         baseStyles.includes("background: var(--highlight-bg);") &&
         portfolioStyles.includes(
@@ -1222,7 +1222,7 @@ assert(
         return position > previousPosition;
     }) &&
         t3Html.includes(
-            'sizes="(max-width: 768px) calc(100vw - 24px), (max-width: 1100px) calc(50vw - 178px), 370px"',
+            'sizes="(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px"',
         ),
     "T3 media must follow the authored sequence and use paired image layouts.",
 );
@@ -1707,20 +1707,33 @@ assert(
     "The homepage must present projects as text-only date/title cards without media.",
 );
 assert(
+    baseStyles.includes("--prose-weight: 380;") &&
     caseStyles.includes(
         ".case-deck {\n    max-width: 680px;\n    color: var(--text-secondary);",
     ) &&
         caseStyles.includes(
-            ".case-copy p,\n.case-copy li {\n    color: var(--text-secondary);",
+            ".case-copy p,\n.case-copy li {\n    color: var(--text-article);\n    font-weight: var(--prose-weight);",
+        ) &&
+        caseStyles.includes(
+            ".case-copy .external-link,\n.case-copy .internal-link {\n    color: var(--text-article);\n    text-decoration: underline;\n    text-decoration-color: var(--text-tertiary);",
+        ) &&
+        caseStyles.includes(
+            ".case-copy .external-link::after {\n    content: none;",
+        ) &&
+        caseStyles.includes(
+            ".case-copy code {\n    font-family: \"Ioskeley Mono\", monospace;\n    font-size: 14px;\n    font-weight: 400;\n    line-height: 18px;\n    padding: 2px 5px;",
         ) &&
         caseStyles.includes(
             ".case-meta dt,\n.case-caption,\n.case-code-label {\n    color: var(--text-tertiary);",
-        ),
-    "Case-study prose and media captions must preserve the brighter-gray/darker-gray hierarchy.",
+        ) &&
+        caseStyles.includes(
+            ".case-copy .external-link:hover,\n    .case-copy .internal-link:hover {\n        color: var(--text-tertiary);",
+        ) &&
+    "Case-study prose must read at the article text color and theme-tuned weight with underlined arrow-free links and bordered mono code chips, while media captions keep the darker gray.",
 );
 assert(
     caseStyles.includes(
-        ".case-title {\n    max-width: 760px;\n    margin: 0 0 var(--case-title-text-gap);",
+        ".case-title {\n    max-width: var(--content-column);\n    margin: 0 0 var(--case-title-text-gap);",
     ) &&
         caseStyles.includes(
             ".case-title,\n.case-copy h3 {\n    font-size: 19px;\n    font-weight: 500;\n    line-height: 28px;",
@@ -1733,20 +1746,20 @@ assert(
 );
 assert(
     caseStyles.includes(
-        ".case-article article {\n    width: min(100%, 760px);\n    margin-right: auto;\n    margin-left: auto;",
+        ".case-article article {\n    width: min(100%, var(--content-column));\n    margin-right: auto;\n    margin-left: auto;",
     ),
     "Case articles and their media must stay inside the centered blog-width boundary.",
 );
 assert(
     baseStyles.includes("--sidebar-column: 240px;") &&
-        baseStyles.includes("--content-column: 760px;") &&
+        baseStyles.includes("--content-column: 540px;") &&
         baseStyles.includes(
             "max-width: calc(var(--sidebar-column) + var(--layout-gap) + var(--content-column));\n  margin: 0 auto;",
         ) &&
         baseStyles.includes(
             ".content {\n  min-width: 0;\n  width: 100%;\n  max-width: var(--content-column);\n  padding: 48px 0;",
         ),
-    "Homepage and case-study content must share the centered 760px column and align with the 48px desktop sidebar inset.",
+    "Homepage and case-study content must share the centered 540px column and align with the 48px desktop sidebar inset.",
 );
 assert(
     caseStyles.includes(
@@ -1780,7 +1793,7 @@ assert(
 );
 assert(
     caseStyles.includes(
-        ".case-intro,\n.case-copy {\n    width: min(100%, 760px);\n    margin-right: auto;\n    margin-left: auto;",
+        ".case-intro,\n.case-copy {\n    width: min(100%, var(--content-column));\n    margin-right: auto;\n    margin-left: auto;",
     ),
     "Case intro and prose columns must be centered inside the wider media container.",
 );
@@ -1814,7 +1827,7 @@ assert(
             ".case-article article:has(+ .case-next) > :last-child {\n        padding-bottom: 0;",
         ) &&
         caseStyles.includes(
-            ".case-next {\n    width: min(100%, 760px);\n    margin: 48px auto 0;",
+            ".case-next {\n    width: min(100%, var(--content-column));\n    margin: 48px auto 0;",
         ) &&
         caseStyles.includes(
             "padding: 8px 0;",

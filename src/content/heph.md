@@ -20,7 +20,7 @@ The layout stays inspectable on disk:
 
 ```text title="docs/index.md: Armory layout"
 ~/.armories/[name]/
-├── materials/            # PDFs, Office docs, notes, code to cite
+├── materials/            # PDFs, Office docs, notes, code
 │   ├── [file].pdf
 │   └── [file].md
 ├── .harness/             # Local Heph state
@@ -73,12 +73,18 @@ The workspace contains `ai`, `extensions`, `heph`, `harness`, and `interfaces`. 
 
 ```toml title="pyproject.toml: [tool.importlinter]"
 [tool.importlinter]
-root_packages = ["ai", "extensions", "heph", "harness", "interfaces"]
+root_packages = [
+    "ai",
+    "extensions",
+    "heph",
+    "harness",
+    "interfaces",
+]
 exclude_type_checking_imports = true
 include_external_packages = true
 
 [[tool.importlinter.contracts]]
-name = "AI must stay below Heph, the harness, extensions, and interfaces"
+name = "AI stays below Heph, harness, extensions, interfaces"
 type = "forbidden"
 source_modules = ["ai"]
 forbidden_modules = [
