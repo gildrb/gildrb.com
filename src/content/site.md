@@ -23,7 +23,7 @@ The eight case routes are `/filen`, `/heph`, `/ben-davis`, `/t3`, `/ml7`, `/n0th
 
 The palette has one background token and three text colors. A separate pair controls selected text. Light and dark themes change those token values without introducing another palette.
 
-Layout values are named in CSS. The main article column is 760px wide on desktop. It sits beside a 240px sidebar with a 48px gap. A 6px token handles compact link stacks; larger separations use 24px, 32px, 48px, or 80px according to the relationship between elements. Case titles are 28/36 on desktop and 24/32 on mobile. Body copy is 16/24, while captions and code labels use 14/20. Inter Variable is self-hosted for interface text and Ioskeley Mono is used for code.
+Layout values are named in CSS. The main article column is 540px wide on desktop. It sits beside a 240px sidebar with a 48px gap. A 6px token handles compact link stacks; larger separations use 24px, 32px, 48px, or 80px according to the relationship between elements. Case titles are 28/36 on desktop and 24/32 on mobile. Body copy is 16/24, while captions and code labels use 14/20. Inter Variable is self-hosted for interface text and Ioskeley Mono is used for code.
 
 Links and controls use the gray text tokens at rest and move to the primary text color on direct hover. Keyboard focus uses a visible ring. The Heph demo has a reduced-motion mode; routine controls change state without decorative animation.
 
@@ -33,8 +33,8 @@ Links and controls use the gray text tokens at rest and move to the primary text
   --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --text-tertiary: #767676;
-  --highlight-bg: #b3b3b3;
-  --highlight-text: #ffffff;
+  --highlight-bg: var(--text-primary);
+  --highlight-text: var(--bg);
   --section-gap: 24px;
   --section-content-gap: 6px;
   --text-media-gap: 32px;
@@ -44,7 +44,7 @@ Links and controls use the gray text tokens at rest and move to the primary text
   --footer-stack-bottom-gap: 4px;
   --footer-title-optical-offset: 4px;
   --sidebar-column: 240px;
-  --content-column: 760px;
+  --content-column: 540px;
   --layout-gap: 48px;
   --media-radius: 22px;
 }
