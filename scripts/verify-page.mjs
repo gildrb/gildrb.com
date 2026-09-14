@@ -153,7 +153,6 @@ const {
     curves: curvesHtml,
     "ben-davis": benDavisHtml,
     t3: t3Html,
-    site: siteHtml,
 } = casePages;
 const caseScript = caseScripts.filen;
 const caseHtml = Object.values(casePages);
@@ -1019,12 +1018,6 @@ assert(
     "Heph must use the shared case-study shell and link to its repository inside the article.",
 );
 assert(
-    /<a\s+class="internal-link"\s+href="\/heph">Heph<\/a> case study/.test(
-        siteHtml,
-    ),
-    "Cross-study references must link readers directly to the referenced case study.",
-);
-assert(
     filenHtml.includes('rel="canonical" href="https://gildrb.com/filen"'),
     "Filen case study is missing its canonical URL.",
 );
@@ -1493,13 +1486,8 @@ assert(
             ".all-case + .all-case {\n    margin-top: var(--all-case-gap);",
         ) &&
         allPage.includes('class="all-cases"') &&
-        (allPage.match(/class="all-case"/g) || []).length === 8 &&
-        allPage.includes('data-date="2026-07-15" data-scope="Design Engineering" data-slug="site" data-title="gildrb.com"') &&
-        allPage.lastIndexOf('data-slug="site"') >
-            allPage.indexOf('data-slug="ml7"') &&
+        (allPage.match(/class="all-case"/g) || []).length === 7 &&
         allScript.includes('new URLSearchParams(window.location.search)') &&
-        !allScript.includes('left.dataset.slug === "site"') &&
-        !allScript.includes('right.dataset.slug === "site"') &&
         allScript.includes(
             'allSortKey === "date"\n            ? isDescending',
         ) &&
@@ -1593,7 +1581,7 @@ assert(
         portfolioStyles.includes('font-family: "Inter", sans-serif;') &&
         !portfolioStyles.includes(".portfolio-card-arrow svg") &&
         !portfolioStyles.includes(".portfolio-card-link::after") &&
-        (indexHtml.match(/class="portfolio-card-arrow"/g) || []).length === 8 &&
+        (indexHtml.match(/class="portfolio-card-arrow"/g) || []).length === 9 &&
         (indexHtml.match(/class="portfolio-card-scope">Brand Identity/g) || [])
             .length === 1 &&
         (indexHtml.match(/class="portfolio-card-scope">Wordmark/g) || [])
@@ -1605,11 +1593,13 @@ assert(
         (indexHtml.match(/class="portfolio-card-scope">Product\/Design Engineering/g) || [])
             .length === 1 &&
         (indexHtml.match(/class="portfolio-card-scope">Design Engineering/g) || [])
-            .length === 1 &&
+            .length === 2 &&
         (indexHtml.match(/class="portfolio-card-view">View<\/span>/g) || [])
-            .length === 8 &&
+            .length === 9 &&
         (indexHtml.match(/<span class="portfolio-card-view">View<\/span>\s+→/g) || [])
-            .length === 8 &&
+            .length === 7 &&
+        (indexHtml.match(/<span class="portfolio-card-view">View<\/span>\s+↗/g) || [])
+            .length === 2 &&
         portfolioStyles.includes(
             ".portfolio-card-link + .portfolio-card-link {\n    margin-top: 0;\n    border-top: 1px solid\n        color-mix(in srgb, var(--text-primary) 12%, transparent);",
         ) &&
@@ -1632,31 +1622,12 @@ assert(
     "Homepage projects must expose single-line rows with aligned ISO dates, space-preserving years, titles, ellipsized field tags, native Inter arrows, hover View labels, and faint separators.",
 );
 assert(
-    indexHtml.includes(
-        '<time id="portfolio-site-date" datetime="2026-07-15">',
-    ) &&
+    !siteScript.includes("copyrightYear") &&
+        !siteScript.includes("updateHomepageDates") &&
         siteScript.includes(
-            'document.querySelector("#portfolio-site-date")',
-        ) &&
-        siteScript.includes("const now = new Date();") &&
-        siteScript.includes(
-            'portfolioSiteDate.querySelector(".portfolio-date-full").textContent',
-        ) &&
-        siteScript.includes(
-            'portfolioSiteDate.querySelector(".portfolio-date-year").textContent',
-        ) &&
-        siteScript.includes(
-            'portfolioSiteDate.setAttribute("datetime", isoDate);',
+            'window.addEventListener("load", () => {\n    updateMobileLayout();\n});',
         ),
-    "The site card must expose a fallback date and update it to the visitor's current local date.",
-);
-assert(
-    siteScript.includes("function updateHomepageDates()") &&
-        !siteScript.includes("copyrightYear") &&
-        siteScript.includes(
-            'window.addEventListener("load", () => {\n    updateHomepageDates();\n    updateMobileLayout();\n});',
-        ),
-    "Homepage date updates must not retain removed copyright behavior.",
+    "Homepage load behavior must not retain removed date or copyright behavior.",
 );
 assert(
     portfolioStyles.includes(
@@ -1674,7 +1645,6 @@ assert(
     "The sidebar Links block must align with the homepage column header through token-based name spacing.",
 );
 const chronologicalProjectTitles = [
-    "portfolio-site-title",
     "portfolio-t3-title",
     "portfolio-ben-davis-title",
     "portfolio-heph-title",
@@ -1689,14 +1659,14 @@ assert(
         .every((position, index, positions) =>
             index === 0 ? position !== -1 : position > positions[index - 1],
         ),
-    "Homepage projects must default to one global newest-first order: gildrb.com, Heph-Agent, Filen, n0thing, mL7.",
+    "Homepage projects must default to one global newest-first order: T3, Ben Davis, Heph-Agent, Filen, n0thing, CURVES, mL7.",
 );
 assert(
     indexHtml.includes('class="portfolio-list"') &&
         !indexHtml.includes("portfolio-group-engineering-title") &&
         !indexHtml.includes("portfolio-group-design-title") &&
         !portfolioStyles.includes(".portfolio-group") &&
-        (indexHtml.match(/class="portfolio-card-link"/g) || []).length === 8,
+        (indexHtml.match(/class="portfolio-card-link"/g) || []).length === 9 &&
     "Homepage projects must live in one globally sortable list without category dividers.",
 );
 assert(
@@ -1721,7 +1691,7 @@ assert(
             ".case-copy .external-link::after {\n    content: none;",
         ) &&
         caseStyles.includes(
-            ".case-copy code {\n    font-family: \"Ioskeley Mono\", monospace;\n    font-size: 14px;\n    font-weight: 400;\n    line-height: 18px;\n    padding: 2px 5px;",
+            ".case-copy code {\n    font-family: \"Ioskeley Mono\", monospace;\n    font-size: 14px;\n    font-weight: 400;\n    line-height: 18px;\n    padding: 1px 5px;",
         ) &&
         caseStyles.includes(
             ".case-meta dt,\n.case-caption,\n.case-code-label {\n    color: var(--text-tertiary);",
