@@ -902,11 +902,7 @@ assert(
         ".site-footer {\n    margin-top: 0;",
     ) &&
         previewContentStyles.includes(
-<<<<<<< HEAD
             ".references-links {\n    display: flex;\n    flex-direction: column;\n    align-items: flex-start;",
-=======
-            ".references-links {\n    display: flex;\n    align-items: center;\n    justify-content: flex-start;",
->>>>>>> f9b534c77bf06a952612528f2c41c067b7c0d8f2
         ) &&
         !previewContentStyles.includes(".copyright") &&
         previewContentStyles.includes(

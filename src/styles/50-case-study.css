@@ -464,11 +464,7 @@
 @media (max-width: 768px) {
     .case-article {
         font-size: 16px;
-<<<<<<< HEAD
         line-height: 26px;
-=======
-        line-height: 24px;
->>>>>>> f9b534c77bf06a952612528f2c41c067b7c0d8f2
     }
 
     .case-deck {
