@@ -50,7 +50,7 @@
 
 .case-article {
     font-size: 16px;
-    line-height: 24px;
+    line-height: 26px;
     letter-spacing: 0;
 }
 
@@ -275,7 +275,7 @@
 }
 
 .case-copy p + p {
-    margin-top: 20px;
+    margin-top: 32px;
 }
 
 .case-copy p,
@@ -330,7 +330,7 @@
 
 .case-media {
     width: 100%;
-    margin-top: var(--text-media-gap);
+    margin-top: 24px;
 }
 
 .case-media-grid {
@@ -338,7 +338,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
     width: 100%;
-    margin-top: var(--text-media-gap);
+    margin-top: 24px;
 }
 
 .case-media figure,
@@ -363,7 +363,7 @@
 
 .case-media + .case-copy,
 .case-media-grid + .case-copy {
-    margin-top: var(--text-media-gap);
+    margin-top: 48px;
 }
 
 .case-code + .case-copy {
@@ -464,7 +464,7 @@
 @media (max-width: 768px) {
     .case-article {
         font-size: 16px;
-        line-height: 24px;
+        line-height: 26px;
     }
 
     .case-deck {
