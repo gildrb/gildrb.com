@@ -9,7 +9,7 @@
 }
 
 .profile-summary {
-    max-width: 760px;
+    max-width: var(--content-column);
     margin-bottom: var(--text-media-gap);
 }
 
