@@ -38,19 +38,12 @@
 
 .references-links {
     display: flex;
-<<<<<<< HEAD
     flex-direction: column;
     align-items: flex-start;
     row-gap: calc(var(--sidebar-baseline-pitch) - var(--link-line-height));
     padding-bottom: calc(
         (var(--theme-toggle-size) - var(--link-line-height)) / 2
     );
-=======
-    align-items: center;
-    justify-content: flex-start;
-    gap: var(--portfolio-table-gap);
-    min-height: var(--theme-toggle-size);
->>>>>>> f9b534c77bf06a952612528f2c41c067b7c0d8f2
     margin-top: 0;
     font-size: 16px;
     font-weight: 400;
