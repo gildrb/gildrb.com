@@ -4,7 +4,7 @@ document.querySelectorAll(".email").forEach((email) => {
         this.blur();
 
         try {
-            await navigator.clipboard.writeText("hi@gildrb.com");
+            await navigator.clipboard.writeText("mail@gildrb.com");
             this.classList.add("copied");
             trackEvent("Email Copy", { result: "success" });
             announce("Email copied to clipboard");
@@ -16,6 +16,6 @@ document.querySelectorAll(".email").forEach((email) => {
 
         setTimeout(() => {
             this.classList.remove("copied", "copy-failed");
-        }, 1500);
+        }, 1000);
     });
 });
