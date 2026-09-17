@@ -1582,14 +1582,12 @@ assert(
         !portfolioStyles.includes(".portfolio-card-arrow svg") &&
         !portfolioStyles.includes(".portfolio-card-link::after") &&
         (indexHtml.match(/class="portfolio-card-arrow"/g) || []).length === 9 &&
-        (indexHtml.match(/class="portfolio-card-scope">Brand Identity/g) || [])
+        (indexHtml.match(/class="portfolio-card-scope">Brand Design/g) || [])
             .length === 1 &&
-        (indexHtml.match(/class="portfolio-card-scope">Wordmark/g) || [])
-            .length === 2 &&
+        (indexHtml.match(/class="portfolio-card-scope">Logo/g) || [])
+            .length === 4 &&
         (indexHtml.match(/class="portfolio-card-scope">Typeface/g) || [])
             .length === 1 &&
-        (indexHtml.match(/class="portfolio-card-scope">Logomark/g) || [])
-            .length === 2 &&
         (indexHtml.match(/class="portfolio-card-scope">Product\/Design Engineering/g) || [])
             .length === 1 &&
         (indexHtml.match(/class="portfolio-card-scope">Design Engineering/g) || [])
@@ -1832,7 +1830,7 @@ assert(
     allHtml.every(
         (html) =>
             sharedSidebarTargets.every((target) => html.includes(target)) &&
-            html.includes('aria-label="Copy hi@gildrb.com"') &&
+            html.includes('aria-label="Copy mail@gildrb.com"') &&
             html.includes('aria-label="Public profiles and contact"'),
     ),
     "Every generated route must contain the shared profile and contact sidebar.",
