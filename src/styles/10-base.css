@@ -244,34 +244,42 @@ body {
   }
 }
 
-.email::after {
-  content: "";
-  color: var(--text-secondary);
-  opacity: 1;
-}
+ .email::after {
+   content: "";
+   color: var(--text-secondary);
+   opacity: 1;
+ }
 
-@media (hover: hover) {
-  .email:hover {
-    color: var(--text-primary);
-  }
-}
+ @media (hover: hover) {
+   .email:hover {
+     color: var(--text-primary);
+   }
+ }
 
-@media (hover: hover) {
-  .email:hover::after {
-    content: " copy";
-    color: var(--text-secondary);
-  }
-}
+ @media (hover: hover) {
+   .email:hover > span {
+     display: none;
+   }
+   .email:hover::after {
+     content: "Copy Mail";
+     color: var(--text-primary);
+   }
+ }
 
-.email.copied::after {
-  content: " copied";
-  color: var(--text-secondary);
-}
+ .email.copied > span,
+ .email.copy-failed > span {
+   display: none;
+ }
 
-.email.copy-failed::after {
-  content: " failed";
-  color: var(--text-secondary);
-}
+ .email.copied::after {
+   content: "Copied";
+   color: var(--text-tertiary);
+ }
+
+ .email.copy-failed::after {
+   content: "Copy failed";
+   color: var(--text-secondary);
+ }
 
 .external-link:focus:not(:focus-visible),
 .internal-link:focus:not(:focus-visible),
