@@ -256,15 +256,6 @@ body {
    }
  }
 
- @media (hover: hover) {
-   .email:hover > span {
-     display: none;
-   }
-   .email:hover::after {
-     content: "Copy Mail";
-     color: var(--text-primary);
-   }
- }
 
  .email.copied > span,
  .email.copy-failed > span {
