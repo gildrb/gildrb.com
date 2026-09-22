@@ -1,3 +1,4 @@
+import { buildAtmosphereBackground } from "./build-atmosphere-background.mjs";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -365,6 +366,8 @@ export async function buildPage({ write = true, output = defaultOutput } = {}) {
             }),
         );
     }
+
+    if (write) await buildAtmosphereBackground(output);
 
     return {
         allPage,
