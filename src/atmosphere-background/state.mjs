@@ -16,7 +16,7 @@ export function localSkyState(preset, now = new Date(), time = 0) {
     altitudeKm: 0.08,
     yaw: 0,
     // A fixed upward view with enough angle to preserve visible cloud depth; no horizon or terrain enters the frame.
-    pitch: 75,
+    pitch: 78,
     exposureEv: 3.2 + (1 - daylight) * 1.2 + Math.max(0, -sun) * 2.0,
     haze: 3.0,
     cloudCoverage: 0.58,
