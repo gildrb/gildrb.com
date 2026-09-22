@@ -9,6 +9,15 @@ body:has(> #gildrb-atmosphere-background) { isolation: isolate; }
   height: 100%;
   pointer-events: none;
   user-select: none;
-  opacity: 0.22;
+  opacity: 1;
+  filter: brightness(0.76) saturate(0.78) contrast(1.08);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) #gildrb-atmosphere-background {
+    filter: brightness(1.06) saturate(0.72) contrast(0.98);
+  }
+}
+:root[data-theme="light"] #gildrb-atmosphere-background {
+  filter: brightness(1.06) saturate(0.72) contrast(0.98);
 }
 @media print { #gildrb-atmosphere-background { display: none; } }

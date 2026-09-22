@@ -69,14 +69,14 @@ export function createBackgroundStart({
         blend: 'alpha',
         set: {
           scene: sky, linearSampler,
-          params: { size: [...surface.size], time: simulationTime, shutter: 1 / 100 },
+          params: { size: [...surface.size], time: simulationTime, shutter: 1 / 65 },
         },
       });
       const lens = vgpu.effect(gpu, shaders.lens, {
         label: 'gildrb-wet-lens',
         set: {
           scene: rainySky, linearSampler,
-          params: { size: [...surface.size], time: simulationTime, wetness: 0.35 },
+          params: { size: [...surface.size], time: simulationTime, wetness: 0.58 },
         },
       });
       await Promise.all([copy.compile(rainySky), rain.compile(rainySky), lens.compile({ colors: [surface.format] })]);
@@ -100,7 +100,7 @@ export function createBackgroundStart({
           lens.set({ params: { time: simulationTime } });
           frame.pass({ target: rainySky, clear: [0, 0, 0, 1] }, pass => {
             pass.draw(copy);
-            pass.draw(rain, { instances: 5200 });
+            pass.draw(rain, { instances: 6800 });
           });
           frame.pass(surface, lens);
           frameCount += 1;
