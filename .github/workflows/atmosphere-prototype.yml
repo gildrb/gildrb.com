@@ -1,0 +1,59 @@
+name: Atmosphere prototype
+
+on:
+  push:
+    branches: [prototype/vgpu-atmosphere-background]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atmosphere-prototype-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install existing site dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Pull verified official example
+        env:
+          npm_config_yes: 'true'
+        run: |
+          mkdir -p .atmosphere-integration
+          set -o pipefail
+          npx vgpu examples pull atmosphere --out ./atmosphere 2>&1 | tee .atmosphere-integration/official-pull.log
+      - name: Install example dependencies and read matching documentation
+        run: |
+          npm install --save-exact --no-audit --no-fund vgpu lil-gui
+          npm exec --no -- vgpu --version | tee .atmosphere-integration/installed-version.log
+          for topic in getting-started.md nextjs.md concepts-frames.md concepts-draws.md; do
+            npm exec --no -- vgpu docs cat "$topic" > ".atmosphere-integration/docs-$topic"
+          done
+      - name: Build unchanged website baseline
+        run: npm run build
+      - name: Package workspace for offline inspection and testing
+        run: |
+          tar --exclude='./.git' --exclude='./workspace.tar.gz' -czf /tmp/atmosphere-workspace.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atmosphere-workspace
+          path: /tmp/atmosphere-workspace.tar.gz
+          retention-days: 7
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atmosphere-acquisition-evidence
+          path: .atmosphere-integration/
+          include-hidden-files: true
+          retention-days: 7
