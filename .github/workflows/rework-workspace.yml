@@ -1,0 +1,41 @@
+name: Rework workspace
+on:
+  push:
+    branches: [rework]
+    paths: [.github/workflows/rework-workspace.yml]
+permissions:
+  contents: read
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Acquire isolated locked toolchain
+        run: |
+          mkdir -p /tmp/rework-deps /tmp/rework-docs
+          cd /tmp/rework-deps
+          echo '{"name":"gildrb-rework-deps","private":true,"type":"module","overrides":{"vite":"npm:@voidzero-dev/vite-plus-core@latest"}}' > package.json
+          npm install --save-exact vite-plus preact @preact/preset-vite preact-render-to-string preact-iso typescript @types/node @webgpu/types markdown-it @types/markdown-it pngjs @types/pngjs playwright tsx vgpu@0.5.0 --no-audit --no-fund
+          node_modules/.bin/vgpu --version > /tmp/rework-docs/vgpu-version.txt
+          node_modules/.bin/vgpu docs cat getting-started.md > /tmp/rework-docs/getting-started.md
+          node_modules/.bin/vgpu docs cat /guides/performance-patterns.docs.md > /tmp/rework-docs/performance-patterns.md
+          node_modules/.bin/vgpu docs cat shipping-to-production > /tmp/rework-docs/shipping.md
+          curl -fsSL https://viteplus.dev/llms-full.txt > /tmp/rework-docs/viteplus.txt
+          tar -C /tmp/rework-deps -czf /tmp/rework-deps.tar.gz .
+      - name: Archive exact source workspace
+        run: tar --exclude=.git --exclude=node_modules -czf /tmp/rework-source.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rework-workspace
+          path: |
+            /tmp/rework-deps.tar.gz
+            /tmp/rework-source.tar.gz
+            /tmp/rework-docs
+          retention-days: 3
