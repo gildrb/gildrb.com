@@ -14,7 +14,7 @@ struct Out {
 }
 @vertex fn vs_main(@builtin(vertex_index) vertex: u32, @builtin(instance_index) instance: u32) -> Out {
   let id = f32(instance);
-  let speed = mix(7.0, 12.5, hash(id + 23.0));
+  let speed = mix(8.0, 14.5, hash(id + 23.0));
   let cycle = hash(id + 17.0) + params.time * speed / 24.0;
   let phase = fract(cycle);
   let generation = floor(cycle);
@@ -26,9 +26,9 @@ struct Out {
   let delta = tail - head;
   let lengthPx = length(delta);
   let direction = normalize(delta + vec2f(0.00001, 0.00001));
-  let physicalRadius = mix(0.0010, 0.0040, pow(hash(id + 91.0), 2.0));
+  let physicalRadius = mix(0.0014, 0.0055, pow(hash(id + 91.0), 2.0));
   let radiusPx = physicalRadius * focal / height;
-  let rasterRadius = max(0.82, radiusPx);
+  let rasterRadius = max(1.05, radiusPx);
   var corners = array<vec2f, 6>(
     vec2f(-1.0,0.0), vec2f(1.0,0.0), vec2f(-1.0,1.0),
     vec2f(-1.0,1.0), vec2f(1.0,0.0), vec2f(1.0,1.0)
@@ -59,8 +59,8 @@ struct Out {
   let fresnel = 0.0204 + 0.9796 * pow(1.0 - max(0.0, normal.z), 5.0);
   let rim = smoothstep(0.52, 0.96, abs(v.local.x));
   let headGlint = exp(-pow((v.local.y - 0.16) * 7.0, 2.0)) * (1.0 - smoothstep(0.18, 0.9, abs(v.local.x)));
-  var color = mix(transmitted * (0.52 + 0.34 * abs(v.local.x)), reflected, clamp(fresnel + rim * 0.32, 0.0, 1.0));
-  color += vec3f(0.74, 0.84, 0.94) * (rim * 0.11 + headGlint * 0.08);
-  let alpha = clamp(width * along * v.density * 1.18, 0.0, 0.88);
+  var color = mix(transmitted * (0.70 + 0.18 * abs(v.local.x)), reflected * 1.04, clamp(fresnel + rim * 0.32, 0.0, 1.0));
+  color += vec3f(0.74, 0.84, 0.94) * (rim * 0.16 + headGlint * 0.11);
+  let alpha = clamp(width * along * v.density * 1.0, 0.0, 0.88);
   return vec4f(color, alpha);
 }

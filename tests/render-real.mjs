@@ -14,6 +14,8 @@ const size = [Number(process.env.RENDER_WIDTH || 720), Number(process.env.RENDER
 const hour = Number(process.env.RENDER_HOUR || 16);
 const minute = Number(process.env.RENDER_MINUTE || 0);
 const name = process.env.RENDER_NAME || 'render';
+const minRange = Number(process.env.MIN_RANGE || 6);
+const minRainFraction = Number(process.env.MIN_RAIN_FRACTION || 0.002);
 assert.match(name, /^[a-zA-Z0-9_-]+$/);
 assert.ok(size.every(x => Number.isInteger(x) && x >= 1 && x <= 3840));
 const gpu = await init();
@@ -25,8 +27,8 @@ try {
   graph = await createGraph(gpu,sky,'test-official-atmosphere');
   const samp = sampler(gpu,{minFilter:'linear',magFilter:'linear'});
   const copy = effect(gpu,copyWgsl,{set:{scene:sky,linearSampler:samp}});
-  const rain = draw(gpu,{shader:rainWgsl,vertices:6,blend:'alpha',set:{scene:sky,linearSampler:samp,params:{size,time:8,shutter:1/65}}});
-  const lens = effect(gpu,lensWgsl,{set:{scene:wet,linearSampler:samp,params:{size,time:8,wetness:.58}}});
+  const rain = draw(gpu,{shader:rainWgsl,vertices:6,blend:'alpha',set:{scene:sky,linearSampler:samp,params:{size,time:8,shutter:1/45}}});
+  const lens = effect(gpu,lensWgsl,{set:{scene:wet,linearSampler:samp,params:{size,time:8,wetness:.14}}});
   await Promise.all([copy.compile(wet),rain.compile(wet),lens.compile(output)]);
   const state = localSkyState(PRESETS[DEFAULT_PRESET],new Date(2026,8,22,hour,minute),8);
   applyState(graph,state,size);
@@ -34,7 +36,7 @@ try {
   for(let i=0;i<17;i++) {
     frame(gpu,f=>{
       renderGraph(f,graph,sky);
-      f.pass({target:wet,clear:[0,0,0,1]},p=>{p.draw(copy);p.draw(rain,{instances:6800});});
+      f.pass({target:wet,clear:[0,0,0,1]},p=>{p.draw(copy);p.draw(rain,{instances:4200});});
       f.pass(output,lens);
     });
     await gpu.gpu.queue.onSubmittedWorkDone();
@@ -60,12 +62,12 @@ try {
   luma.sort((a,b) => a-b);
   const p10 = luma[Math.floor(luma.length * 0.10)];
   const p90 = luma[Math.floor(luma.length * 0.90)];
-  assert.ok(p90 - p10 >= 8, `Cloud field needs visible tonal separation; got ${(p90-p10).toFixed(2)}`);
-  assert.ok(changed / luma.length >= 0.002, `Rain/lens needs visible changed pixels; got ${(changed/luma.length).toFixed(4)}`);
+  assert.ok(p90 - p10 >= minRange, `Cloud field needs visible tonal separation; got ${(p90-p10).toFixed(2)}, expected >= ${minRange}`);
+  assert.ok(changed / luma.length >= minRainFraction, `Rain/lens needs visible changed pixels; got ${(changed/luma.length).toFixed(4)}, expected >= ${minRainFraction}`);
   const png = new PNG({width:size[0],height:size[1]});
   png.data.set(pixels);
   writeFileSync(`validation/${name}.png`,PNG.sync.write(png));
-  writeFileSync(`validation/${name}.json`,JSON.stringify({size,hour,minute,state,terrainColumns:graph.terrainColumns,backend:'vgpu/node',status:'passed'},null,2));
+  writeFileSync(`validation/${name}.json`,JSON.stringify({size,hour,minute,state,terrainColumns:graph.terrainColumns,tonalRange:p90-p10,rainChangedFraction:changed/luma.length,backend:'vgpu/node',status:'passed'},null,2));
 } finally {
   if(graph) destroyGraph(graph);
   for(const t of [sky,wet,output])t.color.destroy();

@@ -16,7 +16,7 @@ test('local clock distinguishes noon from night', () => {
 test('camera is identical at every hour', () => {
   for (let hour = 0; hour < 24; hour++) {
     const state = localSkyState({}, date(hour));
-    assert.equal(state.yaw, 0); assert.equal(state.pitch, 89.9); assert.equal(state.altitudeKm, .08);
+    assert.equal(state.yaw, 0); assert.equal(state.pitch, 75); assert.equal(state.altitudeKm, .08);
   }
 });
 test('sub-minute clock updates do not invalidate lighting history', () => {
@@ -107,7 +107,7 @@ function harness({ stage, hidden = false, reduced = false } = {}) {
 test('uses the official graph followed by the GPU rain passes', async () => {
   const h = harness(); const stop = await h.start({}); h.tick();
   assert.ok(h.log.includes('graph.render')); assert.equal(h.ready.backend, 'vgpu-webgpu');
-  assert.equal(h.states[0].pitch, 89.9); assert.equal(h.effects.length, 3); stop();
+  assert.equal(h.states[0].pitch, 75); assert.equal(h.effects.length, 3); stop();
 });
 test('cleanup is idempotent and releases the graph, extra targets, surface and GPU', async () => {
   const h = harness(); const stop = await h.start({}); stop(); stop();

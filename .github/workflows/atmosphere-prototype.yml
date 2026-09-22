@@ -39,7 +39,7 @@ jobs:
           node tests/build-real.mjs
           RENDER_HOUR=12 RENDER_NAME=noon node .test-build/render-real.mjs
           RENDER_HOUR=19 RENDER_NAME=evening node .test-build/render-real.mjs
-          RENDER_WIDTH=390 RENDER_HEIGHT=844 RENDER_HOUR=17 RENDER_MINUTE=28 RENDER_NAME=mobile-1728 node .test-build/render-real.mjs
+          RENDER_WIDTH=390 RENDER_HEIGHT=844 RENDER_HOUR=17 RENDER_MINUTE=28 MIN_RANGE=20 MIN_RAIN_FRACTION=0.008 RENDER_NAME=mobile-1728 node .test-build/render-real.mjs
           RENDER_HOUR=0 RENDER_NAME=night node .test-build/render-real.mjs
       - uses: actions/upload-artifact@v4
         if: always()

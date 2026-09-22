@@ -7,15 +7,15 @@ struct Params { size: vec2f, time: f32, wetness: f32 }
 fn hash(p: vec2f) -> f32 { return fract(sin(dot(p, vec2f(127.1,311.7))) * 43758.5453); }
 @fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
   let pixel = uv * params.size;
-  let cell = floor(pixel / 72.0);
+  let cell = floor(pixel / 96.0);
   let seed = hash(cell);
   let cycle = params.time * 0.038 + seed * 17.0;
   let age = fract(cycle);
   let generation = floor(cycle);
   let rnd = vec2f(hash(cell + generation + 2.3), hash(cell + generation + 8.2));
-  let center = (cell + vec2f(0.16) + rnd * 0.68) * 72.0;
+  let center = (cell + vec2f(0.16) + rnd * 0.68) * 96.0;
   let life = smoothstep(0.0, 0.018, age) * (1.0 - smoothstep(0.88, 1.0, age));
-  let radius = mix(2.0, 8.5, pow(hash(cell + generation + 5.4), 2.4));
+  let radius = mix(1.5, 4.8, pow(hash(cell + generation + 5.4), 2.4));
   let shape = vec2f(1.0, mix(0.84, 1.18, rnd.x));
   let local = (pixel - center) / (radius * shape);
   let r = length(local);
