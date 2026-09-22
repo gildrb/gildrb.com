@@ -8,6 +8,7 @@ import { buildPage } from "./scripts/build-page.mjs";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const source = path.join(root, "src");
+const atmosphereSource = path.join(root, "atmosphere");
 const output = realpathSync(mkdtempSync(path.join(tmpdir(), "gildrb-vite-")));
 const cacheDir = `${output}-cache`;
 let pending = Promise.resolve();
@@ -32,14 +33,16 @@ export default defineConfig({
         },
         async configureServer(server) {
             await buildPage({ output });
-            server.watcher.add(source);
+            server.watcher.add([source, atmosphereSource]);
             server.watcher.on("all", (event, file) => {
                 if (!["add", "change", "unlink"].includes(event) ||
-                    !file.startsWith(source + path.sep)) return;
+                    !file.startsWith(source + path.sep) &&
+                    !file.startsWith(atmosphereSource + path.sep)) return;
 
                 pending = pending.then(async () => {
                     try {
                         await buildPage({ output });
+                        server.moduleGraph.invalidateAll();
                         server.ws.send({ type: "full-reload" });
                     } catch (error) {
                         server.config.logger.error(error.stack);

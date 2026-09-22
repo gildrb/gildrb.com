@@ -1,59 +1,81 @@
-name: Atmosphere prototype
-
+name: Atmosphere acquisition
 on:
   push:
     branches: [prototype/vgpu-atmosphere-background]
-  workflow_dispatch:
-
+    paths: [.github/workflows/atmosphere-prototype.yml]
 permissions:
-  contents: read
-
+  contents: write
 concurrency:
-  group: atmosphere-prototype-${{ github.ref }}
-  cancel-in-progress: true
-
+  group: atmosphere-acquisition
+  cancel-in-progress: false
 jobs:
-  verify:
+  vendor:
+    if: github.repository == 'gildrb/web'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install existing site dependencies
-        run: npm ci --no-audit --no-fund
-      - name: Pull verified official example
+      - name: Install pinned runtime and pull verified upstream source
         env:
           npm_config_yes: 'true'
         run: |
-          mkdir -p .atmosphere-integration
-          set -o pipefail
-          npx vgpu examples pull atmosphere --out ./atmosphere 2>&1 | tee .atmosphere-integration/official-pull.log
-      - name: Install example dependencies and read matching documentation
+          npm install --save-exact --no-audit --no-fund vgpu@0.5.0 lil-gui@0.21.0
+          npm install --save-dev --save-exact --no-audit --no-fund pngjs@7.0.0
+          npx vgpu examples pull atmosphere --revision 6fa27bb458ffc3f498727090f09dce3fe5faabb43689fd669d633a2a23dc36bb --out ./atmosphere | tee /tmp/official-pull.json
+          curl -fsSL https://raw.githubusercontent.com/vercel-labs/vgpu/80f98da2f5cb6bb089744c0fe96c97231af202a7/apps/docs/examples/atmosphere/bench.ts -o /tmp/atmosphere-bench.ts
+          curl -fsSL https://raw.githubusercontent.com/vercel-labs/vgpu/80f98da2f5cb6bb089744c0fe96c97231af202a7/LICENSE -o /tmp/atmosphere-LICENSE
+      - name: Record provenance and add reversible homepage hooks
         run: |
-          npm install --save-exact --no-audit --no-fund vgpu lil-gui
-          npm exec --no -- vgpu --version | tee .atmosphere-integration/installed-version.log
-          for topic in getting-started.md nextjs.md concepts-frames.md concepts-draws.md; do
-            npm exec --no -- vgpu docs cat "$topic" > ".atmosphere-integration/docs-$topic"
-          done
-      - name: Build unchanged website baseline
-        run: npm run build
-      - name: Package workspace for offline inspection and testing
+          node --input-type=module <<'NODE'
+          import { readdir, readFile, writeFile, copyFile } from 'node:fs/promises';
+          import { createHash } from 'node:crypto';
+          import assert from 'node:assert/strict';
+          import { addAtmosphereHooks } from './scripts/atmosphere-hooks.mjs';
+          const evidence = JSON.parse(await readFile('/tmp/official-pull.json','utf8'));
+          assert.equal(evidence.files,32);
+          assert.equal(evidence.aggregateSha256,'cd254bf76627b3e9ced8bf35b3d1cfde8eb390f3262f9dd1c9a2116b04c64d2c');
+          const files = (await readdir('atmosphere')).sort();
+          assert.equal(files.length,32);
+          const manifest = {};
+          for (const file of files) manifest[file] = createHash('sha256').update(await readFile('atmosphere/'+file)).digest('hex');
+          await writeFile('atmosphere/original-files.sha256.json', JSON.stringify(manifest,null,2)+'\n');
+          await writeFile('atmosphere/verified-pull.json',JSON.stringify(evidence,null,2)+'\n');
+          for (const [src,dest,sha] of [['/tmp/atmosphere-bench.ts','atmosphere/bench.ts','b061d5e5efe5e9f4eaa09a778a1022e27d90d96b'],['/tmp/atmosphere-LICENSE','atmosphere/LICENSE','23f6a8fb86e7f7a245195757758999c460f53dda']]) {
+            const bytes = await readFile(src);
+            assert.equal(createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex'),sha);
+            await copyFile(src,dest);
+          }
+          const result = addAtmosphereHooks(await readFile('src/page.template.html','utf8'),await readFile('scripts/build-page.mjs','utf8'));
+          await writeFile('src/page.template.html',result.template);
+          await writeFile('scripts/build-page.mjs',result.builder);
+          NODE
+      - name: Test invariants and build actual site
         run: |
-          tar --exclude='./.git' --exclude='./workspace.tar.gz' -czf /tmp/atmosphere-workspace.tar.gz .
-      - uses: actions/upload-artifact@v4
-        with:
-          name: atmosphere-workspace
-          path: /tmp/atmosphere-workspace.tar.gz
-          retention-days: 7
-          if-no-files-found: error
+          node --test tests/atmosphere*.test.mjs
+          npm run build
+      - name: Validate real WebGPU shader execution
+        run: |
+          npm exec --no -- vgpu install-software-renderer
+          npm exec --no -- vgpu doctor
+          node tests/build-real.mjs
+          node .test-build/render-real.mjs
+      - name: Commit vendored example and integration hooks to review branch only
+        run: |
+          test "$GITHUB_REF" = refs/heads/prototype/vgpu-atmosphere-background
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add atmosphere package.json package-lock.json src/page.template.html scripts/build-page.mjs
+          git commit -m 'feat: vendor verified Atmosphere example and integrate homepage background'
+          git push origin HEAD:refs/heads/prototype/vgpu-atmosphere-background
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: atmosphere-acquisition-evidence
-          path: .atmosphere-integration/
-          include-hidden-files: true
+          name: atmosphere-real-render
+          path: validation/
           retention-days: 7
+          if-no-files-found: warn
