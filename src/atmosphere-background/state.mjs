@@ -4,12 +4,14 @@ export function localSkyState(preset, now = new Date(), time = 0) {
     throw new TypeError('A valid local date is required.');
   }
   // Minute-sized steps let the original cloud history converge between changes.
+  // The example has no lunar/airglow model. A dim twilight floor preserves a
+  // visible imagined night sky instead of turning the background fully black.
   const hour = now.getHours() + now.getMinutes() / 60;
   const sun = Math.sin((hour - 6) * Math.PI / 12);
   const daylight = Math.max(0, sun);
   return {
     ...preset,
-    sunElevation: Math.max(-18, 55 * sun),
+    sunElevation: Math.max(-2, 55 * sun),
     sunAzimuth: (hour / 24 * 360 + 90) % 360,
     altitudeKm: 0.08,
     yaw: 0,
