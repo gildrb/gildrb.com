@@ -6,12 +6,7 @@
       "@id": "https://gildrb.com/#website",
       "url": "https://gildrb.com/",
       "name": "Gil Rodrigues",
-      "alternateName": [
-        "Gil",
-        "gildrb",
-        "Gil Rodrigues Barbosa",
-        "Gil Domingos Rodrigues Barbosa"
-      ],
+      "alternateName": ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
       "description": "Designer based in Germany.",
       "keywords": [
         "Gil",
@@ -99,19 +94,11 @@
       ]
     },
     {
-      "@type": [
-        "ProfilePage",
-        "WebPage"
-      ],
+      "@type": ["ProfilePage", "WebPage"],
       "@id": "https://gildrb.com/#profile",
       "url": "https://gildrb.com/",
       "name": "Gil Rodrigues",
-      "alternateName": [
-        "Gil",
-        "gildrb",
-        "Gil Rodrigues Barbosa",
-        "Gil Domingos Rodrigues Barbosa"
-      ],
+      "alternateName": ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
       "headline": "Gil Rodrigues",
       "description": "Brand designer based in Germany, building identity systems for software.",
       "keywords": [
@@ -165,7 +152,7 @@
       "description": "Brand designer based in Germany, building identity systems for software.",
       "disambiguatingDescription": "Canonical source for Gil Rodrigues at gildrb.com, the brand designer using the handle gildrb and the legal name Gil Domingos Rodrigues Barbosa.",
       "url": "https://gildrb.com/",
-      "email": "mailto:hi@gildrb.com",
+      "email": "mailto:mail@gildrb.com",
       "jobTitle": "Brand Designer",
       "hasOccupation": {
         "@type": "Occupation",
@@ -262,7 +249,7 @@
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "website contact",
-        "email": "hi@gildrb.com",
+        "email": "mail@gildrb.com",
         "url": "https://gildrb.com/"
       },
       "mainEntityOfPage": {
@@ -343,10 +330,7 @@
       ]
     },
     {
-      "@type": [
-        "CreativeWork",
-        "SoftwareSourceCode"
-      ],
+      "@type": ["CreativeWork", "SoftwareSourceCode"],
       "@id": "https://gildrb.com/#heph",
       "url": "https://gildrb.com/heph",
       "name": "Heph",
@@ -371,10 +355,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/heph#case-study",
       "url": "https://gildrb.com/heph",
       "name": "Heph local document agent",
@@ -398,10 +379,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/filen#case-study",
       "url": "https://gildrb.com/filen",
       "name": "Filen identity system",
@@ -423,10 +401,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/n0thing#case-study",
       "url": "https://gildrb.com/n0thing",
       "name": "n0thing wordmark",
@@ -448,10 +423,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/ml7#case-study",
       "url": "https://gildrb.com/ml7",
       "name": "mL7 identity",
@@ -473,10 +445,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/curves#case-study",
       "url": "https://gildrb.com/curves",
       "name": "CURVES free display typeface",
@@ -498,10 +467,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/ben-davis#case-study",
       "url": "https://gildrb.com/ben-davis",
       "name": "Ben Davis brandmark redesign",
@@ -523,10 +489,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/t3#case-study",
       "url": "https://gildrb.com/t3",
       "name": "T3 logomark exploration",

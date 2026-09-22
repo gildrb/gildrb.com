@@ -13,3 +13,11 @@ public/
 *.pfx
 credentials.json
 secrets.json
+
+dist/
+validation/
+.gpu-cache/
+.baseline-build/
+.baseline-*
+.prototype-build/
+prototype/

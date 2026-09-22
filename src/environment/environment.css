@@ -1,0 +1,65 @@
+.environment {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  background: oklch(0.27 0.018 250);
+}
+.environment-poster,
+.environment canvas,
+.environment-veil {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.environment-poster {
+  background: url("/environment/day.webp") center/cover no-repeat;
+}
+:root[data-sky="dusk"] .environment-poster {
+  background-image: url("/environment/dusk.webp");
+}
+:root[data-sky="night"] .environment-poster {
+  background-image: url("/environment/night.webp");
+}
+.environment canvas {
+  display: block;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+.environment canvas[data-status="ready"] {
+  opacity: 1;
+}
+.environment-veil {
+  background: var(--veil);
+  transition: background-color 180ms ease;
+}
+
+:root[data-sky="dusk"] .environment-veil {
+  background: oklch(0 0 0 / 0.16);
+}
+:root[data-sky="night"] .environment-veil {
+  background: oklch(0 0 0 / 0.04);
+}
+:root[data-theme="light"] .environment-veil {
+  background: oklch(1 0 0 / 0.72);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .environment-veil {
+    background: oklch(1 0 0 / 0.72);
+  }
+}
+
+@media (min-width: 768px) {
+  .environment-poster {
+    background-image: url("/environment/day-wide.webp");
+  }
+  :root[data-sky="dusk"] .environment-poster {
+    background-image: url("/environment/dusk-wide.webp");
+  }
+  :root[data-sky="night"] .environment-poster {
+    background-image: url("/environment/night-wide.webp");
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "renderer": "src/environment/graph.ts",
+  "upstream": "atmosphere/PROVENANCE.md",
+  "backend": "vgpu/node 0.5.0, Dawn/Mesa CPU",
+  "states": {
+    "day": "12:00",
+    "dusk": "17:59",
+    "night": "00:00"
+  },
+  "simulationTime": 8,
+  "files": [
+    {
+      "file": "day.webp",
+      "size": [
+        390,
+        844
+      ],
+      "bytes": 8410,
+      "sha256": "a0cf6f6b812bfaddd33a76823c2a1b7cbf692967e4ba4b62d8e4f159557ecf67"
+    },
+    {
+      "file": "day-wide.webp",
+      "size": [
+        960,
+        600
+      ],
+      "bytes": 14712,
+      "sha256": "108a47520f9668369e1cadb50ebd31da3f6b3dec642fcfb07a932468cc60a933"
+    },
+    {
+      "file": "dusk.webp",
+      "size": [
+        390,
+        844
+      ],
+      "bytes": 2904,
+      "sha256": "b8f3618f0575013e1622f01fd5dc8006329a65d25f47a4216fd1f5d8a2c248b7"
+    },
+    {
+      "file": "dusk-wide.webp",
+      "size": [
+        960,
+        600
+      ],
+      "bytes": 4900,
+      "sha256": "d8cfff8473d1d30d6c5f57b67a7b16dbd33818c87b7e6d15a8081561385a8fe5"
+    },
+    {
+      "file": "night.webp",
+      "size": [
+        390,
+        844
+      ],
+      "bytes": 2082,
+      "sha256": "d935ae828babc9f34e97695670c5aa3e4c07024fb8a5b664b1ae2fc4ef1ba2cf"
+    },
+    {
+      "file": "night-wide.webp",
+      "size": [
+        960,
+        600
+      ],
+      "bytes": 3658,
+      "sha256": "bc4dd04b8a1bc00d78629f4c257d740478b827f6c5d64e95bb4e98cee5caf152"
+    }
+  ]
+}

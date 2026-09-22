@@ -1,0 +1,426 @@
+{
+  "filen/filen-light-study": {
+    "src": "/images/optimized/gil-rodrigues-filen-light-study-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-light-study-480.webp 480w, /images/optimized/gil-rodrigues-filen-light-study-720.webp 720w, /images/optimized/gil-rodrigues-filen-light-study-960.webp 960w, /images/optimized/gil-rodrigues-filen-light-study-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-light-study-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Monochrome Filen light study with soft beams emerging from the lower-left corner",
+    "width": "1600",
+    "height": "1600"
+  },
+  "filen/filen-logo-texture": {
+    "src": "/images/optimized/gil-rodrigues-filen-logo-texture-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-logo-texture-480.webp 480w, /images/optimized/gil-rodrigues-filen-logo-texture-720.webp 720w, /images/optimized/gil-rodrigues-filen-logo-texture-960.webp 960w, /images/optimized/gil-rodrigues-filen-logo-texture-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-logo-texture-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Filen mark over a streaked monochrome visual texture",
+    "width": "3940",
+    "height": "2260"
+  },
+  "filen/filen-exploration-board": {
+    "src": "/images/optimized/gil-rodrigues-filen-exploration-board-960.webp",
+    "srcset": "\n                                    /images/optimized/gil-rodrigues-filen-exploration-board-480.webp   480w,\n                                    /images/optimized/gil-rodrigues-filen-exploration-board-720.webp   720w,\n                                    /images/optimized/gil-rodrigues-filen-exploration-board-960.webp   960w,\n                                    /images/optimized/gil-rodrigues-filen-exploration-board-1280.webp 1280w\n                                ",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Filen exploration board containing sketches, rejected symbols, wordmarks, and refined identity directions",
+    "width": "1280",
+    "height": "956"
+  },
+  "filen/filen-zero-knowledge-campaign": {
+    "src": "/images/optimized/gil-rodrigues-filen-zero-knowledge-campaign-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-zero-knowledge-campaign-480.webp 480w, /images/optimized/gil-rodrigues-filen-zero-knowledge-campaign-720.webp 720w, /images/optimized/gil-rodrigues-filen-zero-knowledge-campaign-960.webp 960w, /images/optimized/gil-rodrigues-filen-zero-knowledge-campaign-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-zero-knowledge-campaign-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "Campaign graphic reading Zero knowledge. Total control.",
+    "width": "3940",
+    "height": "2260"
+  },
+  "filen/filen-brand-system-board": {
+    "src": "/images/optimized/gil-rodrigues-filen-brand-system-board-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-brand-system-board-480.webp 480w, /images/optimized/gil-rodrigues-filen-brand-system-board-720.webp 720w, /images/optimized/gil-rodrigues-filen-brand-system-board-960.webp 960w, /images/optimized/gil-rodrigues-filen-brand-system-board-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-brand-system-board-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Filen brand system board with logo, copy, icon, and typography",
+    "width": "1600",
+    "height": "999"
+  },
+  "filen/filen-wordmark": {
+    "src": "/images/optimized/gil-rodrigues-filen-wordmark-960.webp",
+    "srcset": "\n                                /images/optimized/gil-rodrigues-filen-wordmark-480.webp   480w,\n                                /images/optimized/gil-rodrigues-filen-wordmark-720.webp   720w,\n                                /images/optimized/gil-rodrigues-filen-wordmark-960.webp   960w,\n                                /images/optimized/gil-rodrigues-filen-wordmark-1280.webp 1280w,\n                                /images/optimized/gil-rodrigues-filen-wordmark-1600.webp 1600w\n                            ",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Final Filen mark and wordmark in white on black",
+    "width": "3940",
+    "height": "2260"
+  },
+  "filen/filen-light-lockup": {
+    "src": "/images/optimized/gil-rodrigues-filen-light-lockup-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-light-lockup-480.webp 480w, /images/optimized/gil-rodrigues-filen-light-lockup-720.webp 720w, /images/optimized/gil-rodrigues-filen-light-lockup-960.webp 960w, /images/optimized/gil-rodrigues-filen-light-lockup-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-light-lockup-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Metallic Filen lockup across vertical light panels",
+    "width": "1600",
+    "height": "921"
+  },
+  "filen/filen-app-icon": {
+    "src": "/images/optimized/gil-rodrigues-filen-app-icon-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-app-icon-480.webp 480w, /images/optimized/gil-rodrigues-filen-app-icon-720.webp 720w, /images/optimized/gil-rodrigues-filen-app-icon-960.webp 960w, /images/optimized/gil-rodrigues-filen-app-icon-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-app-icon-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "Filen app icon using a dimensional rendering of the identity mark",
+    "width": "3940",
+    "height": "2260"
+  },
+  "filen/filen-identity-system-overview": {
+    "src": "/images/optimized/gil-rodrigues-filen-identity-system-overview-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-identity-system-overview-480.webp 480w, /images/optimized/gil-rodrigues-filen-identity-system-overview-720.webp 720w, /images/optimized/gil-rodrigues-filen-identity-system-overview-960.webp 960w, /images/optimized/gil-rodrigues-filen-identity-system-overview-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-identity-system-overview-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Filen red identity exploration showing the logo, typography, app icon, and campaign executions",
+    "width": "1600",
+    "height": "1444"
+  },
+  "filen/filen-logo-scale": {
+    "src": "/images/optimized/gil-rodrigues-filen-logo-scale-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-logo-scale-480.webp 480w, /images/optimized/gil-rodrigues-filen-logo-scale-720.webp 720w, /images/optimized/gil-rodrigues-filen-logo-scale-960.webp 960w, /images/optimized/gil-rodrigues-filen-logo-scale-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-logo-scale-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "Filen mark tested at four decreasing sizes",
+    "width": "3940",
+    "height": "2260"
+  },
+  "filen/filen-storage-message": {
+    "src": "/images/optimized/gil-rodrigues-filen-storage-message-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-storage-message-480.webp 480w, /images/optimized/gil-rodrigues-filen-storage-message-720.webp 720w, /images/optimized/gil-rodrigues-filen-storage-message-960.webp 960w, /images/optimized/gil-rodrigues-filen-storage-message-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-storage-message-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "Campaign graphic reading Storage that earns nothing from knowing you",
+    "width": "3940",
+    "height": "2260"
+  },
+  "filen/filen-pangolin-exploration": {
+    "src": "/images/optimized/gil-rodrigues-filen-pangolin-exploration-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-pangolin-exploration-480.webp 480w, /images/optimized/gil-rodrigues-filen-pangolin-exploration-720.webp 720w, /images/optimized/gil-rodrigues-filen-pangolin-exploration-960.webp 960w, /images/optimized/gil-rodrigues-filen-pangolin-exploration-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-pangolin-exploration-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Filen identity exploration with pangolin and architectural references",
+    "width": "1600",
+    "height": "766"
+  },
+  "filen/filen-pattern-exploration": {
+    "src": "/images/optimized/gil-rodrigues-filen-pattern-exploration-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-filen-pattern-exploration-480.webp 480w, /images/optimized/gil-rodrigues-filen-pattern-exploration-720.webp 720w, /images/optimized/gil-rodrigues-filen-pattern-exploration-960.webp 960w, /images/optimized/gil-rodrigues-filen-pattern-exploration-1280.webp 1280w, /images/optimized/gil-rodrigues-filen-pattern-exploration-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Filen pattern explorations built from repeated protective scales",
+    "width": "1600",
+    "height": "611"
+  },
+  "n0thing/n0thing-pixel-variations": {
+    "src": "/images/optimized/gil-rodrigues-n0thing-pixel-variations-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-n0thing-pixel-variations-480.webp 480w, /images/optimized/gil-rodrigues-n0thing-pixel-variations-720.webp 720w, /images/optimized/gil-rodrigues-n0thing-pixel-variations-960.webp 960w, /images/optimized/gil-rodrigues-n0thing-pixel-variations-1280.webp 1280w, /images/optimized/gil-rodrigues-n0thing-pixel-variations-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Black, white, and red n0thing pixel wordmark variations",
+    "width": "1600",
+    "height": "1007"
+  },
+  "n0thing/n0thing-typewriter-direction": {
+    "src": "/images/optimized/gil-rodrigues-n0thing-typewriter-direction-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-n0thing-typewriter-direction-480.webp 480w, /images/optimized/gil-rodrigues-n0thing-typewriter-direction-720.webp 720w, /images/optimized/gil-rodrigues-n0thing-typewriter-direction-960.webp 960w, /images/optimized/gil-rodrigues-n0thing-typewriter-direction-1280.webp 1280w, /images/optimized/gil-rodrigues-n0thing-typewriter-direction-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Typewriter-inspired n0thing and Jordan Gilbert wordmark",
+    "width": "1600",
+    "height": "982"
+  },
+  "n0thing/n0thing-wordmark-animation": {
+    "src": "/images/optimized/gil-rodrigues-n0thing-wordmark-animation-720.gif",
+    "srcset": "/images/optimized/gil-rodrigues-n0thing-wordmark-animation-480.gif 480w, /images/optimized/gil-rodrigues-n0thing-wordmark-animation-720.gif 720w, /images/optimized/gil-rodrigues-n0thing-wordmark-animation-960.gif 960w, /images/optimized/gil-rodrigues-n0thing-wordmark-animation-1280.gif 1280w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Animated medium-gray n0thing pixel wordmark on black with a blinking underscore",
+    "width": "1280",
+    "height": "720"
+  },
+  "n0thing/n0thing-export-folder": {
+    "src": "/images/optimized/gil-rodrigues-n0thing-export-folder-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-n0thing-export-folder-480.webp 480w, /images/optimized/gil-rodrigues-n0thing-export-folder-720.webp 720w, /images/optimized/gil-rodrigues-n0thing-export-folder-951.webp 951w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Windows Explorer showing AI and PSD folders beside six n0thing wordmark PNG exports",
+    "width": "951",
+    "height": "304"
+  },
+  "heph/heph-demo": {
+    "demo": "heph"
+  },
+  "heph/heph-typeface-refinement": {
+    "src": "/images/optimized/gil-rodrigues-heph-typeface-refinement-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-heph-typeface-refinement-480.webp 480w, /images/optimized/gil-rodrigues-heph-typeface-refinement-720.webp 720w, /images/optimized/gil-rodrigues-heph-typeface-refinement-960.webp 960w, /images/optimized/gil-rodrigues-heph-typeface-refinement-1280.webp 1280w, /images/optimized/gil-rodrigues-heph-typeface-refinement-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Continued Heph typeface drawing in Glyphs with lowercase o curves beside a large y",
+    "width": "1600",
+    "height": "909"
+  },
+  "heph/heph-interface": {
+    "src": "/images/optimized/gil-rodrigues-heph-interface-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-heph-interface-480.webp 480w, /images/optimized/gil-rodrigues-heph-interface-720.webp 720w, /images/optimized/gil-rodrigues-heph-interface-960.webp 960w, /images/optimized/gil-rodrigues-heph-interface-1280.webp 1280w, /images/optimized/gil-rodrigues-heph-interface-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Heph terminal interface showing a cited answer, evidence panel, and command menu",
+    "width": "1600",
+    "height": "1004"
+  },
+  "heph/heph-lockup": {
+    "src": "/images/optimized/gil-rodrigues-heph-lockup.svg",
+    "alt": "Heph symbol and wordmark",
+    "width": "3023",
+    "height": "860",
+    "class": "heph-lockup"
+  },
+  "heph/heph-typeface-early": {
+    "src": "/images/optimized/gil-rodrigues-heph-typeface-early-960.webp",
+    "srcset": "/images/optimized/gil-rodrigues-heph-typeface-early-480.webp 480w, /images/optimized/gil-rodrigues-heph-typeface-early-720.webp 720w, /images/optimized/gil-rodrigues-heph-typeface-early-960.webp 960w, /images/optimized/gil-rodrigues-heph-typeface-early-1280.webp 1280w, /images/optimized/gil-rodrigues-heph-typeface-early-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Early Heph typeface drawing in Glyphs with the lowercase g selected",
+    "width": "1600",
+    "height": "909"
+  },
+  "t3/t3-system-board": {
+    "src": "/images/optimized/gil-rodrigues-t3-system-board-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-system-board-480.webp 480w, /images/optimized/gil-rodrigues-t3-system-board-720.webp 720w, /images/optimized/gil-rodrigues-t3-system-board-960.webp 960w, /images/optimized/gil-rodrigues-t3-system-board-1280.webp 1280w, /images/optimized/gil-rodrigues-t3-system-board-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 identity system board with logotypes, icons, favicons, and clear-space lockup",
+    "width": "2048",
+    "height": "1853"
+  },
+  "t3/t3-feedback-board": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-board-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-board-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-board-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-board-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-board-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 application board posted for feedback in the T3 Discord",
+    "width": "1200",
+    "height": "886"
+  },
+  "t3/t3-ghost-grid": {
+    "src": "/images/optimized/gil-rodrigues-t3-ghost-grid-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-ghost-grid-480.webp 480w, /images/optimized/gil-rodrigues-t3-ghost-grid-720.webp 720w, /images/optimized/gil-rodrigues-t3-ghost-grid-960.webp 960w, /images/optimized/gil-rodrigues-t3-ghost-grid-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "Ghosted T3 comparison grid showing overlapping logomark proportions",
+    "width": "1200",
+    "height": "744"
+  },
+  "t3/t3-code-explorations": {
+    "src": "/images/optimized/gil-rodrigues-t3-code-explorations-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-code-explorations-480.webp 480w, /images/optimized/gil-rodrigues-t3-code-explorations-720.webp 720w, /images/optimized/gil-rodrigues-t3-code-explorations-960.webp 960w, /images/optimized/gil-rodrigues-t3-code-explorations-1304.webp 1304w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Tall design canvas of T3 marks and T3 Code wordmark explorations",
+    "width": "1304",
+    "height": "1880"
+  },
+  "t3/t3-feedback-thinner": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-thinner-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-thinner-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-thinner-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-thinner-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-thinner-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Thinner T3 mark test and feedback on the direction",
+    "width": "1200",
+    "height": "382"
+  },
+  "t3/t3-before-after": {
+    "src": "/images/optimized/gil-rodrigues-t3-before-after-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-before-after-480.webp 480w, /images/optimized/gil-rodrigues-t3-before-after-720.webp 720w, /images/optimized/gil-rodrigues-t3-before-after-960.webp 960w, /images/optimized/gil-rodrigues-t3-before-after-1280.webp 1280w, /images/optimized/gil-rodrigues-t3-before-after-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 logomark before and after comparison showing the final refined joint and terminals",
+    "width": "3446",
+    "height": "2520"
+  },
+  "t3/t3-feedback-angled-3": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-angled-3-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-angled-3-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-angled-3-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-angled-3-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-angled-3-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Angled T3 3 and the verdict on its direction",
+    "width": "1200",
+    "height": "48"
+  },
+  "t3/t3-mark": {
+    "src": "/images/optimized/gil-rodrigues-t3-mark-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-mark-480.webp 480w, /images/optimized/gil-rodrigues-t3-mark-720.webp 720w, /images/optimized/gil-rodrigues-t3-mark-960.webp 960w, /images/optimized/gil-rodrigues-t3-mark-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 logomark exploration shown as a compact black and white symbol",
+    "width": "1200",
+    "height": "1200"
+  },
+  "t3/t3-connected-mark": {
+    "src": "/images/optimized/gil-rodrigues-t3-connected-mark-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-connected-mark-480.webp 480w, /images/optimized/gil-rodrigues-t3-connected-mark-720.webp 720w, /images/optimized/gil-rodrigues-t3-connected-mark-960.webp 960w, /images/optimized/gil-rodrigues-t3-connected-mark-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "White connected lowercase t and 3 logomark on a dark canvas",
+    "width": "1724",
+    "height": "1200"
+  },
+  "t3/t3-weight-tests": {
+    "src": "/images/optimized/gil-rodrigues-t3-weight-tests-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-weight-tests-480.webp 480w, /images/optimized/gil-rodrigues-t3-weight-tests-720.webp 720w, /images/optimized/gil-rodrigues-t3-weight-tests-960.webp 960w, /images/optimized/gil-rodrigues-t3-weight-tests-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "T3 logomark weight and angle tests comparing heavier and lighter constructions",
+    "width": "1200",
+    "height": "642"
+  },
+  "t3/t3-code-construction": {
+    "src": "/images/optimized/gil-rodrigues-t3-code-construction-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-code-construction-480.webp 480w, /images/optimized/gil-rodrigues-t3-code-construction-720.webp 720w, /images/optimized/gil-rodrigues-t3-code-construction-960.webp 960w, /images/optimized/gil-rodrigues-t3-code-construction-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 Code wordmark with diagonal construction guides across the T3 and C",
+    "width": "1600",
+    "height": "900"
+  },
+  "t3/t3-code-scale": {
+    "src": "/images/optimized/gil-rodrigues-t3-code-scale-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-code-scale-480.webp 480w, /images/optimized/gil-rodrigues-t3-code-scale-720.webp 720w, /images/optimized/gil-rodrigues-t3-code-scale-960.webp 960w, /images/optimized/gil-rodrigues-t3-code-scale-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "White T3 Code wordmark shown at five decreasing sizes on black",
+    "width": "1600",
+    "height": "900"
+  },
+  "t3/t3-canvas-sketches": {
+    "src": "/images/optimized/gil-rodrigues-t3-canvas-sketches-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-canvas-sketches-480.webp 480w, /images/optimized/gil-rodrigues-t3-canvas-sketches-720.webp 720w, /images/optimized/gil-rodrigues-t3-canvas-sketches-960.webp 960w, /images/optimized/gil-rodrigues-t3-canvas-sketches-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "T3 logomark sketch passes arranged across the exploration canvas",
+    "width": "1200",
+    "height": "834"
+  },
+  "t3/t3-code-outline": {
+    "src": "/images/optimized/gil-rodrigues-t3-code-outline-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-code-outline-480.webp 480w, /images/optimized/gil-rodrigues-t3-code-outline-720.webp 720w, /images/optimized/gil-rodrigues-t3-code-outline-960.webp 960w, /images/optimized/gil-rodrigues-t3-code-outline-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 Code wordmark above a larger outlined version on black",
+    "width": "1600",
+    "height": "900"
+  },
+  "t3/t3-feedback-repainted": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-repainted-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-repainted-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-repainted-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-repainted-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-repainted-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Repainted T3 board with feedback on its weight and direction",
+    "width": "1200",
+    "height": "815"
+  },
+  "t3/t3-canvas-overview": {
+    "src": "/images/optimized/gil-rodrigues-t3-canvas-overview-480.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-canvas-overview-480.webp 480w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Tall T3 exploration canvas filled with logomark studies and rejected directions",
+    "width": "540",
+    "height": "1199"
+  },
+  "t3/t3-feedback-spacing": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-spacing-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-spacing-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-spacing-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-spacing-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-spacing-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 Discord feedback on the spacing between the logomark glyphs",
+    "width": "1200",
+    "height": "851"
+  },
+  "t3/t3-render": {
+    "src": "/images/optimized/gil-rodrigues-t3-render-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-render-480.webp 480w, /images/optimized/gil-rodrigues-t3-render-720.webp 720w, /images/optimized/gil-rodrigues-t3-render-960.webp 960w, /images/optimized/gil-rodrigues-t3-render-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 logomark rendered in a light application setting",
+    "width": "1200",
+    "height": "675"
+  },
+  "t3/t3-color-tests": {
+    "src": "/images/optimized/gil-rodrigues-t3-color-tests-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-color-tests-480.webp 480w, /images/optimized/gil-rodrigues-t3-color-tests-720.webp 720w, /images/optimized/gil-rodrigues-t3-color-tests-960.webp 960w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "T3 pink and monochrome colorway tests for the logomark",
+    "width": "1199",
+    "height": "899"
+  },
+  "t3/t3-feedback-frames": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-frames-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-frames-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-frames-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-frames-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-frames-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Nine T3 logo frames and the Discord replies they drew",
+    "width": "1200",
+    "height": "1127"
+  },
+  "t3/t3-feedback-curves": {
+    "src": "/images/optimized/gil-rodrigues-t3-feedback-curves-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-feedback-curves-480.webp 480w, /images/optimized/gil-rodrigues-t3-feedback-curves-720.webp 720w, /images/optimized/gil-rodrigues-t3-feedback-curves-960.webp 960w, /images/optimized/gil-rodrigues-t3-feedback-curves-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "T3 curve comparison and feedback on the smoothed version",
+    "width": "1200",
+    "height": "1266"
+  },
+  "t3/t3-canvas-color": {
+    "src": "/images/optimized/gil-rodrigues-t3-canvas-color-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-t3-canvas-color-480.webp 480w, /images/optimized/gil-rodrigues-t3-canvas-color-720.webp 720w, /images/optimized/gil-rodrigues-t3-canvas-color-960.webp 960w, /images/optimized/gil-rodrigues-t3-canvas-color-1200.webp 1200w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px",
+    "alt": "T3 logomark color passes arranged across the exploration canvas",
+    "width": "1200",
+    "height": "834"
+  },
+  "ml7/ml7-logo-system": {
+    "src": "/images/optimized/gil-rodrigues-ml7-logo-system-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-ml7-logo-system-480.webp 480w, /images/optimized/gil-rodrigues-ml7-logo-system-720.webp 720w, /images/optimized/gil-rodrigues-ml7-logo-system-960.webp 960w, /images/optimized/gil-rodrigues-ml7-logo-system-1280.webp 1280w, /images/optimized/gil-rodrigues-ml7-logo-system-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "mL7 logo with black lettering and an orange directional stroke on white",
+    "width": "3473",
+    "height": "2263"
+  },
+  "ben-davis/ben-davis-brandmark": {
+    "src": "/images/optimized/gil-rodrigues-ben-davis-brandmark.svg",
+    "alt": "White db monogram with a central diagonal joining mirrored letterforms",
+    "width": "2000",
+    "height": "1112",
+    "class": "ben-davis-brandmark theme-adaptive-monochrome-artwork"
+  },
+  "ben-davis/ben-davis-construction": {
+    "src": "/images/optimized/gil-rodrigues-ben-davis-construction-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-ben-davis-construction-480.webp 480w, /images/optimized/gil-rodrigues-ben-davis-construction-720.webp 720w, /images/optimized/gil-rodrigues-ben-davis-construction-960.webp 960w, /images/optimized/gil-rodrigues-ben-davis-construction-1280.webp 1280w, /images/optimized/gil-rodrigues-ben-davis-construction-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Ben Davis db monogram shown with construction points and the finished mark",
+    "width": "4096",
+    "height": "2304"
+  },
+  "ben-davis/ben-davis-original": {
+    "src": "/images/optimized/gil-rodrigues-ben-davis-original.svg",
+    "alt": "Ben Davis's previous db logo built from a slab-sided d and circular b",
+    "width": "700",
+    "height": "443",
+    "class": "ben-davis-brandmark theme-adaptive-monochrome-artwork"
+  },
+  "curves/curves-uppercase": {
+    "src": "/images/optimized/gil-rodrigues-curves-uppercase-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-curves-uppercase-480.webp 480w, /images/optimized/gil-rodrigues-curves-uppercase-720.webp 720w, /images/optimized/gil-rodrigues-curves-uppercase-960.webp 960w, /images/optimized/gil-rodrigues-curves-uppercase-1280.webp 1280w, /images/optimized/gil-rodrigues-curves-uppercase-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Full unicase CURVES alphabet showing repeated geometric letter construction",
+    "width": "2973",
+    "height": "4010"
+  },
+  "curves/curves-letterforms": {
+    "src": "/images/optimized/gil-rodrigues-curves-letterforms-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-curves-letterforms-480.webp 480w, /images/optimized/gil-rodrigues-curves-letterforms-720.webp 720w, /images/optimized/gil-rodrigues-curves-letterforms-960.webp 960w, /images/optimized/gil-rodrigues-curves-letterforms-1280.webp 1280w, /images/optimized/gil-rodrigues-curves-letterforms-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "Geometric CURVES glyphs arranged as a black and white letterform study",
+    "width": "2973",
+    "height": "2093"
+  },
+  "curves/curves-punctuation": {
+    "src": "/images/optimized/gil-rodrigues-curves-punctuation-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-curves-punctuation-480.webp 480w, /images/optimized/gil-rodrigues-curves-punctuation-720.webp 720w, /images/optimized/gil-rodrigues-curves-punctuation-960.webp 960w, /images/optimized/gil-rodrigues-curves-punctuation-1280.webp 1280w, /images/optimized/gil-rodrigues-curves-punctuation-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "CURVES punctuation math signs currency symbols and accented characters",
+    "width": "2973",
+    "height": "3100"
+  },
+  "curves/curves-wordmark": {
+    "src": "/images/optimized/gil-rodrigues-curves-wordmark-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-curves-wordmark-480.webp 480w, /images/optimized/gil-rodrigues-curves-wordmark-720.webp 720w, /images/optimized/gil-rodrigues-curves-wordmark-960.webp 960w, /images/optimized/gil-rodrigues-curves-wordmark-1280.webp 1280w, /images/optimized/gil-rodrigues-curves-wordmark-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "CURVES wordmark set in the geometric display typeface",
+    "width": "2973",
+    "height": "850"
+  },
+  "curves/curves-specimen": {
+    "src": "/images/optimized/gil-rodrigues-curves-specimen-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-curves-specimen-480.webp 480w, /images/optimized/gil-rodrigues-curves-specimen-720.webp 720w, /images/optimized/gil-rodrigues-curves-specimen-960.webp 960w, /images/optimized/gil-rodrigues-curves-specimen-1280.webp 1280w, /images/optimized/gil-rodrigues-curves-specimen-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "CURVES type specimen showing the display face in a large editorial setting",
+    "width": "2973",
+    "height": "1583"
+  },
+  "curves/curves-numerals": {
+    "src": "/images/optimized/gil-rodrigues-curves-numerals-720.webp",
+    "srcset": "/images/optimized/gil-rodrigues-curves-numerals-480.webp 480w, /images/optimized/gil-rodrigues-curves-numerals-720.webp 720w, /images/optimized/gil-rodrigues-curves-numerals-960.webp 960w, /images/optimized/gil-rodrigues-curves-numerals-1280.webp 1280w, /images/optimized/gil-rodrigues-curves-numerals-1600.webp 1600w",
+    "sizes": "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px",
+    "alt": "CURVES numerals with diagonal forms and a slashed zero",
+    "width": "2973",
+    "height": "2000"
+  }
+}

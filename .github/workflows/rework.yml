@@ -1,0 +1,56 @@
+name: Rework checks
+on:
+  push:
+    branches: [rework]
+  pull_request:
+    branches: [main]
+    paths:
+      [
+        "src/**",
+        "build/**",
+        "functions/**",
+        "tests/**",
+        "atmosphere/**",
+        "package*.json",
+        "index.html",
+        "vite.config.ts",
+        "tsconfig.json",
+        "vercel.json",
+        ".github/workflows/rework.yml",
+      ]
+permissions:
+  contents: read
+concurrency:
+  group: rework-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run verify
+      - name: Chromium viewport and first-paint checks
+        run: |
+          npm exec --no -- playwright install chromium --only-shell --with-deps
+          npm run preview -- --host 127.0.0.1 --port 5175 > /tmp/rework-preview.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:5175/ > /dev/null && break || sleep 1; done
+          npm run test:browser
+      - name: Execute actual WGSL with native WebGPU
+        run: |
+          npm exec --no -- vgpu install-software-renderer
+          npm run test:gpu
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rework-validation
+          path: validation/
+          retention-days: 7
+          if-no-files-found: error
