@@ -1,0 +1,39 @@
+name: Atmosphere test toolkit
+on:
+  push:
+    branches: [prototype/vgpu-atmosphere-background]
+    paths: [.github/workflows/atmosphere-toolkit.yml]
+permissions:
+  contents: read
+jobs:
+  tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      VGPU_CACHE_DIR: /tmp/toolkit/vgpu-cache
+      PLAYWRIGHT_BROWSERS_PATH: /tmp/toolkit/browsers
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated validation tools
+        run: |
+          mkdir -p /tmp/toolkit
+          npm install --prefix /tmp/toolkit vgpu@0.5.0 agent-browser playwright --no-audit --no-fund
+          /tmp/toolkit/node_modules/.bin/vgpu install-software-renderer
+          /tmp/toolkit/node_modules/.bin/playwright install chromium --only-shell
+          /tmp/toolkit/node_modules/.bin/vgpu doctor | tee /tmp/toolkit/doctor.json
+      - name: Archive validation tools
+        run: |
+          tar -C /tmp/toolkit --exclude=browsers -czf /tmp/vgpu-tools.tar.gz .
+          tar -C /tmp/toolkit -czf /tmp/vgpu-browser.tar.gz browsers
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vgpu-tools
+          path: /tmp/vgpu-tools.tar.gz
+          retention-days: 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vgpu-browser
+          path: /tmp/vgpu-browser.tar.gz
+          retention-days: 3
