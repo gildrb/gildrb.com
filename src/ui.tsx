@@ -5,7 +5,10 @@ import { colors, media, space } from "./tokens.stylex.ts";
 export type Style = stylex.StyleXArray<stylex.CompiledStyles | boolean | null | undefined>;
 
 export const ui = stylex.create({
-  sans: { fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+  sans: {
+    fontFamily:
+      'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  },
   mono: { fontFamily: '"Ioskeley Mono", "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace' },
   focusRing: {
     outline: { default: null, ":focus-visible": `1px solid ${colors.primary}` },
