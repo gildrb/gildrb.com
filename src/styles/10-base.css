@@ -27,8 +27,7 @@
   --portfolio-table-gap: 16px;
   --portfolio-mobile-table-gap: clamp(8px, 3vw, 16px);
   --portfolio-mobile-cell-end-space: 10px;
-  --portfolio-table-columns:
-    max-content max-content minmax(0, 1fr)
+  --portfolio-table-columns: max-content max-content minmax(0, 1fr)
     minmax(var(--portfolio-arrow-column), max-content);
   --portfolio-mobile-table-columns: var(--portfolio-table-columns);
 }
@@ -65,20 +64,6 @@
   box-sizing: border-box;
 }
 
-
-:is(a[href]:not(.heph-demo-close-link),
-  button,
-  input:not([type="hidden"]),
-  select,
-  textarea,
-  summary,
-  [role="button"],
-  [role="link"],
-  [tabindex]:not([tabindex="-1"])):active {
-  position: relative;
-  top: 1px;
-}
-
 ::selection {
   color: var(--highlight-text);
   background: var(--highlight-bg);
@@ -91,7 +76,10 @@
   letter-spacing: -0.02em;
   color: var(--text-primary);
   min-height: calc(var(--link-line-height) * 2);
-  margin-bottom: calc(var(--section-gap) + var(--section-content-gap) + var(--text-media-gap) - var(--link-line-height));
+  margin-bottom: calc(
+    var(--section-gap) + var(--section-content-gap) + var(--text-media-gap) -
+      var(--link-line-height)
+  );
   white-space: nowrap;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -236,7 +224,6 @@ body {
 }
 
 @media (hover: hover) {
-
   .external-link:hover,
   .internal-link:hover,
   .reference-link:hover {
@@ -244,33 +231,32 @@ body {
   }
 }
 
- .email::after {
-   content: "";
-   color: var(--text-secondary);
-   opacity: 1;
- }
+.email::after {
+  content: "";
+  color: var(--text-secondary);
+  opacity: 1;
+}
 
- @media (hover: hover) {
-   .email:hover {
-     color: var(--text-primary);
-   }
- }
+@media (hover: hover) {
+  .email:hover {
+    color: var(--text-primary);
+  }
+}
 
+.email.copied > span,
+.email.copy-failed > span {
+  display: none;
+}
 
- .email.copied > span,
- .email.copy-failed > span {
-   display: none;
- }
+.email.copied::after {
+  content: "Copied";
+  color: inherit;
+}
 
- .email.copied::after {
-   content: "Copied";
-   color: var(--text-tertiary);
- }
-
- .email.copy-failed::after {
-   content: "Copy failed";
-   color: var(--text-secondary);
- }
+.email.copy-failed::after {
+  content: "Copy failed";
+  color: var(--text-secondary);
+}
 
 .external-link:focus:not(:focus-visible),
 .internal-link:focus:not(:focus-visible),
@@ -384,18 +370,19 @@ body {
     line-height: var(--link-line-height);
   }
 
-  body:not(.case-page) :is(
-    .portfolio-table-header,
-    .portfolio-sort-button,
-    .portfolio-link-heading,
-    .portfolio-card-title,
-    .portfolio-card-scope,
-    .portfolio-card-link time,
-    .portfolio-card-arrow,
-    .profile-summary .section-title,
-    .profile-copy,
-    .references-links
-  ) {
+  body:not(.case-page)
+    :is(
+      .portfolio-table-header,
+      .portfolio-sort-button,
+      .portfolio-link-heading,
+      .portfolio-card-title,
+      .portfolio-card-scope,
+      .portfolio-card-link time,
+      .portfolio-card-arrow,
+      .profile-summary .section-title,
+      .profile-copy,
+      .references-links
+    ) {
     font-size: 1rem;
     line-height: var(--link-line-height);
   }
