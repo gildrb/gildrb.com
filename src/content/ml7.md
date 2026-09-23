@@ -1,6 +1,6 @@
 # The mL7 logo, made in 2018
 
-In 2018 I was playing competitive Overwatch and learning from players who were far better than me. One of them was [Mihai "mL7" Lupascu](https://www.twitch.tv/ml7support). I made a logo for him as a thank-you and posted it. His manager contacted me, and the mark became mL7's channel identity. As of July 2026, his Twitch channel still uses the same mark in a different colorway.
+In 2018 I was playing competitive Overwatch and learning from players who were far better than me. One of them was [Mihai "mL7" Lupascu](https://www.twitch.tv/ml7support). I made a logo for him as a thank-you and posted it. His manager contacted me, and the mark became mL7's channel identity.
 
 ![mL7 logo system](media:ml7-logo-system)
 

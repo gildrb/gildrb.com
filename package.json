@@ -3,17 +3,28 @@
   "private": true,
   "scripts": {
     "dev": "vp dev",
-    "build": "node scripts/prepare-cloudflare-output.mjs && node scripts/verify-agent-readiness.mjs",
-    "verify": "node scripts/prepare-cloudflare-output.mjs && node scripts/verify-page.mjs && node scripts/verify-agent-readiness.mjs",
+    "build": "vp build",
+    "check": "vp check",
     "prepare": "vp config"
   },
+  "dependencies": {
+    "@stylexjs/stylex": "^0.19.1",
+    "preact": "^10.29.8"
+  },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260923.1",
+    "@stylexjs/unplugin": "^0.19.1",
+    "@types/node": "^26.6.2",
+    "preact-render-to-string": "^6.7.0",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
     "vite-plus": "0.3.3"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"
   },
+  "browserslist": [
+    "baseline widely available"
+  ],
   "devEngines": {
     "packageManager": {
       "name": "npm",

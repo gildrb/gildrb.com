@@ -26,8 +26,8 @@ Punctuation, math signs, currency, and accented Latin bring the font to 96 glyph
 
 ### Release
 
-I released CURVES in early 2019 on [DaFont](https://www.dafont.com/curves.font), free for personal and commercial use, and posted the specimen on [Behance](https://www.behance.net/gallery/75409663/CURVES-Free-Font). As of August 2026 it has passed 23,000 downloads.
+I released CURVES in early 2019 on [DaFont](https://www.dafont.com/curves.font), free for personal and commercial use, and posted the specimen on [Behance](https://www.behance.net/gallery/75409663/CURVES-Free-Font).
 
 ![Specimen setting](media:curves-specimen)
 
-The rule that holds a headline together closes the counters too far at text sizes. It is a display face and it is used as one: 23,000 downloads, seven years on.
+The rule that holds a headline together closes the counters too far at text sizes. It is a display face and it is used as one.
