@@ -11,14 +11,15 @@ import { type Style, ui } from "./ui.tsx";
 
 export type Assets = { script: string; css: string };
 
+// Both faces are subset to exactly this range (see README), so declare it to the browser.
 const fontRanges =
-  "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2190-2199,U+21A9-2212,U+2215,U+FEFF,U+FFFD";
+  "U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2010-205E,U+20AC,U+2122,U+2190-21FF,U+2212,U+2500-257F";
 
 /** The few rules StyleX cannot attach to an element, layered beneath StyleX's own layers. */
 const globalCss = [
   "@layer reset;",
-  `@font-face{font-family:"Inter";font-weight:100 900;font-display:optional;src:url("/fonts/inter-variable-latin.woff2") format("woff2");unicode-range:${fontRanges}}`,
-  `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("/fonts/IoskeleyMono-Regular.woff2") format("woff2");unicode-range:${fontRanges}}`,
+  `@font-face{font-family:"Inter";font-weight:380 600;font-display:optional;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
+  `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("/fonts/ioskeley-mono.woff2") format("woff2");unicode-range:${fontRanges}}`,
   "@layer reset{*{margin:0;padding:0;box-sizing:border-box}}",
   `::selection{color:${colors.bg};background:${colors.primary}}`,
 ].join("\n");
@@ -62,7 +63,7 @@ export function Document({
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link
           rel="preload"
-          href="/fonts/inter-variable-latin.woff2"
+          href="/fonts/inter.woff2"
           as="font"
           type="font/woff2"
           crossorigin="anonymous"
@@ -70,7 +71,7 @@ export function Document({
         {mono && (
           <link
             rel="preload"
-            href="/fonts/IoskeleyMono-Regular.woff2"
+            href="/fonts/ioskeley-mono.woff2"
             as="font"
             type="font/woff2"
             crossorigin="anonymous"

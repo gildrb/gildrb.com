@@ -3,7 +3,7 @@
   "info": {
     "title": "gildrb.com public API",
     "version": "1.0.0",
-    "description": "Public, read-only profile and portfolio endpoints for gildrb.com. Versioned in the URL path (/api/v1/...); the unversioned /api/... paths are deprecated aliases. Errors use RFC 9457 application/problem+json. Responses advertise RateLimit-Limit and RateLimit-Policy headers. No authentication is required."
+    "description": "Public, read-only profile and portfolio endpoints for gildrb.com. Versioned in the URL path (/api/v1/...); the unversioned /api/... paths are deprecated aliases that answer with Deprecation and Sunset headers. Errors use RFC 9457 application/problem+json. Responses advertise RateLimit-Limit and RateLimit-Policy headers (60 requests per 60 seconds); a request over the limit may receive 429 with Retry-After. No authentication is required."
   },
   "servers": [
     {
@@ -77,6 +77,9 @@
               }
             }
           },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
           "default": {
             "$ref": "#/components/responses/UnexpectedError"
           }
@@ -124,6 +127,9 @@
           "405": {
             "$ref": "#/components/responses/MethodNotAllowed"
           },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
           "default": {
             "$ref": "#/components/responses/UnexpectedError"
           }
@@ -168,6 +174,9 @@
               }
             }
           },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
           "default": {
             "$ref": "#/components/responses/UnexpectedError"
           }
@@ -207,6 +216,9 @@
           },
           "405": {
             "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           },
           "default": {
             "$ref": "#/components/responses/UnexpectedError"
@@ -342,6 +354,9 @@
           },
           "413": {
             "$ref": "#/components/responses/Problem413"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
           },
           "default": {
             "$ref": "#/components/responses/UnexpectedError"
@@ -626,6 +641,24 @@
       },
       "Problem413": {
         "description": "Request body exceeds the 64 KiB limit",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "Rate limit exceeded; retry after the indicated delay",
+        "headers": {
+          "Retry-After": {
+            "description": "Seconds to wait before retrying.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        },
         "content": {
           "application/problem+json": {
             "schema": {

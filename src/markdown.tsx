@@ -246,7 +246,17 @@ function group(blocks: Block[]): Group[] {
   return groups;
 }
 
-function Prose({ blocks, after }: { blocks: Block[]; after: Group | undefined }) {
+/** `nested` is true inside a `##` section, where `###` becomes an h3; before any section it is an h2. */
+function Prose({
+  blocks,
+  after,
+  nested,
+}: {
+  blocks: Block[];
+  after: Group | undefined;
+  nested: boolean;
+}) {
+  const Subheading = nested ? "h3" : "h2";
   const spacing =
     after &&
     !Array.isArray(after) &&
@@ -259,9 +269,9 @@ function Prose({ blocks, after }: { blocks: Block[]; after: Group | undefined })
             <Inline text={block.text} />
           </h2>
         ) : block.type === "h3" ? (
-          <h3 {...stylex.props(styles.h3)}>
+          <Subheading {...stylex.props(styles.h3)}>
             <Inline text={block.text} />
-          </h3>
+          </Subheading>
         ) : block.type === "list" ? (
           <ul {...stylex.props(styles.list)}>
             {block.items.map((item, itemIndex) => (
@@ -297,10 +307,10 @@ export function Article({ markdown, eager }: { markdown: string; eager: boolean 
     if (block.type === "h2") sections.push([]);
     sections.at(-1)?.push(block);
   }
-  const render = (groups: Group[]) =>
+  const render = (groups: Group[], nested: boolean) =>
     groups.map((item, index) =>
       Array.isArray(item) ? (
-        <Prose blocks={item} after={groups[index - 1]} />
+        <Prose blocks={item} after={groups[index - 1]} nested={nested} />
       ) : item.type === "media" ? (
         <Figures items={item.items} eager={eager && item === firstMedia} />
       ) : (
@@ -315,9 +325,9 @@ export function Article({ markdown, eager }: { markdown: string; eager: boolean 
           <Inline text={title} />
         </h1>
       </header>
-      {render(group(intro))}
+      {render(group(intro), false)}
       {chapters.map((chapter) => (
-        <section {...stylex.props(styles.section)}>{render(group(chapter))}</section>
+        <section {...stylex.props(styles.section)}>{render(group(chapter), true)}</section>
       ))}
     </>
   );
