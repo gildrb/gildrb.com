@@ -72,11 +72,19 @@ function withHeaders(response: Response, headers: Record<string, string>): Respo
   return next;
 }
 
-export const onRequest: PagesFunction<Env> = async ({ env, request }) => {
+export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
   const redirect = canonicalHost(request);
   if (redirect) return redirect;
   const url = new URL(request.url);
   const { pathname } = url;
+  // Plain page and file requests go straight to static serving; only Markdown negotiation,
+  // aliases and the API need the work below.
+  const plain =
+    !wantsMarkdown(request) &&
+    !aliases.has(pathname) &&
+    !(pathname in overrides) &&
+    !pathname.startsWith("/api");
+  if (plain) return next();
   if (pathname === "/api" || pathname === "/api/v1") {
     return Response.json(apiIndex, {
       headers: {
