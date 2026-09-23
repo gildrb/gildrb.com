@@ -20,6 +20,9 @@ const globalCss = [
   "@layer reset;",
   `@font-face{font-family:"Inter";font-weight:380 600;font-display:optional;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
   `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("/fonts/ioskeley-mono.woff2") format("woff2");unicode-range:${fontRanges}}`,
+  // Arial (or metric-identical Liberation Sans) scaled to Inter's metrics, so text laid out
+  // before the web font arrives does not move when it does.
+  '@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans");size-adjust:107.35%;ascent-override:90.24%;descent-override:22.47%;line-gap-override:0%}',
   "@layer reset{*{margin:0;padding:0;box-sizing:border-box}}",
   `::selection{color:${colors.bg};background:${colors.primary}}`,
 ].join("\n");
@@ -252,7 +255,8 @@ const styles = stylex.create({
   body: {
     backgroundColor: colors.bg,
     color: colors.primary,
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily:
+      'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     fontFeatureSettings: '"liga" 1, "calt" 1',
     fontWeight: 400,
     // Every element sets its own size; this keeps stray whitespace from adding height.
@@ -418,7 +422,8 @@ const styles = stylex.create({
     marginBlock: `calc(${space.sectionContentGap} / -2)`,
     "::after": {
       content: '" ↗"',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontFamily:
+        'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     },
   },
   profile: {
