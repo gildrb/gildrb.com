@@ -81,7 +81,7 @@ export function Document({
           />
         )}
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
-        <script data-cfasync="false" type="module" src={assets.script} />
+        <script data-cfasync="false" type="module" src={assets.script} fetchpriority="low" />
       </head>
       <body
         {...stylex.props(
