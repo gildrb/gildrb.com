@@ -1,7 +1,7 @@
 .DS_Store
 AGENTS.md
 node_modules/
-public/
+dist/
 .wrangler/
 
 .env

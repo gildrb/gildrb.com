@@ -10,7 +10,7 @@ The demo shows the actual interaction model. The active armory, selected model, 
 
 ![Heph in use](media:heph-interface)
 
-Heph requires Python 3.13 and is managed as a five-package `uv` workspace. Textual and Rich provide the terminal foundation. There is one install and no optional extras: retrieval is lexical, document conversion is written against the file formats directly, and credentials can be stored through the operating system keyring. The full install is 43 packages and about 46 MB, with no machine-learning runtime, no CUDA, and no model downloads. A local `llama.cpp` model runs through a managed binary rather than a Python ML stack, so choosing local inference does not change the dependency graph.
+Heph is a Python project managed as a `uv` workspace. Textual and Rich provide the terminal foundation. There is one install and no optional extras: retrieval is lexical, document conversion is written against the file formats directly, and credentials can be stored through the operating system keyring. The install has no machine-learning runtime, no CUDA, and no model downloads. A local `llama.cpp` model runs through a managed binary rather than a Python ML stack, so choosing local inference does not change the dependency graph.
 
 ### Armories
 
