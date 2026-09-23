@@ -93,16 +93,16 @@
     },
     {
       "rel": "me",
-      "href": "https://www.goodreads.com/gildrb",
+      "href": "https://letterboxd.com/gildrb/",
       "titles": {
-        "en": "Gil Rodrigues on Goodreads"
+        "en": "Gil Rodrigues on Letterboxd"
       }
     },
     {
       "rel": "me",
-      "href": "https://letterboxd.com/gildrb/",
+      "href": "https://literal.club/gildrb",
       "titles": {
-        "en": "Gil Rodrigues on Letterboxd"
+        "en": "Gil Rodrigues on Literal"
       }
     },
     {

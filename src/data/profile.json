@@ -6,12 +6,7 @@
       "@id": "https://gildrb.com/#website",
       "url": "https://gildrb.com/",
       "name": "Gil Rodrigues",
-      "alternateName": [
-        "Gil",
-        "gildrb",
-        "Gil Rodrigues Barbosa",
-        "Gil Domingos Rodrigues Barbosa"
-      ],
+      "alternateName": ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
       "description": "Designer based in Germany.",
       "keywords": [
         "Gil",
@@ -99,19 +94,11 @@
       ]
     },
     {
-      "@type": [
-        "ProfilePage",
-        "WebPage"
-      ],
+      "@type": ["ProfilePage", "WebPage"],
       "@id": "https://gildrb.com/#profile",
       "url": "https://gildrb.com/",
       "name": "Gil Rodrigues",
-      "alternateName": [
-        "Gil",
-        "gildrb",
-        "Gil Rodrigues Barbosa",
-        "Gil Domingos Rodrigues Barbosa"
-      ],
+      "alternateName": ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
       "headline": "Gil Rodrigues",
       "description": "Brand designer based in Germany, building identity systems for software.",
       "keywords": [
@@ -271,8 +258,8 @@
       "sameAs": [
         "https://behance.net/gildrb",
         "https://github.com/gildrb",
-        "https://www.goodreads.com/gildrb",
         "https://letterboxd.com/gildrb/",
+        "https://literal.club/gildrb",
         "https://www.linkedin.com/in/gildrb/"
       ],
       "knowsAbout": [
@@ -332,10 +319,10 @@
           "@id": "https://github.com/gildrb#profile"
         },
         {
-          "@id": "https://www.goodreads.com/gildrb#profile"
+          "@id": "https://letterboxd.com/gildrb/#profile"
         },
         {
-          "@id": "https://letterboxd.com/gildrb/#profile"
+          "@id": "https://literal.club/gildrb#profile"
         },
         {
           "@id": "https://www.linkedin.com/in/gildrb/#profile"
@@ -343,10 +330,7 @@
       ]
     },
     {
-      "@type": [
-        "CreativeWork",
-        "SoftwareSourceCode"
-      ],
+      "@type": ["CreativeWork", "SoftwareSourceCode"],
       "@id": "https://gildrb.com/#heph",
       "url": "https://gildrb.com/heph",
       "name": "Heph",
@@ -371,10 +355,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/heph#case-study",
       "url": "https://gildrb.com/heph",
       "name": "Heph local document agent",
@@ -398,10 +379,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/filen#case-study",
       "url": "https://gildrb.com/filen",
       "name": "Filen identity system",
@@ -423,10 +401,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/n0thing#case-study",
       "url": "https://gildrb.com/n0thing",
       "name": "n0thing wordmark",
@@ -448,10 +423,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/ml7#case-study",
       "url": "https://gildrb.com/ml7",
       "name": "mL7 identity",
@@ -473,10 +445,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/curves#case-study",
       "url": "https://gildrb.com/curves",
       "name": "CURVES free display typeface",
@@ -498,10 +467,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/ben-davis#case-study",
       "url": "https://gildrb.com/ben-davis",
       "name": "Ben Davis brandmark redesign",
@@ -523,10 +489,7 @@
       }
     },
     {
-      "@type": [
-        "Article",
-        "CreativeWork"
-      ],
+      "@type": ["Article", "CreativeWork"],
       "@id": "https://gildrb.com/t3#case-study",
       "url": "https://gildrb.com/t3",
       "name": "T3 logomark exploration",
@@ -648,23 +611,6 @@
     },
     {
       "@type": "ProfilePage",
-      "@id": "https://www.goodreads.com/gildrb#profile",
-      "url": "https://www.goodreads.com/gildrb",
-      "name": "Gil Rodrigues on Goodreads",
-      "about": {
-        "@id": "https://gildrb.com/#person"
-      },
-      "mainEntity": {
-        "@id": "https://gildrb.com/#person"
-      },
-      "isPartOf": {
-        "@type": "WebSite",
-        "name": "Goodreads",
-        "url": "https://www.goodreads.com/"
-      }
-    },
-    {
-      "@type": "ProfilePage",
       "@id": "https://letterboxd.com/gildrb/#profile",
       "url": "https://letterboxd.com/gildrb/",
       "name": "Gil Rodrigues on Letterboxd",
@@ -678,6 +624,23 @@
         "@type": "WebSite",
         "name": "Letterboxd",
         "url": "https://letterboxd.com/"
+      }
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": "https://literal.club/gildrb#profile",
+      "url": "https://literal.club/gildrb",
+      "name": "Gil Rodrigues on Literal",
+      "about": {
+        "@id": "https://gildrb.com/#person"
+      },
+      "mainEntity": {
+        "@id": "https://gildrb.com/#person"
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Literal",
+        "url": "https://literal.club/"
       }
     },
     {
