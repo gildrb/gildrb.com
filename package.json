@@ -2,11 +2,23 @@
   "name": "gildrb-web",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vp dev",
     "build": "node scripts/prepare-cloudflare-output.mjs && node scripts/verify-agent-readiness.mjs",
-    "verify": "node scripts/prepare-cloudflare-output.mjs && node scripts/verify-page.mjs && node scripts/verify-agent-readiness.mjs"
+    "verify": "node scripts/prepare-cloudflare-output.mjs && node scripts/verify-page.mjs && node scripts/verify-agent-readiness.mjs",
+    "prepare": "vp config"
   },
   "devDependencies": {
-    "vite": "^8.2.2"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
+    "vite-plus": "0.3.3"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "12.1.0",
+      "onFail": "download"
+    }
   }
 }
