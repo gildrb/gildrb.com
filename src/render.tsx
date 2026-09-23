@@ -32,16 +32,16 @@ const html = (page: VNode) =>
 export function render(assets: Assets): Record<string, string> {
   return {
     "index.html": html(<Home assets={assets} />),
-    "all/index.html": html(<AllPage assets={assets} markdown={markdown} />),
+    "all.html": html(<AllPage assets={assets} markdown={markdown} />),
     ...Object.fromEntries(
       cases.map((item) => [
-        `${item.slug}/index.html`,
+        `${item.slug}.html`,
         html(<CasePage assets={assets} item={item} markdown={text(item.slug)} />),
       ]),
     ),
     ...Object.fromEntries(
       pages.map((page) => [
-        `${page.slug}/index.html`,
+        `${page.slug}.html`,
         html(<DocPage assets={assets} page={page} markdown={text(page.slug)} />),
       ]),
     ),

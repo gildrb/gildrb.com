@@ -19,9 +19,11 @@ const site: Plugin = {
       const { pathname } = new URL(request.url ?? "/", "http://localhost");
       const { render } = (await server.ssrLoadModule("/src/render.tsx")) as Render;
       const files = render({ script: "/src/client.ts", css: "" });
-      const file = [pathname.slice(1), path.join(pathname.slice(1), "index.html")].find(
-        (name) => name in files,
-      );
+      const file = [
+        pathname.slice(1),
+        `${pathname.slice(1) || "index"}.html`,
+        path.join(pathname.slice(1), "index.html"),
+      ].find((name) => name in files);
       if (!file) return next();
       const body = files[file] ?? "";
       response.setHeader("Content-Type", file.endsWith(".html") ? "text/html" : "text/plain");
