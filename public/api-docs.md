@@ -15,7 +15,7 @@ Versioned endpoints live under `/api/v1/` and every response carries `X-API-Vers
 
 ## Rate limits
 
-Responses advertise `RateLimit-Limit: 60` and `RateLimit-Policy: 60;w=60`. Please stay within that.
+Responses advertise `RateLimit-Limit: 60` and `RateLimit-Policy: 60;w=60`. Please stay within that; a request over the limit may receive `429 Too Many Requests` with a `Retry-After` header.
 
 ## Errors
 

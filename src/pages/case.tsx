@@ -69,6 +69,22 @@ function Frame({
   );
 }
 
+/** Starts loading a page's first image with the HTML, since it is usually the largest paint. */
+function HeroPreload({ markdown }: { markdown: string }) {
+  const first = parse(markdown).blocks.find((block) => block.type === "media")?.items[0]?.id;
+  if (!first || first === "heph-demo") return null;
+  const { src, srcset } = sources(first);
+  return (
+    <link
+      rel="preload"
+      as="image"
+      href={src}
+      {...(srcset && { imagesrcset: srcset, imagesizes: singleSizes })}
+      fetchpriority="high"
+    />
+  );
+}
+
 function Alternates({ slug, name }: { slug?: string; name?: string }) {
   return (
     <>
@@ -113,8 +129,6 @@ export function CasePage({
 }) {
   const url = `${origin}/${item.slug}`;
   const image = item.ogImage && `${origin}/images/optimized/${item.ogImage}`;
-  const first = parse(markdown).blocks.find((block) => block.type === "media")?.items[0]?.id;
-  const hero = first && first !== "heph-demo" ? sources(first) : undefined;
   return (
     <Frame
       assets={assets}
@@ -153,15 +167,7 @@ export function CasePage({
               inLanguage: "en",
             }}
           />
-          {hero && (
-            <link
-              rel="preload"
-              as="image"
-              href={hero.src}
-              {...(hero.srcset && { imagesrcset: hero.srcset, imagesizes: singleSizes })}
-              fetchpriority="high"
-            />
-          )}
+          <HeroPreload markdown={markdown} />
         </>
       }
     >
@@ -205,6 +211,7 @@ export function AllPage({
         <>
           <link rel="canonical" href={`${origin}/all`} />
           <Alternates />
+          <HeroPreload markdown={markdown[cases[0]?.slug ?? ""] ?? ""} />
           <meta property="og:type" content="website" />
           <meta property="og:url" content={`${origin}/all`} />
           <meta property="og:title" content="All projects | Gil Rodrigues" />
@@ -243,7 +250,12 @@ const styles = stylex.create({
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
     order: { default: null, [media.mobile]: 5 },
   },
-  nextCase: { marginTop: `calc(${space.caseTitleTextGap} * 1.618)` },
+  nextCase: {
+    marginTop: `calc(${space.caseTitleTextGap} * 1.618)`,
+    // Offscreen case studies skip style and layout until they approach the viewport.
+    contentVisibility: "auto",
+    containIntrinsicSize: "auto 4000px",
+  },
   settle: {
     paddingBottom: {
       default: null,

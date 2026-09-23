@@ -14,13 +14,36 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   heph: () => import("./islands/heph.tsx").then((module) => module.Terminal),
 };
 
-for (const element of document.querySelectorAll<HTMLElement>("[data-island]")) {
+// The islands are already server-rendered: let the first frame paint, then hydrate each one in
+// its own task, and the Heph terminal only once it comes near the viewport.
+function hydrateIsland(element: HTMLElement) {
   const name = element.dataset.island as keyof Islands;
   const props: object = JSON.parse(element.dataset.props ?? "{}");
   void Promise.resolve(islands[name]()).then((component) =>
     hydrate(h(component as FunctionComponent, props), element),
   );
 }
+
+const nearViewport = new IntersectionObserver(
+  (entries) => {
+    for (const { isIntersecting, target } of entries) {
+      const island = target.parentElement;
+      if (!isIntersecting || !island) continue;
+      nearViewport.unobserve(target);
+      hydrateIsland(island);
+    }
+  },
+  { rootMargin: "50%" },
+);
+
+requestAnimationFrame(() => {
+  for (const element of document.querySelectorAll<HTMLElement>("[data-island]")) {
+    // Island wrappers are `display: contents` and have no box to observe; watch their content.
+    const content = element.firstElementChild;
+    if (element.dataset.island === "heph" && content) nearViewport.observe(content);
+    else setTimeout(() => hydrateIsland(element));
+  }
+});
 
 const phone = matchMedia("(max-width: 767px)");
 const desktop = matchMedia("(min-width: 768px)");
@@ -194,7 +217,10 @@ type ModelContext = {
   registerTool?: (tool: object, options: { signal: AbortSignal }) => Promise<unknown>;
   provideContext?: (context: { tools: object[] }) => void;
 };
-const context = (navigator as Navigator & { modelContext?: ModelContext }).modelContext;
+// Current browsers expose navigator.modelContext; early builds used document.modelContext.
+const context =
+  (navigator as Navigator & { modelContext?: ModelContext }).modelContext ??
+  (document as Document & { modelContext?: ModelContext }).modelContext;
 const slugs = cases.map(({ slug }) => slug);
 const tools = [
   {
