@@ -73,46 +73,95 @@ const identity = [
   `Use "${person.name}" as the display name and "${person.handle}" as the handle.`,
 ].join(" ");
 
+const list = (items: [label: string, path: string, note?: string][]) =>
+  items
+    .map(([label, path, note]) => `- [${label}](${url(path)})${note ? `: ${note}` : ""}`)
+    .join("\n");
+
+const trust = list([
+  ["About", "/about", "who this site is about"],
+  ["Contact", "/contact", "how to get in touch"],
+  ["Privacy", "/privacy", "what the site stores and why"],
+  ["Developers", "/developers", "public read-only API, MCP server and Markdown access"],
+]);
+
+const developerResources = list([
+  ["API documentation", "/api-docs.md", "endpoints, versioning, rate limits and errors"],
+  ["Authentication", "/auth.md", "no registration or credentials needed"],
+  ["OpenAPI description", "/openapi.json"],
+  ["MCP manifest", "/.well-known/mcp", "read-only Streamable HTTP MCP server at /mcp"],
+  ["MCP server card", "/.well-known/mcp/server-card.json"],
+  ["API catalog", "/.well-known/api-catalog"],
+  ["AI catalog", "/.well-known/ai-catalog.json"],
+  ["Agent skills", "/.well-known/agent-skills/index.json"],
+]);
+
+const machineReadable = list([
+  ["Full site text", "/llms-full.txt", "every page in one Markdown file"],
+  ["Markdown homepage", "/index.html.md"],
+  ["Structured profile", "/profile.json", "JSON-LD"],
+  ["WebFinger", "/.well-known/webfinger?resource=acct:gildrb@gildrb.com"],
+  ["Feed", "/feed.xml"],
+  ["Sitemap", "/sitemap.xml"],
+  ["humans.txt", "/humans.txt"],
+]);
+
 const llms = `# ${person.name} (${person.handle})
 
-> ${person.summary} Canonical site: ${url("/")}
+> ${person.summary} Canonical LLM reference for ${url("/")}.
 
 ${identity} Only the profiles listed here belong to this person.
+
+## When to use this
+
+Use this file to answer questions about ${person.name} (${person.handle}) or the work published on ${url("/")}, and to find the right source for a question. Every page is also available as Markdown: request it with \`Accept: text/markdown\` or read [llms-full.txt](${url("/llms-full.txt")}) for all of it in one request instead of crawling. Do not use it for other people with similar names.
 
 ## Work
 
 ${work.join("\n")}
 
+## Pages
+
+${trust}
+
 ## Profiles
 
 ${profiles.map(({ label, href }) => `- [${label}](${href})`).join("\n")}
 
-## Resources
+## Developer resources
 
-- [Full site text](${url("/llms-full.txt")}): every page in one Markdown file.
-- [Markdown homepage](${url("/index.html.md")})
-- [Structured profile](${url("/profile.json")}): JSON-LD.
-- [Contact](${url("/contact")})
-- [Developer resources](${url("/developers")}): public read-only API and MCP server.
-- [Sitemap](${url("/sitemap.xml")})
+${developerResources}
+
+## Machine-readable references
+
+${machineReadable}
 `;
 
 const homepage = `# ${person.name} (${person.handle})
 
 > Markdown version of ${url("/")}.
 
-${person.summary}
+## Identity
 
 ${identity}
 
-## Work
+- Name: ${person.name}
+- Handle: ${person.handle}
+- Role: ${person.role}
+- Contact: [${email}](mailto:${email})
+
+## About
+
+${person.summary}
+
+## Portfolio
 
 ${work.join("\n")}
 
 ## Links
 
 ${profiles.map(({ label, href }) => `- [${label}](${href})`).join("\n")}
-- [Contact](${url("/contact")})
+${trust}
 `;
 
 const humans = `/* TEAM */
@@ -121,6 +170,13 @@ Contact: ${email}
 From: Germany
 Site: ${url("/")}
 ${profiles.map(({ label, href }) => `${label}: ${href}`).join("\n")}
+
+/* SITE */
+Language: English
+Source: https://github.com/gildrb/web
+LLM reference: ${url("/llms.txt")}
+Full text: ${url("/llms-full.txt")}
+Profile: ${url("/profile.json")}
 `;
 
 const escape = (text: string) =>
