@@ -11,217 +11,201 @@ const output = path.join(root, sitePaths.output);
 const outputPrefix = `${sitePaths.output}/`;
 
 async function readText(relativePath) {
-    return readFile(path.join(root, relativePath), "utf8");
+  return readFile(path.join(root, relativePath), "utf8");
 }
 
 async function readPublicText(relativePath) {
-    return readFile(path.join(output, relativePath), "utf8");
+  return readFile(path.join(output, relativePath), "utf8");
 }
 
 function assert(condition, message) {
-    if (!condition) {
-        throw new Error(message);
-    }
+  if (!condition) {
+    throw new Error(message);
+  }
 }
 
 function getCssDeclarations(css, selector) {
-    const declarations = {};
+  const declarations = {};
 
-    for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-        const selectors = match[1]
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean);
-        if (!selectors.includes(selector)) continue;
+  for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selectors = match[1]
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (!selectors.includes(selector)) continue;
 
-        for (const declaration of match[2].split(";")) {
-            const separator = declaration.indexOf(":");
-            if (separator === -1) continue;
-            declarations[declaration.slice(0, separator).trim()] = declaration
-                .slice(separator + 1)
-                .trim();
-        }
+    for (const declaration of match[2].split(";")) {
+      const separator = declaration.indexOf(":");
+      if (separator === -1) continue;
+      declarations[declaration.slice(0, separator).trim()] = declaration
+        .slice(separator + 1)
+        .trim();
     }
+  }
 
-    return declarations;
+  return declarations;
 }
 
 function getAttributes(source) {
-    return Object.fromEntries(
-        [...source.matchAll(/([a-z-]+)="([^"]*)"/g)].map((match) => [
-            match[1],
-            match[2],
-        ]),
-    );
+  return Object.fromEntries(
+    [...source.matchAll(/([a-z-]+)="([^"]*)"/g)].map((match) => [match[1], match[2]]),
+  );
 }
 
 function getGeneratedJsonLd(html) {
-    const match = html.match(
-        /<script type="application\/ld\+json">\n([\s\S]*?)\n        <\/script>/,
-    );
+  const match = html.match(/<script type="application\/ld\+json">\n([\s\S]*?)\n        <\/script>/);
 
-    assert(match, "Missing inline JSON-LD script.");
-    return JSON.parse(match[1]);
+  assert(match, "Missing inline JSON-LD script.");
+  return JSON.parse(match[1]);
 }
 
 function extractAssetRefs(html) {
-    const refs = new Set();
-    const addRef = (value) => {
-        if (
-            !value ||
-            value.startsWith("#") ||
-            value.startsWith("data:") ||
-            value.startsWith("mailto:") ||
-            value.startsWith("http://") ||
-            value.startsWith("https://")
-        ) {
-            return;
-        }
-
-        if (/\.(?:avif|gif|jpe?g|png|svg|webp|woff2?)$/i.test(value)) {
-            refs.add(value.replace(/^\/+/, ""));
-        }
-    };
-
-    for (const match of html.matchAll(
-        /\s(?:href|src|data-preview-src)=["']([^"']+)["']/g,
-    )) {
-        addRef(match[1]);
+  const refs = new Set();
+  const addRef = (value) => {
+    if (
+      !value ||
+      value.startsWith("#") ||
+      value.startsWith("data:") ||
+      value.startsWith("mailto:") ||
+      value.startsWith("http://") ||
+      value.startsWith("https://")
+    ) {
+      return;
     }
 
-    for (const match of html.matchAll(
-        /\s(?:srcset|imagesrcset)=["']([^"']+)["']/g,
-    )) {
-        for (const candidate of match[1].split(",")) {
-            addRef(candidate.trim().split(/\s+/)[0]);
-        }
+    if (/\.(?:avif|gif|jpe?g|png|svg|webp|woff2?)$/i.test(value)) {
+      refs.add(value.replace(/^\/+/, ""));
     }
+  };
 
-    for (const match of html.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
-        addRef(match[1]);
+  for (const match of html.matchAll(/\s(?:href|src|data-preview-src)=["']([^"']+)["']/g)) {
+    addRef(match[1]);
+  }
+
+  for (const match of html.matchAll(/\s(?:srcset|imagesrcset)=["']([^"']+)["']/g)) {
+    for (const candidate of match[1].split(",")) {
+      addRef(candidate.trim().split(/\s+/)[0]);
     }
+  }
 
-    return refs;
+  for (const match of html.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
+    addRef(match[1]);
+  }
+
+  return refs;
 }
 
 function extractPortfolioCases(html) {
-    return [
-        ...html.matchAll(
-            /<a\s+class="portfolio-card-link"\s+href="\/([^"?]+)"[\s\S]*?<time[^>]+datetime="([^"]+)"[\s\S]*?<h3\s+class="portfolio-card-title"[^>]*>([^<]+)<\/h3\s*>[\s\S]*?<span\s+class="portfolio-card-scope">([^<]+)<\/span>/g,
-        ),
-    ].map(([, slug, date, title, scope]) => ({
-        date,
-        scope,
-        slug,
-        title,
-    }));
+  return [
+    ...html.matchAll(
+      /<a\s+class="portfolio-card-link"\s+href="\/([^"?]+)"[\s\S]*?<time[^>]+datetime="([^"]+)"[\s\S]*?<h3\s+class="portfolio-card-title"[^>]*>([^<]+)<\/h3\s*>[\s\S]*?<span\s+class="portfolio-card-scope">([^<]+)<\/span>/g,
+    ),
+  ].map(([, slug, date, title, scope]) => ({
+    date,
+    scope,
+    slug,
+    title,
+  }));
 }
 
 async function listFiles(relativeDir) {
-    const dir = path.join(root, relativeDir);
-    const entries = await readdir(dir, { withFileTypes: true });
-    const files = await Promise.all(
-        entries.map(async (entry) => {
-            const relativePath = path.posix.join(relativeDir, entry.name);
+  const dir = path.join(root, relativeDir);
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const relativePath = path.posix.join(relativeDir, entry.name);
 
-            if (entry.isDirectory()) {
-                return listFiles(relativePath);
-            }
+      if (entry.isDirectory()) {
+        return listFiles(relativePath);
+      }
 
-            return [relativePath];
-        }),
-    );
+      return [relativePath];
+    }),
+  );
 
-    return files.flat();
+  return files.flat();
 }
 
 const {
-    allPage,
-    allScript,
-    casePages,
-    caseScripts,
-    fullSiteText,
-    indexHtml,
-    profileJson,
-    siteScript,
+  allPage,
+  allScript,
+  casePages,
+  caseScripts,
+  fullSiteText,
+  indexHtml,
+  profileJson,
+  siteScript,
 } = await buildPage({ write: false });
 const {
-    filen: filenHtml,
-    heph: hephHtml,
-    ml7: ml7Html,
-    n0thing: n0thingHtml,
-    curves: curvesHtml,
-    "ben-davis": benDavisHtml,
-    t3: t3Html,
+  filen: filenHtml,
+  heph: hephHtml,
+  ml7: ml7Html,
+  n0thing: n0thingHtml,
+  curves: curvesHtml,
+  "ben-davis": benDavisHtml,
+  t3: t3Html,
 } = casePages;
 const caseScript = caseScripts.filen;
 const caseHtml = Object.values(casePages);
 const allHtml = [indexHtml, ...caseHtml];
 const portfolioCases = extractPortfolioCases(indexHtml);
-const configuredCaseSlugs = new Set(
-    siteConfig.caseStudies.map(({ slug }) => slug),
-);
+const configuredCaseSlugs = new Set(siteConfig.caseStudies.map(({ slug }) => slug));
 const suggestionBlockPattern =
-    /<nav class="case-next" aria-label="All projects">([\s\S]*?)<\/nav>/g;
+  /<nav class="case-next" aria-label="All projects">([\s\S]*?)<\/nav>/g;
 const suggestionRowPattern =
-    /<a class="case-next-row case-next-link" href="\/([^"]+)"(?: aria-current="page")?>[\s\S]*?<time datetime="([^"]+)">[\s\S]*?<span class="case-next-project">([^<]+)<\/span>[\s\S]*?<span class="case-next-scope">([^<]+)<\/span>/g;
+  /<a class="case-next-row case-next-link" href="\/([^"]+)"(?: aria-current="page")?>[\s\S]*?<time datetime="([^"]+)">[\s\S]*?<span class="case-next-project">([^<]+)<\/span>[\s\S]*?<span class="case-next-scope">([^<]+)<\/span>/g;
 for (const [slug, html] of Object.entries(casePages)) {
-    const blocks = [...html.matchAll(suggestionBlockPattern)];
-    assert(
-        blocks.length === 1,
-        `${slug} must contain exactly one suggested-projects navigation block.`,
-    );
-    const suggestions = [
-        ...blocks[0][1].matchAll(suggestionRowPattern),
-    ].map(([, targetSlug, date, title, scope]) => ({
-        date,
-        scope,
-        slug: targetSlug,
-        title,
-    }));
-    assert(
-        suggestions.length === portfolioCases.length - 1 &&
-            !suggestions.some(({ slug: targetSlug }) => targetSlug === slug) &&
-            suggestions.every(
-                ({ slug: targetSlug, date, title, scope, tag }, index) => {
-                    const target = portfolioCases.find(
-                        (portfolioCase) => portfolioCase.slug === targetSlug,
-                    );
-                    const expectedTargets = portfolioCases.filter(
-                        (portfolioCase) => portfolioCase.slug !== slug,
-                    );
-                    const expectedTarget = expectedTargets[index];
-                    return (
-                        expectedTarget?.slug === targetSlug &&
-                        configuredCaseSlugs.has(targetSlug) &&
-                        target !== undefined &&
-                        target.date === date &&
-                        target.title === title &&
-                        target.scope === scope &&
-                        true
-                    );
-                },
-            ),
-        `${slug} must expose every other configured project once in homepage order, without a self-link.`,
-    );
+  const blocks = [...html.matchAll(suggestionBlockPattern)];
+  assert(
+    blocks.length === 1,
+    `${slug} must contain exactly one suggested-projects navigation block.`,
+  );
+  const suggestions = [...blocks[0][1].matchAll(suggestionRowPattern)].map(
+    ([, targetSlug, date, title, scope]) => ({
+      date,
+      scope,
+      slug: targetSlug,
+      title,
+    }),
+  );
+  assert(
+    suggestions.length === portfolioCases.length - 1 &&
+      !suggestions.some(({ slug: targetSlug }) => targetSlug === slug) &&
+      suggestions.every(({ slug: targetSlug, date, title, scope, tag }, index) => {
+        const target = portfolioCases.find((portfolioCase) => portfolioCase.slug === targetSlug);
+        const expectedTargets = portfolioCases.filter(
+          (portfolioCase) => portfolioCase.slug !== slug,
+        );
+        const expectedTarget = expectedTargets[index];
+        return (
+          expectedTarget?.slug === targetSlug &&
+          configuredCaseSlugs.has(targetSlug) &&
+          target !== undefined &&
+          target.date === date &&
+          target.title === title &&
+          target.scope === scope &&
+          true
+        );
+      }),
+    `${slug} must expose every other configured project once in homepage order, without a self-link.`,
+  );
 }
 assert(
-    (allPage.match(/class="case-next"/g) || []).length === 0,
-    "The all-projects page must not contain suggested-projects navigation.",
+  (allPage.match(/class="case-next"/g) || []).length === 0,
+  "The all-projects page must not contain suggested-projects navigation.",
 );
 assert(
-    !allPage.includes("case-next.js") &&
-        !allPage.includes('class="case-next"'),
-    "The all-projects page must not include case-next scripts or markup.",
+  !allPage.includes("case-next.js") && !allPage.includes('class="case-next"'),
+  "The all-projects page must not include case-next scripts or markup.",
 );
 const currentIndex = await readPublicText("index.html");
 const currentCasePages = Object.fromEntries(
-    await Promise.all(
-        siteConfig.caseStudies.map(async ({ slug }) => [
-            slug,
-            await readPublicText(`${slug}/index.html`),
-        ]),
-    ),
+  await Promise.all(
+    siteConfig.caseStudies.map(async ({ slug }) => [
+      slug,
+      await readPublicText(`${slug}/index.html`),
+    ]),
+  ),
 );
 const currentProfile = await readPublicText("profile.json");
 const currentFullSiteText = await readPublicText("llms-full.txt");
@@ -233,34 +217,32 @@ const humansText = await readPublicText("humans.txt");
 const sitemapText = await readPublicText("sitemap.xml");
 const feedText = await readPublicText("feed.xml");
 const identityTexts = await Promise.all(
-    [
-        `${outputPrefix}.well-known/llms.txt`,
-        `${outputPrefix}.well-known/webfinger`,
-        `${outputPrefix}feed.xml`,
-        `${outputPrefix}humans.txt`,
-        `${outputPrefix}index.html`,
-        `${outputPrefix}index.html.md`,
-        `${outputPrefix}llms.txt`,
-        `${outputPrefix}profile.json`,
-        `${outputPrefix}llms-full.txt`,
-        siteConfig.profileSource,
-        `${sitePaths.staticSource}/index.html.md`,
-        "src/page.template.html",
-        "src/partials/layout-open.html",
-        "src/sections/profile-summary.html",
-    ].map(async (file) => ({
-        file,
-        text: file.startsWith(outputPrefix)
-            ? await readPublicText(file.slice(outputPrefix.length))
-            : await readText(file),
-    })),
+  [
+    `${outputPrefix}.well-known/llms.txt`,
+    `${outputPrefix}.well-known/webfinger`,
+    `${outputPrefix}feed.xml`,
+    `${outputPrefix}humans.txt`,
+    `${outputPrefix}index.html`,
+    `${outputPrefix}index.html.md`,
+    `${outputPrefix}llms.txt`,
+    `${outputPrefix}profile.json`,
+    `${outputPrefix}llms-full.txt`,
+    siteConfig.profileSource,
+    `${sitePaths.staticSource}/index.html.md`,
+    "src/page.template.html",
+    "src/partials/layout-open.html",
+    "src/sections/profile-summary.html",
+  ].map(async (file) => ({
+    file,
+    text: file.startsWith(outputPrefix)
+      ? await readPublicText(file.slice(outputPrefix.length))
+      : await readText(file),
+  })),
 );
 const caseStyles = await readText("src/styles/50-case-study.css");
 const responsiveStyles = await readText("src/styles/90-responsive.css");
 const baseStyles = await readText("src/styles/10-base.css");
-const homepageEntryStyles = await readText(
-    "src/styles/15-homepage-entry.css",
-);
+const homepageEntryStyles = await readText("src/styles/15-homepage-entry.css");
 const portfolioStyles = await readText("src/styles/20-portfolio-media.css");
 const hephDemoStyles = await readText("src/styles/30-heph-demo.css");
 const benDavisStyles = await readText("src/styles/30-ben-davis.css");
@@ -274,1599 +256,1313 @@ const cloudflareRoutes = await readText(`${sitePaths.staticSource}/_routes.json`
 const cloudflareFunctionsCatchAll = "/*";
 const directStaticAssetRoutes = ["/content/*", "/fonts/*", "/images/*"];
 const legacyRedirectSources = cloudflareRedirects
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith("https://"))
-    .map((line) => line.split(/\s+/)[0]);
+  .split("\n")
+  .map((line) => line.trim())
+  .filter((line) => line && !line.startsWith("https://"))
+  .map((line) => line.split(/\s+/)[0]);
 const sharedCacheFreshnessToken = ["s", "maxage"].join("-");
 const staleRevalidationToken = ["stale", "while", "revalidate"].join("-");
 const caseSources = await Promise.all(
-    siteConfig.caseStudies.map(async ({ slug, title }) => ({
-        slug,
-        title,
-        markdown: await readText(`${sitePaths.contentSource}/${slug}.md`),
-        template: await readText(`src/${slug}.template.html`),
-    })),
+  siteConfig.caseStudies.map(async ({ slug, title }) => ({
+    slug,
+    title,
+    markdown: await readText(`${sitePaths.contentSource}/${slug}.md`),
+    template: await readText(`src/${slug}.template.html`),
+  })),
 );
 assert(
-    indexHtml.includes("<title>Gil Rodrigues (gildrb)</title>") &&
-        indexHtml.includes(
-            '<a class="sr-only" href="/developers" tabindex="-1">gildrb.com developer resources</a>',
-        ),
-    "The homepage must name Gil Rodrigues and directly expose its developer resources without changing the visible navigation.",
-);
-assert(
-    indexHtml.includes('property="og:title"\n            content="Gil Rodrigues (gildrb)"') &&
-        indexHtml.includes('name="twitter:title"\n            content="Gil Rodrigues (gildrb)"'),
-    "The homepage social titles must carry the gildrb handle.",
-);
-assert(
+  indexHtml.includes("<title>Gil Rodrigues (gildrb)</title>") &&
     indexHtml.includes(
-        '<meta\n            name="description"\n            content="Brand designer based in Germany, building identity systems for software."',
-    ) &&
-        indexHtml.includes("<span data-nosnippet>Links</span>") &&
-        indexHtml.includes("<span data-nosnippet>About</span>") &&
-        indexHtml.includes(
-            "Designer based in Germany.",
-        ),
-    "The homepage must keep its canonical description eligible for search snippets and exclude navigation labels.",
+      '<a class="sr-only" href="/developers" tabindex="-1">gildrb.com developer resources</a>',
+    ),
+  "The homepage must name Gil Rodrigues and directly expose its developer resources without changing the visible navigation.",
+);
+assert(
+  indexHtml.includes('property="og:title"\n            content="Gil Rodrigues (gildrb)"') &&
+    indexHtml.includes('name="twitter:title"\n            content="Gil Rodrigues (gildrb)"'),
+  "The homepage social titles must carry the gildrb handle.",
+);
+assert(
+  indexHtml.includes(
+    '<meta\n            name="description"\n            content="Brand designer based in Germany, building identity systems for software."',
+  ) &&
+    indexHtml.includes("<span data-nosnippet>Links</span>") &&
+    indexHtml.includes("<span data-nosnippet>About</span>") &&
+    indexHtml.includes("Designer based in Germany."),
+  "The homepage must keep its canonical description eligible for search snippets and exclude navigation labels.",
 );
 for (const { slug, title, markdown, template } of caseSources) {
-    assert(
-        markdown.startsWith("# ") &&
-            [0, 3].includes(
-                (markdown.match(/^- \*\*[^*]+:\*\* .+$/gm) || []).length,
-            ),
-        `content/${slug}.md must begin with a title and use zero or three metadata rows.`,
-    );
-    assert(
-        template.includes(`<!-- @case-markdown:${slug} -->`) &&
-            !template.includes('class="case-title"') &&
-            !template.includes('class="case-copy"'),
-        `src/${slug}.template.html must keep authored prose in content/${slug}.md.`,
-    );
-    assert(
-        template.includes(`<title>${title}</title>`),
-        `src/${slug}.template.html must use only the project name as its browser title.`,
-    );
-    assert(
-        template.includes("https://gildrb.com/llms.txt") &&
-            template.includes("https://gildrb.com/llms-full.txt") &&
-            template.includes(`https://gildrb.com/content/${slug}.md`) &&
-            template.includes("https://gildrb.com/profile.json"),
-        `src/${slug}.template.html must expose LLM, full-text, Markdown source, and structured profile discovery links.`,
-    );
-    const mediaCaptions = [
-        ...markdown.matchAll(/^!\[(.*)\]\(media:[a-z0-9-]+\)$/gm),
-    ].map(([, caption]) => caption.trim());
-    const allowedLongMediaCaptions =
-        slug === "t3"
-            ? new Set([
-                  "The application board posted for feedback",
-                  "Feedback on the spacing between the glyphs",
-                  "The repainted board",
-                  "The thinner test and the reply",
-                  "Nine frames and the replies they drew",
-                  "The angled 3, and the verdict on it",
-                  "The pinched curve against the smoothed one",
-              ])
-            : new Set();
-    assert(
-        mediaCaptions.every(
-            (caption) =>
-                caption &&
-                (caption.split(/\s+/).length <= 5 ||
-                    allowedLongMediaCaptions.has(caption)),
-        ),
-        `content/${slug}.md media captions must contain one to five words.`,
-    );
-    const authoredBody = markdown
-        .split("\n")
-        .slice(1)
-        .some((line) => {
-            const trimmed = line.trim();
-            return (
-                trimmed &&
-                !trimmed.startsWith("!") &&
-                !trimmed.startsWith("#") &&
-                !trimmed.startsWith("- **")
-            );
-        });
-    assert(
-        authoredBody || markdown.trimEnd().endsWith("## MORE SOON"),
-        `content/${slug}.md must contain authored prose or end with ## MORE SOON.`,
-    );
+  assert(
+    markdown.startsWith("# ") &&
+      [0, 3].includes((markdown.match(/^- \*\*[^*]+:\*\* .+$/gm) || []).length),
+    `content/${slug}.md must begin with a title and use zero or three metadata rows.`,
+  );
+  assert(
+    template.includes(`<!-- @case-markdown:${slug} -->`) &&
+      !template.includes('class="case-title"') &&
+      !template.includes('class="case-copy"'),
+    `src/${slug}.template.html must keep authored prose in content/${slug}.md.`,
+  );
+  assert(
+    template.includes(`<title>${title}</title>`),
+    `src/${slug}.template.html must use only the project name as its browser title.`,
+  );
+  assert(
+    template.includes("https://gildrb.com/llms.txt") &&
+      template.includes("https://gildrb.com/llms-full.txt") &&
+      template.includes(`https://gildrb.com/content/${slug}.md`) &&
+      template.includes("https://gildrb.com/profile.json"),
+    `src/${slug}.template.html must expose LLM, full-text, Markdown source, and structured profile discovery links.`,
+  );
+  const mediaCaptions = [...markdown.matchAll(/^!\[(.*)\]\(media:[a-z0-9-]+\)$/gm)].map(
+    ([, caption]) => caption.trim(),
+  );
+  const allowedLongMediaCaptions =
+    slug === "t3"
+      ? new Set([
+          "The application board posted for feedback",
+          "Feedback on the spacing between the glyphs",
+          "The repainted board",
+          "The thinner test and the reply",
+          "Nine frames and the replies they drew",
+          "The angled 3, and the verdict on it",
+          "The pinched curve against the smoothed one",
+        ])
+      : new Set();
+  assert(
+    mediaCaptions.every(
+      (caption) =>
+        caption && (caption.split(/\s+/).length <= 5 || allowedLongMediaCaptions.has(caption)),
+    ),
+    `content/${slug}.md media captions must contain one to five words.`,
+  );
+  const authoredBody = markdown
+    .split("\n")
+    .slice(1)
+    .some((line) => {
+      const trimmed = line.trim();
+      return (
+        trimmed &&
+        !trimmed.startsWith("!") &&
+        !trimmed.startsWith("#") &&
+        !trimmed.startsWith("- **")
+      );
+    });
+  assert(
+    authoredBody || markdown.trimEnd().endsWith("## MORE SOON"),
+    `content/${slug}.md must contain authored prose or end with ## MORE SOON.`,
+  );
 }
 
 const proseLinks = caseHtml.flatMap((html) =>
-    [...html.matchAll(/<div class="case-copy">([\s\S]*?)<\/div>/g)].flatMap(
-        (copy) =>
-            [...copy[1].matchAll(/<a\s+([^>]+)>/g)].map((link) =>
-                getAttributes(link[1]),
-            ),
-    ),
+  [...html.matchAll(/<div class="case-copy">([\s\S]*?)<\/div>/g)].flatMap((copy) =>
+    [...copy[1].matchAll(/<a\s+([^>]+)>/g)].map((link) => getAttributes(link[1])),
+  ),
 );
 assert(
-    proseLinks.every(({ class: className = "", href, target, rel }) => {
-        const classes = new Set(className.split(/\s+/).filter(Boolean));
-        const isInternal = classes.has("internal-link");
-        const isExternal = classes.has("external-link");
+  proseLinks.every(({ class: className = "", href, target, rel }) => {
+    const classes = new Set(className.split(/\s+/).filter(Boolean));
+    const isInternal = classes.has("internal-link");
+    const isExternal = classes.has("external-link");
 
-        if (isInternal === isExternal) return false;
-        if (isInternal) {
-            return href?.startsWith("/") && !target && !rel;
-        }
+    if (isInternal === isExternal) return false;
+    if (isInternal) {
+      return href?.startsWith("/") && !target && !rel;
+    }
 
-        return (
-            /^https:\/\//.test(href ?? "") &&
-            target === "_blank" &&
-            new Set((rel ?? "").split(/\s+/)).has("noopener") &&
-            new Set((rel ?? "").split(/\s+/)).has("noreferrer")
-        );
-    }),
-    "Every case-study prose link must declare a valid internal or external link role; bare anchors are forbidden.",
+    return (
+      /^https:\/\//.test(href ?? "") &&
+      target === "_blank" &&
+      new Set((rel ?? "").split(/\s+/)).has("noopener") &&
+      new Set((rel ?? "").split(/\s+/)).has("noreferrer")
+    );
+  }),
+  "Every case-study prose link must declare a valid internal or external link role; bare anchors are forbidden.",
 );
 
 for (const linkRole of ["internal-link", "external-link"]) {
-    const resting = getCssDeclarations(baseStyles, `.${linkRole}`);
-    const hover = getCssDeclarations(baseStyles, `.${linkRole}:hover`);
-    const focus = getCssDeclarations(baseStyles, `.${linkRole}:focus-visible`);
-    assert(
-        resting.color === "var(--text-tertiary)" &&
-            resting["text-decoration"] === "none" &&
-            hover.color === "var(--text-primary)" &&
-            focus.color === "var(--text-primary)" &&
-            (focus.outline || focus["box-shadow"]),
-        `.${linkRole} must define token-based resting, hover, and keyboard-focus states without browser-default styling.`,
-    );
+  const resting = getCssDeclarations(baseStyles, `.${linkRole}`);
+  const hover = getCssDeclarations(baseStyles, `.${linkRole}:hover`);
+  const focus = getCssDeclarations(baseStyles, `.${linkRole}:focus-visible`);
+  assert(
+    resting.color === "var(--text-tertiary)" &&
+      resting["text-decoration"] === "none" &&
+      hover.color === "var(--text-primary)" &&
+      focus.color === "var(--text-primary)" &&
+      (focus.outline || focus["box-shadow"]),
+    `.${linkRole} must define token-based resting, hover, and keyboard-focus states without browser-default styling.`,
+  );
 }
 
-assert(
-    currentIndex === indexHtml,
-    "index.html is out of date. Run `node scripts/build-page.mjs`.",
-);
+assert(currentIndex === indexHtml, "index.html is out of date. Run `node scripts/build-page.mjs`.");
 for (const { slug } of siteConfig.caseStudies) {
-    assert(
-        currentCasePages[slug] === casePages[slug],
-        `${slug}/index.html is out of date. Run \`node scripts/build-page.mjs\`.`,
-    );
+  assert(
+    currentCasePages[slug] === casePages[slug],
+    `${slug}/index.html is out of date. Run \`node scripts/build-page.mjs\`.`,
+  );
 }
 assert(
-    currentProfile === profileJson,
-    "profile.json is out of date. Run `node scripts/build-page.mjs`.",
+  currentProfile === profileJson,
+  "profile.json is out of date. Run `node scripts/build-page.mjs`.",
 );
 assert(
-    currentFullSiteText === fullSiteText,
-    "llms-full.txt is out of date. Run `node scripts/build-page.mjs`.",
+  currentFullSiteText === fullSiteText,
+  "llms-full.txt is out of date. Run `node scripts/build-page.mjs`.",
 );
 assert(
-    JSON.stringify(getGeneratedJsonLd(indexHtml)) ===
-        JSON.stringify(JSON.parse(profileJson)),
-    "Inline JSON-LD no longer matches profile.json.",
+  JSON.stringify(getGeneratedJsonLd(indexHtml)) === JSON.stringify(JSON.parse(profileJson)),
+  "Inline JSON-LD no longer matches profile.json.",
 );
-const staleRolePattern = new RegExp(
-    `${["design", "engineer"].join("\\s+")}\\b`,
-    "i",
-);
-const staleIdentityPattern =
-    /student(?: and designer)?|Julius-Maximilians|Würzburg/i;
+const staleRolePattern = new RegExp(`${["design", "engineer"].join("\\s+")}\\b`, "i");
+const staleIdentityPattern = /student(?: and designer)?|Julius-Maximilians|Würzburg/i;
 const staleIdentityFiles = identityTexts
-    .filter(
-        ({ text }) =>
-            staleIdentityPattern.test(text) || staleRolePattern.test(text),
-    )
-    .map(({ file }) => file);
+  .filter(({ text }) => staleIdentityPattern.test(text) || staleRolePattern.test(text))
+  .map(({ file }) => file);
 assert(
-    staleIdentityFiles.length === 0,
-    `Stale student or university identity copy found in:\n${staleIdentityFiles.join("\n")}`,
+  staleIdentityFiles.length === 0,
+  `Stale student or university identity copy found in:\n${staleIdentityFiles.join("\n")}`,
 );
 
 new Function(siteScript);
 new Function(caseScript);
 assert(
-    [indexHtml, allPage, ...caseHtml].every(
-        (html) =>
-            html.includes('<script data-cfasync="false">') &&
-            !html.includes("<script>") &&
-            !html.includes("/_vercel/") &&
-            html.includes("<!--email_off-->") &&
-            html.includes("<!--/email_off-->"),
+  [indexHtml, allPage, ...caseHtml].every(
+    (html) =>
+      html.includes('<script data-cfasync="false">') &&
+      !html.includes("<script>") &&
+      !html.includes("/_vercel/") &&
+      html.includes("<!--email_off-->") &&
+      html.includes("<!--/email_off-->"),
+  ) &&
+    !indexHtml.includes("homepage-first-paint-pending") &&
+    homepageEntryStyles.includes("@keyframes homepage-fade") &&
+    homepageEntryStyles.includes("@keyframes homepage-rise") &&
+    homepageEntryStyles.includes("filter: blur(6px);") &&
+    homepageEntryStyles.includes("transform: translateY(12px);") &&
+    homepageEntryStyles.includes(
+      "animation: homepage-fade 700ms cubic-bezier(0.16, 1, 0.3, 1) both;",
     ) &&
-        !indexHtml.includes("homepage-first-paint-pending") &&
-        homepageEntryStyles.includes("@keyframes homepage-fade") &&
-        homepageEntryStyles.includes("@keyframes homepage-rise") &&
-        homepageEntryStyles.includes("filter: blur(6px);") &&
-        homepageEntryStyles.includes("transform: translateY(12px);") &&
-        homepageEntryStyles.includes(
-            "animation: homepage-fade 700ms cubic-bezier(0.16, 1, 0.3, 1) both;",
-        ) &&
-        homepageEntryStyles.includes(
-            "animation: homepage-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;",
-        ) &&
-        homepageEntryStyles.includes(
-            "@media screen and (prefers-reduced-motion: no-preference)",
-        ) &&
-        homepageEntryStyles.includes("@media (max-width: 767px)") &&
-        homepageEntryStyles.includes(
-            ".links > :nth-child(1),\n\t\t.links > :nth-child(7) {",
-        ) &&
-        homepageEntryStyles.includes("animation-delay: 480ms;") &&
-        homepageEntryStyles.includes("--homepage-entry-delay: 525ms;") &&
-        homepageEntryStyles.includes("--homepage-entry-delay: 750ms;") &&
-        homepageEntryStyles.includes(
-            "html:not([data-homepage-entry-complete]) .portfolio-table-header",
-        ) &&
-        siteScript.includes(
-            'document.documentElement.dataset.homepageEntryComplete = "true";',
-        ) &&
-        homepageEntryStyles.includes(
-            "--homepage-entry-delay: 570ms;",
-        ) &&
-        !homepageEntryStyles.includes("visibility: hidden") &&
-        !homepageEntryStyles.includes("will-change") &&
-        siteConfig.homepage.styles.includes("15-homepage-entry.css") &&
-        !siteConfig.homepage.scripts.includes("12-homepage-entry.js") &&
-        !siteScript.includes("document.fonts.load") &&
-        !/<link[^>]+IoskeleyMono-Regular\.woff2/.test(indexHtml) &&
-        !indexHtml.includes('aria-label="Read the'),
-    "Public pages must paint identity content immediately, preserve desktop entry motion, follow mobile visual rows with bounded reduced-motion-safe animation, prevent Cloudflare injection, avoid unused font preloads, and use visible link text as accessible names.",
+    homepageEntryStyles.includes(
+      "animation: homepage-rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both;",
+    ) &&
+    homepageEntryStyles.includes("@media screen and (prefers-reduced-motion: no-preference)") &&
+    homepageEntryStyles.includes("@media (max-width: 767px)") &&
+    homepageEntryStyles.includes(".links > :nth-child(1),\n\t\t.links > :nth-child(7) {") &&
+    homepageEntryStyles.includes("animation-delay: 480ms;") &&
+    homepageEntryStyles.includes("--homepage-entry-delay: 525ms;") &&
+    homepageEntryStyles.includes("--homepage-entry-delay: 750ms;") &&
+    homepageEntryStyles.includes(
+      "html:not([data-homepage-entry-complete]) .portfolio-table-header",
+    ) &&
+    siteScript.includes('document.documentElement.dataset.homepageEntryComplete = "true";') &&
+    homepageEntryStyles.includes("--homepage-entry-delay: 570ms;") &&
+    !homepageEntryStyles.includes("visibility: hidden") &&
+    !homepageEntryStyles.includes("will-change") &&
+    siteConfig.homepage.styles.includes("15-homepage-entry.css") &&
+    !siteConfig.homepage.scripts.includes("12-homepage-entry.js") &&
+    !siteScript.includes("document.fonts.load") &&
+    !/<link[^>]+IoskeleyMono-Regular\.woff2/.test(indexHtml) &&
+    !indexHtml.includes('aria-label="Read the'),
+  "Public pages must paint identity content immediately, preserve desktop entry motion, follow mobile visual rows with bounded reduced-motion-safe animation, prevent Cloudflare injection, avoid unused font preloads, and use visible link text as accessible names.",
 );
 assert(
-    caseScript.includes('querySelectorAll(".email")') &&
-        caseScript.includes("navigator.clipboard") &&
-        caseScript.includes("copy-failed"),
-    "Case pages must include the shared email-copy behavior.",
+  caseScript.includes('querySelectorAll(".email")') &&
+    caseScript.includes("navigator.clipboard") &&
+    caseScript.includes("copy-failed"),
+  "Case pages must include the shared email-copy behavior.",
 );
 
 const assetRefs = new Set([
-    ...extractAssetRefs(indexHtml),
-    ...caseHtml.flatMap((html) => [...extractAssetRefs(html)]),
+  ...extractAssetRefs(indexHtml),
+  ...caseHtml.flatMap((html) => [...extractAssetRefs(html)]),
 ]);
-const missingAssets = [...assetRefs].filter(
-    (ref) => !existsSync(path.join(output, ref)),
-);
+const missingAssets = [...assetRefs].filter((ref) => !existsSync(path.join(output, ref)));
+
+assert(missingAssets.length === 0, `Missing referenced assets:\n${missingAssets.join("\n")}`);
 
 assert(
-    missingAssets.length === 0,
-    `Missing referenced assets:\n${missingAssets.join("\n")}`,
-);
-
-assert(
-        baseStyles.includes("--highlight-bg: var(--text-primary);") &&
-        baseStyles.includes("--highlight-text: var(--bg);") &&
-        baseStyles.includes("color: var(--highlight-text);") &&
-        baseStyles.includes("background: var(--highlight-bg);") &&
-        portfolioStyles.includes(
-            ".portfolio-card-link:hover {\n        color: var(--text-primary);",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-link:hover .portfolio-card-view {\n        visibility: visible;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-link:hover .portfolio-card-arrow {\n        color: var(--text-primary);",
-        ) &&
-        !portfolioStyles.includes("background: color-mix(") &&
-        !portfolioStyles.includes(".portfolio-card-image::after") &&
-        !hephDemoStyles.includes(".heph-demo-frame::after") &&
-        !portfolioStyles.includes("mix-blend-mode:") &&
-        !caseStyles.includes(".case-study-entry:hover img"),
-    "Clickable project rows must brighten their date and arrow to white on hover without a hover background or image dimming.",
+  baseStyles.includes("--highlight-bg: var(--text-primary);") &&
+    baseStyles.includes("--highlight-text: var(--bg);") &&
+    baseStyles.includes("color: var(--highlight-text);") &&
+    baseStyles.includes("background: var(--highlight-bg);") &&
+    portfolioStyles.includes(".portfolio-card-link:hover {\n        color: var(--text-primary);") &&
+    portfolioStyles.includes(
+      ".portfolio-card-link:hover .portfolio-card-view {\n        visibility: visible;",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-card-link:hover .portfolio-card-arrow {\n        color: var(--text-primary);",
+    ) &&
+    !portfolioStyles.includes("background: color-mix(") &&
+    !portfolioStyles.includes(".portfolio-card-image::after") &&
+    !hephDemoStyles.includes(".heph-demo-frame::after") &&
+    !portfolioStyles.includes("mix-blend-mode:") &&
+    !caseStyles.includes(".case-study-entry:hover img"),
+  "Clickable project rows must brighten their date and arrow to white on hover without a hover background or image dimming.",
 );
 
 const hephDemoHexColors = new Set(
-    [...hephDemoStyles.matchAll(/#[0-9a-f]{6}/gi)].map(([color]) => color.toLowerCase()),
+  [...hephDemoStyles.matchAll(/#[0-9a-f]{6}/gi)].map(([color]) => color.toLowerCase()),
 );
 assert(
-    hephDemoStyles.includes(
-        ".heph-demo-input {\n        width: 160%;\n        font-size: 16px;\n        transform: scale(0.625);\n        transform-origin: left center;",
-    ),
-    "The mobile Heph input must retain a 16px computed font size without changing its 10px visual scale.",
+  hephDemoStyles.includes(
+    ".heph-demo-input {\n        width: 160%;\n        font-size: 16px;\n        transform: scale(0.625);\n        transform-origin: left center;",
+  ),
+  "The mobile Heph input must retain a 16px computed font size without changing its 10px visual scale.",
 );
 assert(
-    hephDemoStyles.includes("--heph-demo-terminal-bg: color-mix(") &&
-        hephDemoStyles.includes("var(--bg) 96%") &&
-        hephDemoStyles.includes("--heph-demo-row-bg: color-mix(") &&
-        hephDemoStyles.includes("var(--bg) 94%") &&
-        hephDemoStyles.includes("--heph-demo-mobile-bg: color-mix(") &&
-        hephDemoStyles.includes("var(--bg) 92%") &&
-        hephDemoStyles.includes("color: var(--text-primary);") &&
-        hephDemoStyles.includes("color: var(--text-secondary);") &&
-        hephDemoStyles.includes("color: var(--text-tertiary);") &&
-        [...hephDemoHexColors].every((color) =>
-            ["#f96664", "#face2e", "#3bc55d"].includes(color),
-        ) &&
-        hephHtml.includes("EVIDENCE <b>ctrl+g</b>") &&
-        hephHtml.includes("SCOPE <b>4/4</b>") &&
-        hephHtml.includes("EXCERPTS <b>4</b>") &&
-        caseScripts.heph.includes('hephDemoEvidenceOpen.innerHTML = "EVIDENCE <b>ctrl+g</b>"') &&
-        caseScripts.heph.includes('hephDemoEvidenceMeta.innerHTML = "EXCERPTS <b>4</b>"'),
-    "Heph must theme its surface and use shared primary, label, and value colors plus the macOS lights.",
+  hephDemoStyles.includes("--heph-demo-terminal-bg: color-mix(") &&
+    hephDemoStyles.includes("var(--bg) 96%") &&
+    hephDemoStyles.includes("--heph-demo-row-bg: color-mix(") &&
+    hephDemoStyles.includes("var(--bg) 94%") &&
+    hephDemoStyles.includes("--heph-demo-mobile-bg: color-mix(") &&
+    hephDemoStyles.includes("var(--bg) 92%") &&
+    hephDemoStyles.includes("color: var(--text-primary);") &&
+    hephDemoStyles.includes("color: var(--text-secondary);") &&
+    hephDemoStyles.includes("color: var(--text-tertiary);") &&
+    [...hephDemoHexColors].every((color) => ["#f96664", "#face2e", "#3bc55d"].includes(color)) &&
+    hephHtml.includes("EVIDENCE <b>ctrl+g</b>") &&
+    hephHtml.includes("SCOPE <b>4/4</b>") &&
+    hephHtml.includes("EXCERPTS <b>4</b>") &&
+    caseScripts.heph.includes('hephDemoEvidenceOpen.innerHTML = "EVIDENCE <b>ctrl+g</b>"') &&
+    caseScripts.heph.includes('hephDemoEvidenceMeta.innerHTML = "EXCERPTS <b>4</b>"'),
+  "Heph must theme its surface and use shared primary, label, and value colors plus the macOS lights.",
 );
 
-const referencedImages = new Set(
-    [...assetRefs].filter((ref) => ref.startsWith("images/")),
-);
+const referencedImages = new Set([...assetRefs].filter((ref) => ref.startsWith("images/")));
 // The Open Graph image is referenced by absolute URL in social metadata.
 referencedImages.add("images/og-image.png");
 const imageFiles = (await listFiles(`${sitePaths.output}/images`))
-    .map((file) => file.slice(outputPrefix.length))
-    .filter((file) => !file.endsWith(".DS_Store"));
-const unreferencedImages = imageFiles.filter(
-    (file) => !referencedImages.has(file),
-);
+  .map((file) => file.slice(outputPrefix.length))
+  .filter((file) => !file.endsWith(".DS_Store"));
+const unreferencedImages = imageFiles.filter((file) => !referencedImages.has(file));
 
 assert(
-    unreferencedImages.length === 0,
-    `Unreferenced image files:\n${unreferencedImages.join("\n")}`,
+  unreferencedImages.length === 0,
+  `Unreferenced image files:\n${unreferencedImages.join("\n")}`,
 );
 assert(
-    !indexHtml.includes("portfolio-personal-title") &&
-        !indexHtml.includes('class="image-preview"') &&
-        !siteScript.includes("Image Preview Open") &&
-        !siteScript.includes("imagePreview") &&
-        !siteScript.includes("closeImagePreview") &&
-        siteScript.includes("item.getClientRects().length > 0") &&
-        siteScript.includes(
-            'getComputedStyle(item).visibility !== "hidden"',
-        ) &&
-        !imageFiles.some((file) => file.includes("personal-")),
-    "Removed Personal media and its preview machinery must stay absent, and arrow navigation must omit hidden controls.",
+  !indexHtml.includes("portfolio-personal-title") &&
+    !indexHtml.includes('class="image-preview"') &&
+    !siteScript.includes("Image Preview Open") &&
+    !siteScript.includes("imagePreview") &&
+    !siteScript.includes("closeImagePreview") &&
+    siteScript.includes("item.getClientRects().length > 0") &&
+    siteScript.includes('getComputedStyle(item).visibility !== "hidden"') &&
+    !imageFiles.some((file) => file.includes("personal-")),
+  "Removed Personal media and its preview machinery must stay absent, and arrow navigation must omit hidden controls.",
 );
-const homepageFooter =
-    indexHtml.match(/<footer class="site-footer">[\s\S]*?<\/footer>/)?.[0] ??
-    "";
+const homepageFooter = indexHtml.match(/<footer class="site-footer">[\s\S]*?<\/footer>/)?.[0] ?? "";
 assert(
-    homepageFooter.includes('aria-label="Metadata"') &&
-        !homepageFooter.includes('<p class="links-label">Metadata</p>') &&
-        homepageFooter.includes('href="humans.txt"') &&
-        homepageFooter.includes('href="llms.txt"') &&
-        homepageFooter.includes('href="https://github.com/gildrb/web"') &&
-        !homepageFooter.includes("llms-full.txt") &&
-        !homepageFooter.includes('href="/developers"') &&
-        !homepageFooter.includes('href="/about"') &&
-        (homepageFooter.match(/class="reference-link"/g) || []).length === 3 &&
-        allHtml.every(
-            (html) =>
-                !html.includes('class="copyright"') &&
-                !html.includes('id="copyright-year"'),
-        ) &&
-        caseHtml.every(
-            (html) => !html.includes('class="site-footer"'),
-        ),
-    "The homepage-only footer must keep three resource links without a Metadata heading or copyright label.",
+  homepageFooter.includes('aria-label="Metadata"') &&
+    !homepageFooter.includes('<p class="links-label">Metadata</p>') &&
+    homepageFooter.includes('href="humans.txt"') &&
+    homepageFooter.includes('href="llms.txt"') &&
+    homepageFooter.includes('href="https://github.com/gildrb/web"') &&
+    !homepageFooter.includes("llms-full.txt") &&
+    !homepageFooter.includes('href="/developers"') &&
+    !homepageFooter.includes('href="/about"') &&
+    (homepageFooter.match(/class="reference-link"/g) || []).length === 3 &&
+    allHtml.every(
+      (html) => !html.includes('class="copyright"') && !html.includes('id="copyright-year"'),
+    ) &&
+    caseHtml.every((html) => !html.includes('class="site-footer"')),
+  "The homepage-only footer must keep three resource links without a Metadata heading or copyright label.",
 );
 assert(
-    baseStyles.includes("--sidebar-baseline-pitch: 2rem;") &&
-        baseStyles.includes("--portfolio-baseline-pitch: 2.5rem;") &&
-        baseStyles.includes("--portfolio-row-padding: calc((var(--portfolio-baseline-pitch) - var(--link-line-height)) / 2);") &&
-        baseStyles.includes("row-gap: calc(var(--sidebar-baseline-pitch) - var(--link-line-height));") &&
-        baseStyles.includes("--section-content-gap: 6px;") &&
-        baseStyles.includes("margin-block: calc(var(--section-content-gap) / -2);"),
-    "Desktop homepage rhythm must derive sidebar gaps and project padding without changing shared interaction compensation.",
+  baseStyles.includes("--sidebar-baseline-pitch: 2rem;") &&
+    baseStyles.includes("--portfolio-baseline-pitch: 2.5rem;") &&
+    baseStyles.includes(
+      "--portfolio-row-padding: calc((var(--portfolio-baseline-pitch) - var(--link-line-height)) / 2);",
+    ) &&
+    baseStyles.includes(
+      "row-gap: calc(var(--sidebar-baseline-pitch) - var(--link-line-height));",
+    ) &&
+    baseStyles.includes("--section-content-gap: 6px;") &&
+    baseStyles.includes("margin-block: calc(var(--section-content-gap) / -2);"),
+  "Desktop homepage rhythm must derive sidebar gaps and project padding without changing shared interaction compensation.",
 );
 assert(
-    responsiveStyles.includes("grid-template-rows: auto minmax(min-content, 1fr) auto;") &&
-        responsiveStyles.includes("grid-template-rows: subgrid;") &&
-        responsiveStyles.includes("margin-top: var(--sidebar-baseline-pitch);") &&
-        !responsiveStyles.includes("margin-top: 44px;") &&
-        portfolioStyles.includes("border-bottom: 0;") &&
-        portfolioStyles.includes("border-top: 0;") &&
-        portfolioStyles.includes("box-shadow: inset 0 -1px") &&
-        portfolioStyles.includes("box-shadow: inset 0 1px"),
-    "Desktop homepage must share intro tracks and paint table separators outside its baseline geometry.",
+  responsiveStyles.includes("grid-template-rows: auto minmax(min-content, 1fr) auto;") &&
+    responsiveStyles.includes("grid-template-rows: subgrid;") &&
+    responsiveStyles.includes("margin-top: var(--sidebar-baseline-pitch);") &&
+    !responsiveStyles.includes("margin-top: 44px;") &&
+    portfolioStyles.includes("border-bottom: 0;") &&
+    portfolioStyles.includes("border-top: 0;") &&
+    portfolioStyles.includes("box-shadow: inset 0 -1px") &&
+    portfolioStyles.includes("box-shadow: inset 0 1px"),
+  "Desktop homepage must share intro tracks and paint table separators outside its baseline geometry.",
 );
 assert(
-    baseStyles.includes("body .links {\n    row-gap: calc(var(--sidebar-baseline-pitch) - var(--link-line-height));") &&
-        caseStyles.includes("padding-block: var(--portfolio-row-padding);") &&
-        caseStyles.includes(".case-next-row + .case-next-row {\n        border-top: 0;") &&
-        caseStyles.includes("box-shadow: inset 0 1px"),
-    "Desktop case pages must share the sidebar and table baseline rhythm without changing mobile spacing.",
+  baseStyles.includes(
+    "body .links {\n    row-gap: calc(var(--sidebar-baseline-pitch) - var(--link-line-height));",
+  ) &&
+    caseStyles.includes("padding-block: var(--portfolio-row-padding);") &&
+    caseStyles.includes(".case-next-row + .case-next-row {\n        border-top: 0;") &&
+    caseStyles.includes("box-shadow: inset 0 1px"),
+  "Desktop case pages must share the sidebar and table baseline rhythm without changing mobile spacing.",
 );
 assert(
-    responsiveStyles.includes("scrollbar-gutter: stable;") &&
-        responsiveStyles.includes("body .sidebar .theme-toggle:active {\n        position: fixed;\n        top: auto;") &&
-        responsiveStyles.includes("bottom: calc(var(--desktop-footer-inset) + (var(--desktop-footer-height) - var(--theme-toggle-size)) / 2);"),
-    "Desktop navigation and theme controls must keep their viewport position across routes and while pressed.",
-);
-assert(
-    siteScript.includes("const homepageSummaryText = ") &&
-        caseHtml.every((html) => html.includes("const homepageSummaryText = ")) &&
-        siteScript.includes('style.setProperty("--desktop-intro-height", `${height}px`)') &&
-        responsiveStyles.includes("min-height: var(--desktop-intro-height,") &&
-        !indexHtml.includes("<!-- @homepage-description -->"),
-    "Every route must measure the same source-backed intro height before positioning Contact and Links.",
-);
-const hephAsciiSignature =
-    "HEPH // BRANDMARK RASTER 64x22 // GIL RODRIGUES / GILDRB";
-assert(
-    [llmsText, wellKnownLlmsText].every(
-        (text) =>
-            text.includes(hephAsciiSignature) &&
-            text.includes("SYSTEM // LOCAL DOCUMENT AGENT") &&
-            text.includes("SOURCE // github.com/gildrb/heph"),
+  responsiveStyles.includes("scrollbar-gutter: stable;") &&
+    responsiveStyles.includes(
+      "body .sidebar .theme-toggle:active {\n        position: fixed;\n        top: auto;",
+    ) &&
+    responsiveStyles.includes(
+      "bottom: calc(var(--desktop-footer-inset) + (var(--desktop-footer-height) - var(--theme-toggle-size)) / 2);",
     ),
-    "Both LLM references must carry the authored Heph ASCII brandmark.",
+  "Desktop navigation and theme controls must keep their viewport position across routes and while pressed.",
+);
+assert(
+  siteScript.includes("const homepageSummaryText = ") &&
+    caseHtml.every((html) => html.includes("const homepageSummaryText = ")) &&
+    siteScript.includes('style.setProperty("--desktop-intro-height", `${height}px`)') &&
+    responsiveStyles.includes("min-height: var(--desktop-intro-height,") &&
+    !indexHtml.includes("<!-- @homepage-description -->"),
+  "Every route must measure the same source-backed intro height before positioning Contact and Links.",
+);
+const hephAsciiSignature = "HEPH // BRANDMARK RASTER 64x22 // GIL RODRIGUES / GILDRB";
+assert(
+  [llmsText, wellKnownLlmsText].every(
+    (text) =>
+      text.includes(hephAsciiSignature) &&
+      text.includes("SYSTEM // LOCAL DOCUMENT AGENT") &&
+      text.includes("SOURCE // github.com/gildrb/heph"),
+  ),
+  "Both LLM references must carry the authored Heph ASCII brandmark.",
 );
 const llmFullTextRoute = "https://gildrb.com/llms-full.txt";
 assert(
-    [
-        indexHtml,
-        homepageMarkdown,
-        llmsText,
-        wellKnownLlmsText,
-        humansText,
-        sitemapText,
-        currentFullSiteText,
-        await readPublicText(".well-known/webfinger"),
-        await readPublicText(".well-known/host-meta"),
-        await readPublicText(".well-known/host-meta.json"),
-    ].every((text) => text.includes(llmFullTextRoute)) &&
-        currentFullSiteText.includes(
-            "This file is generated from the same authored Markdown sources as the website.",
-        ) &&
-        siteConfig.caseStudies.every(({ slug }) =>
-            currentFullSiteText.includes(
-                `Markdown source: https://gildrb.com/content/${slug}.md`,
-            ),
-        ),
-    "Public discovery files must advertise the full public website text endpoint.",
-);
-assert(
-    cloudflareHeaders.includes("/llms-full.txt") &&
-        cloudflareHeaders.includes("/content/*") &&
-        cloudflareHeaders.includes(llmFullTextRoute) &&
-        !cloudflareHeaders.includes(sharedCacheFreshnessToken) &&
-        !cloudflareHeaders.includes(staleRevalidationToken) &&
-        cloudflareRoutes.includes(`"${cloudflareFunctionsCatchAll}"`) &&
-            directStaticAssetRoutes.every((route) =>
-                cloudflareRoutes.includes(`"${route}"`),
-            ) &&
-            legacyRedirectSources.every((route) =>
-                cloudflareRoutes.includes(`"${route}"`),
-            ),
-    "Cloudflare Pages headers and routes must expose the full-text and content Markdown routes, with Functions covering every non-redirect path so percent-encoded repo files stay blocked, without shared-cache stale windows.",
-);
-const documentedPortfolioTexts = [
+  [
+    indexHtml,
+    homepageMarkdown,
     llmsText,
     wellKnownLlmsText,
-    homepageMarkdown,
     humansText,
+    sitemapText,
     currentFullSiteText,
+    await readPublicText(".well-known/webfinger"),
+    await readPublicText(".well-known/host-meta"),
+    await readPublicText(".well-known/host-meta.json"),
+  ].every((text) => text.includes(llmFullTextRoute)) &&
+    currentFullSiteText.includes(
+      "This file is generated from the same authored Markdown sources as the website.",
+    ) &&
+    siteConfig.caseStudies.every(({ slug }) =>
+      currentFullSiteText.includes(`Markdown source: https://gildrb.com/content/${slug}.md`),
+    ),
+  "Public discovery files must advertise the full public website text endpoint.",
+);
+assert(
+  cloudflareHeaders.includes("/llms-full.txt") &&
+    cloudflareHeaders.includes("/content/*") &&
+    cloudflareHeaders.includes(llmFullTextRoute) &&
+    !cloudflareHeaders.includes(sharedCacheFreshnessToken) &&
+    !cloudflareHeaders.includes(staleRevalidationToken) &&
+    cloudflareRoutes.includes(`"${cloudflareFunctionsCatchAll}"`) &&
+    directStaticAssetRoutes.every((route) => cloudflareRoutes.includes(`"${route}"`)) &&
+    legacyRedirectSources.every((route) => cloudflareRoutes.includes(`"${route}"`)),
+  "Cloudflare Pages headers and routes must expose the full-text and content Markdown routes, with Functions covering every non-redirect path so percent-encoded repo files stay blocked, without shared-cache stale windows.",
+);
+const documentedPortfolioTexts = [
+  llmsText,
+  wellKnownLlmsText,
+  homepageMarkdown,
+  humansText,
+  currentFullSiteText,
 ];
 assert(
+  siteConfig.caseStudies.every(({ slug }) =>
+    documentedPortfolioTexts.every((text) => text.includes(`https://gildrb.com/${slug}`)),
+  ) &&
     siteConfig.caseStudies.every(({ slug }) =>
-        documentedPortfolioTexts.every((text) =>
-            text.includes(`https://gildrb.com/${slug}`),
-        ),
+      sitemapText.includes(`<loc>https://gildrb.com/${slug}</loc>`),
     ) &&
-        siteConfig.caseStudies.every(({ slug }) =>
-            sitemapText.includes(`<loc>https://gildrb.com/${slug}</loc>`),
-        ) &&
-        siteConfig.caseStudies.every(({ slug }) =>
-            sitemapText.includes(
-                `<loc>https://gildrb.com/content/${slug}.md</loc>`,
-            ),
-        ) &&
-        siteConfig.caseStudies.every(({ slug }) =>
-            feedText.includes(`<link>https://gildrb.com/${slug}</link>`),
-        ),
-    "Public agent references, the sitemap, and the feed must enumerate every configured case-study route.",
+    siteConfig.caseStudies.every(({ slug }) =>
+      sitemapText.includes(`<loc>https://gildrb.com/content/${slug}.md</loc>`),
+    ) &&
+    siteConfig.caseStudies.every(({ slug }) =>
+      feedText.includes(`<link>https://gildrb.com/${slug}</link>`),
+    ),
+  "Public agent references, the sitemap, and the feed must enumerate every configured case-study route.",
 );
 const profileGraph = JSON.parse(profileJson)["@graph"];
-const websiteProfile = profileGraph.find(
-    (entry) => entry["@id"] === "https://gildrb.com/#website",
-);
+const websiteProfile = profileGraph.find((entry) => entry["@id"] === "https://gildrb.com/#website");
 assert(
-    siteConfig.caseStudies.every(({ slug }) =>
-        profileGraph.some(
-            (entry) =>
-                entry["@id"] ===
-                `https://gildrb.com/${slug}#case-study`,
-        ),
+  siteConfig.caseStudies.every(({ slug }) =>
+    profileGraph.some((entry) => entry["@id"] === `https://gildrb.com/${slug}#case-study`),
+  ) &&
+    websiteProfile &&
+    websiteProfile.hasPart.some(
+      (entry) => entry["@id"] === "https://gildrb.com/llms-full.txt#full-public-text",
     ) &&
-        websiteProfile &&
-        websiteProfile.hasPart.some(
-            (entry) =>
-                entry["@id"] ===
-                "https://gildrb.com/llms-full.txt#full-public-text",
-        ) &&
-        siteConfig.caseStudies.every(({ slug }) =>
-            websiteProfile.hasPart.some(
-                (entry) =>
-                    entry["@id"] ===
-                    `https://gildrb.com/${slug}#case-study`,
-            ),
-        ),
-    "The structured profile must expose every configured case study as part of the website.",
-);
-assert(
     siteConfig.caseStudies.every(({ slug }) =>
-        contentGuide.includes(`- \`${slug}.md\``),
+      websiteProfile.hasPart.some(
+        (entry) => entry["@id"] === `https://gildrb.com/${slug}#case-study`,
+      ),
     ),
-    "The tracked content guide must enumerate every configured case study.",
+  "The structured profile must expose every configured case study as part of the website.",
 );
 assert(
+  siteConfig.caseStudies.every(({ slug }) => contentGuide.includes(`- \`${slug}.md\``)),
+  "The tracked content guide must enumerate every configured case study.",
+);
+assert(
+  (await readText("src/styles/30-heph-demo.css")).includes("margin-bottom: 32px;") &&
+    !responsiveStyles.includes(".heph-demo {\n        margin-bottom: 80px;"),
+  "The Heph-to-Filen gap must use the optically compensated 32px project rhythm.",
+);
+assert(
+  !indexHtml.includes('<div class="heph-demo-frame">') &&
+    !indexHtml.includes('class="heph-demo-shell"') &&
+    hephHtml.includes('<div class="heph-demo-frame">') &&
     (await readText("src/styles/30-heph-demo.css")).includes(
-        "margin-bottom: 32px;",
+      ".heph-demo-frame {\n        padding: 34px 14px;\n        border-radius: 24px;\n        background: var(--heph-demo-mobile-bg);",
+    ),
+  "The interactive Heph demo must live only on the Heph case study, keeping its mobile chrome there and off the homepage.",
+);
+assert(
+  !indexHtml.includes(".heph-demo {") &&
+    !siteScript.includes("const hephDemoEvidenceOpen") &&
+    Object.entries(casePages).every(
+      ([slug, html]) =>
+        slug === "heph" ||
+        (!html.includes(".heph-demo {") &&
+          !html.includes("const hephDemoEvidenceOpen") &&
+          !html.includes(".heph-lockup")),
     ) &&
-        !responsiveStyles.includes(
-            ".heph-demo {\n        margin-bottom: 80px;",
-        ),
-    "The Heph-to-Filen gap must use the optically compensated 32px project rhythm.",
+    hephHtml.includes(".heph-demo {") &&
+    hephHtml.includes("const hephDemoEvidenceOpen") &&
+    hephHtml.includes(".heph-lockup"),
+  "Heph component styles and behavior must be bundled only into the Heph case study.",
 );
 assert(
-    !indexHtml.includes('<div class="heph-demo-frame">') &&
-        !indexHtml.includes('class="heph-demo-shell"') &&
-        hephHtml.includes('<div class="heph-demo-frame">') &&
-        (await readText("src/styles/30-heph-demo.css")).includes(
-            ".heph-demo-frame {\n        padding: 34px 14px;\n        border-radius: 24px;\n        background: var(--heph-demo-mobile-bg);",
-        ),
-    "The interactive Heph demo must live only on the Heph case study, keeping its mobile chrome there and off the homepage.",
-);
-assert(
-    !indexHtml.includes(".heph-demo {") &&
-        !siteScript.includes("const hephDemoEvidenceOpen") &&
-        Object.entries(casePages).every(
-            ([slug, html]) =>
-                slug === "heph" ||
-                (!html.includes(".heph-demo {") &&
-                    !html.includes("const hephDemoEvidenceOpen") &&
-                    !html.includes(".heph-lockup")),
-        ) &&
-        hephHtml.includes(".heph-demo {") &&
-        hephHtml.includes("const hephDemoEvidenceOpen") &&
-        hephHtml.includes(".heph-lockup"),
-    "Heph component styles and behavior must be bundled only into the Heph case study.",
-);
-assert(
-    benDavisStyles.includes(
-        ".case-media .ben-davis-brandmark {\n    width: 88%;\n    margin-inline: auto;\n    border-radius: 0;\n}",
+  benDavisStyles.includes(
+    ".case-media .ben-davis-brandmark {\n    width: 88%;\n    margin-inline: auto;\n    border-radius: 0;\n}",
+  ) &&
+    !benDavisStyles.includes("filter:") &&
+    previewContentStyles.includes(".theme-adaptive-monochrome-artwork {\n    filter: none;") &&
+    previewContentStyles.includes(
+      "@media (prefers-color-scheme: light) {\n    :root:not([data-theme]) .theme-adaptive-monochrome-artwork {\n        filter: brightness(0);",
     ) &&
-        !benDavisStyles.includes("filter:") &&
-        previewContentStyles.includes(
-            ".theme-adaptive-monochrome-artwork {\n    filter: none;",
-        ) &&
-        previewContentStyles.includes(
-            "@media (prefers-color-scheme: light) {\n    :root:not([data-theme]) .theme-adaptive-monochrome-artwork {\n        filter: brightness(0);",
-        ) &&
-        previewContentStyles.includes(
-            ':root[data-theme="light"] .theme-adaptive-monochrome-artwork {\n    filter: brightness(0);',
-        ) &&
-        previewContentStyles.includes(
-            ':root[data-theme="dark"] .theme-adaptive-monochrome-artwork {\n    filter: none;',
-        ) &&
-        siteConfig.allPage.styles.includes("40-preview-content.css") &&
-        benDavisHtml.includes(
-            'class="ben-davis-brandmark theme-adaptive-monochrome-artwork"',
-        ) &&
-        allPage.includes(
-            'class="ben-davis-brandmark theme-adaptive-monochrome-artwork"',
-        ),
-    "Theme-adaptive monochrome artwork must use one shared light/dark contrast utility on every rendered route; Ben Davis remains the current cross-route fixture while sizing stays case-specific.",
+    previewContentStyles.includes(
+      ':root[data-theme="light"] .theme-adaptive-monochrome-artwork {\n    filter: brightness(0);',
+    ) &&
+    previewContentStyles.includes(
+      ':root[data-theme="dark"] .theme-adaptive-monochrome-artwork {\n    filter: none;',
+    ) &&
+    siteConfig.allPage.styles.includes("40-preview-content.css") &&
+    benDavisHtml.includes('class="ben-davis-brandmark theme-adaptive-monochrome-artwork"') &&
+    allPage.includes('class="ben-davis-brandmark theme-adaptive-monochrome-artwork"'),
+  "Theme-adaptive monochrome artwork must use one shared light/dark contrast utility on every rendered route; Ben Davis remains the current cross-route fixture while sizing stays case-specific.",
 );
 assert(
-    hephMarkdown.includes("![Heph demo](media:heph-demo)") &&
-        hephHtml.includes('class="heph-demo case-heph-demo"') &&
-        hephHtml.indexOf('class="heph-demo case-heph-demo"') <
-            hephHtml.indexOf(">GitHub repository</a>"),
-    "The Heph case study must place the shared demo before the repository link.",
+  hephMarkdown.includes("![Heph demo](media:heph-demo)") &&
+    hephHtml.includes('class="heph-demo case-heph-demo"') &&
+    hephHtml.indexOf('class="heph-demo case-heph-demo"') <
+      hephHtml.indexOf(">GitHub repository</a>"),
+  "The Heph case study must place the shared demo before the repository link.",
 );
 const hephMediaSequence = [
-    'class="heph-demo case-heph-demo"',
-    "gil-rodrigues-heph-interface-960.webp",
-    "gil-rodrigues-heph-typeface-early-960.webp",
-    "gil-rodrigues-heph-typeface-refinement-960.webp",
-    "gil-rodrigues-heph-lockup.svg",
+  'class="heph-demo case-heph-demo"',
+  "gil-rodrigues-heph-interface-960.webp",
+  "gil-rodrigues-heph-typeface-early-960.webp",
+  "gil-rodrigues-heph-typeface-refinement-960.webp",
+  "gil-rodrigues-heph-lockup.svg",
 ];
 assert(
-    hephMediaSequence.every((asset, index) => {
-        const position = hephHtml.indexOf(asset);
-        const previousPosition =
-            index === 0 ? -1 : hephHtml.indexOf(hephMediaSequence[index - 1]);
-        return position > previousPosition;
-    }) && !hephHtml.includes("\u2014"),
-    "Heph media must follow the documented chronology and omit em dashes.",
+  hephMediaSequence.every((asset, index) => {
+    const position = hephHtml.indexOf(asset);
+    const previousPosition = index === 0 ? -1 : hephHtml.indexOf(hephMediaSequence[index - 1]);
+    return position > previousPosition;
+  }) && !hephHtml.includes("\u2014"),
+  "Heph media must follow the documented chronology and omit em dashes.",
 );
 assert(
-    hephHtml.includes('class="heph-lockup"') &&
-        hephDemoStyles.includes(
-            ".case-media .heph-lockup {\n    width: 88%;\n    border-radius: 0;",
-        ) &&
-        hephDemoStyles.includes(':root:not([data-theme]) .heph-lockup') &&
-        hephDemoStyles.includes(':root[data-theme="light"] .heph-lockup') &&
-        hephDemoStyles.includes("filter: brightness(0);") &&
-        hephDemoStyles.includes(':root[data-theme="dark"] .heph-lockup') &&
-        hephDemoStyles.includes("filter: none;"),
-    "The Heph lockup must stay square, render below full width, and follow the active theme.",
+  hephHtml.includes('class="heph-lockup"') &&
+    hephDemoStyles.includes(".case-media .heph-lockup {\n    width: 88%;\n    border-radius: 0;") &&
+    hephDemoStyles.includes(":root:not([data-theme]) .heph-lockup") &&
+    hephDemoStyles.includes(':root[data-theme="light"] .heph-lockup') &&
+    hephDemoStyles.includes("filter: brightness(0);") &&
+    hephDemoStyles.includes(':root[data-theme="dark"] .heph-lockup') &&
+    hephDemoStyles.includes("filter: none;"),
+  "The Heph lockup must stay square, render below full width, and follow the active theme.",
 );
 assert(
-    hephHtml.includes("const hephDemoForm = document.querySelector(") &&
-        hephDemoStyles.includes(
-            ".case-media .heph-demo {\n    margin-bottom: 0;",
-        ),
-    "The Heph case-study demo must reuse the live demo behavior without adding nested spacing.",
+  hephHtml.includes("const hephDemoForm = document.querySelector(") &&
+    hephDemoStyles.includes(".case-media .heph-demo {\n    margin-bottom: 0;"),
+  "The Heph case-study demo must reuse the live demo behavior without adding nested spacing.",
 );
 assert(
+  portfolioStyles.includes(
+    ".showcase {\n    display: grid;\n    grid-template-columns: 2.5fr 1fr;\n    gap: 20px;\n    margin-bottom: 32px;",
+  ) &&
     portfolioStyles.includes(
-        ".showcase {\n    display: grid;\n    grid-template-columns: 2.5fr 1fr;\n    gap: 20px;\n    margin-bottom: 32px;",
+      ".gallery {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    gap: 20px;\n    margin-bottom: 32px;",
     ) &&
-        portfolioStyles.includes(
-            ".gallery {\n    display: grid;\n    grid-template-columns: repeat(2, 1fr);\n    gap: 20px;\n    margin-bottom: 32px;",
-        ) &&
-        !responsiveStyles.includes("margin-bottom: 80px;"),
-    "Every homepage project transition must use the same optically compensated 32px rhythm at every viewport.",
+    !responsiveStyles.includes("margin-bottom: 80px;"),
+  "Every homepage project transition must use the same optically compensated 32px rhythm at every viewport.",
 );
 assert(
+  previewContentStyles.includes(".site-footer {\n    margin-top: 0;") &&
     previewContentStyles.includes(
-        ".site-footer {\n    margin-top: 0;",
+      ".references-links {\n    display: flex;\n    flex-direction: column;\n    align-items: flex-start;",
     ) &&
-        previewContentStyles.includes(
-            ".references-links {\n    display: flex;\n    flex-direction: column;\n    align-items: flex-start;",
-        ) &&
-        !previewContentStyles.includes(".copyright") &&
-        previewContentStyles.includes(
-            "@media (min-width: 768px) {\n    .site-footer {\n        margin-top: auto;",
-        ) &&
-        responsiveStyles.includes(
-            ".site-footer {\n        display: none;",
-        ),
-    "The Metadata footer must remain desktop-only without copyright styling.",
+    !previewContentStyles.includes(".copyright") &&
+    previewContentStyles.includes(
+      "@media (min-width: 768px) {\n    .site-footer {\n        margin-top: auto;",
+    ) &&
+    responsiveStyles.includes(".site-footer {\n        display: none;"),
+  "The Metadata footer must remain desktop-only without copyright styling.",
 );
 
+assert(indexHtml.includes('href="/filen"'), "Homepage does not link to the Filen case study.");
 assert(
-    indexHtml.includes('href="/filen"'),
-    "Homepage does not link to the Filen case study.",
+  /<h1 class="name" id="site-title" itemprop="name">\s*<span data-nosnippet>Gil Rodrigues<\/span>\s*<\/h1>/.test(
+    indexHtml,
+  ),
+  "The homepage name must remain plain text rather than linking to itself.",
 );
 assert(
-    /<h1 class="name" id="site-title" itemprop="name">\s*<span data-nosnippet>Gil Rodrigues<\/span>\s*<\/h1>/.test(
-        indexHtml,
-    ),
-    "The homepage name must remain plain text rather than linking to itself.",
+  (indexHtml.match(/href="\/heph"/g) || []).length === 1 &&
+    !indexHtml.includes('class="heph-demo-zoom-link"') &&
+    !indexHtml.includes('href="https://github.com/gildrb/heph"'),
+  "Homepage must link to the Heph case study exactly once through its card and never to the repository.",
 );
 assert(
-    (indexHtml.match(/href="\/heph"/g) || []).length === 1 &&
-        !indexHtml.includes('class="heph-demo-zoom-link"') &&
-        !indexHtml.includes('href="https://github.com/gildrb/heph"'),
-    "Homepage must link to the Heph case study exactly once through its card and never to the repository.",
+  hephDemoStyles.includes(
+    ".heph-demo-zoom-link:focus-visible,\n.heph-demo-close-link:focus-visible {\n    outline: 0;\n    box-shadow: 0 0 0 2px var(--text-primary);",
+  ) &&
+    hephDemoStyles.includes(".case-media .heph-demo-zoom-link {\n    display: none;") &&
+    !portfolioStyles.includes(".heph-demo:has(.heph-demo-zoom-link:hover)") &&
+    !portfolioStyles.includes(".heph-demo:has(.heph-demo-zoom-link:focus-visible)"),
+  "The homepage green window control must remain a quiet navigation target without exposing the metadata read affordance.",
 );
 assert(
-    hephDemoStyles.includes(
-            ".heph-demo-zoom-link:focus-visible,\n.heph-demo-close-link:focus-visible {\n    outline: 0;\n    box-shadow: 0 0 0 2px var(--text-primary);",
-        ) &&
-        hephDemoStyles.includes(
-            ".case-media .heph-demo-zoom-link {\n    display: none;",
-        ) &&
-        !portfolioStyles.includes(
-            ".heph-demo:has(.heph-demo-zoom-link:hover)",
-        ) &&
-        !portfolioStyles.includes(
-            ".heph-demo:has(.heph-demo-zoom-link:focus-visible)",
-        ),
-    "The homepage green window control must remain a quiet navigation target without exposing the metadata read affordance.",
+  /<a\s+class="heph-demo-close-link"\s+href="\/"\s+aria-label="Return to the portfolio"/.test(
+    hephHtml,
+  ) &&
+    hephDemoStyles.includes(".heph-demo-close-link {\n    left: 4px;\n    display: none;") &&
+    hephDemoStyles.includes(".case-media .heph-demo-close-link {\n    display: block;"),
+  "The Heph article must replace the homepage zoom interaction with a red window control that returns to the portfolio.",
 );
 assert(
-    /<a\s+class="heph-demo-close-link"\s+href="\/"\s+aria-label="Return to the portfolio"/.test(
-        hephHtml,
-    ) &&
-        hephDemoStyles.includes(
-            ".heph-demo-close-link {\n    left: 4px;\n    display: none;",
-        ) &&
-        hephDemoStyles.includes(
-            ".case-media .heph-demo-close-link {\n    display: block;",
-        ),
-    "The Heph article must replace the homepage zoom interaction with a red window control that returns to the portfolio.",
+  baseStyles.includes(":is(a[href]:not(.heph-demo-close-link),\n  button,") &&
+    baseStyles.includes('[tabindex]:not([tabindex="-1"])):active {') &&
+    !baseStyles.includes(":active:not(.portfolio-sort-button)"),
+  "The global active nudge must move portfolio sort headings while leaving the Heph close control excluded.",
 );
 assert(
-    baseStyles.includes(
-        ":is(a[href]:not(.heph-demo-close-link),\n  button,",
-    ) &&
-        baseStyles.includes(
-            '[tabindex]:not([tabindex="-1"])):active {',
-        ) &&
-        !baseStyles.includes(":active:not(.portfolio-sort-button)"),
-    "The global active nudge must move portfolio sort headings while leaving the Heph close control excluded.",
+  hephDemoStyles.includes(
+    ".heph-demo-evidence-item:hover,\n    .heph-demo-evidence-item.is-active:hover,\n    .heph-demo-citation-button:hover {\n        color: var(--text-primary);",
+  ),
+  "Interactive evidence excerpts and citations must use the primary hover color, including the active right-side excerpt.",
 );
 assert(
-    hephDemoStyles.includes(
-        ".heph-demo-evidence-item:hover,\n    .heph-demo-evidence-item.is-active:hover,\n    .heph-demo-citation-button:hover {\n        color: var(--text-primary);",
-    ),
-    "Interactive evidence excerpts and citations must use the primary hover color, including the active right-side excerpt.",
+  !hephDemoStyles.includes(".heph-demo-frame::after") &&
+    !portfolioStyles.includes(".heph-demo-frame::after"),
+  "The Heph demo must not use a hover or focus overlay.",
 );
 assert(
-    !hephDemoStyles.includes(".heph-demo-frame::after") &&
-        !portfolioStyles.includes(".heph-demo-frame::after"),
-    "The Heph demo must not use a hover or focus overlay.",
+  (indexHtml.match(/href="\/filen"/g) || []).length === 1,
+  "Only the featured Filen image may link to the case study.",
 );
 assert(
-    (indexHtml.match(/href="\/filen"/g) || []).length === 1,
-    "Only the featured Filen image may link to the case study.",
+  (indexHtml.match(/href="\/ml7"/g) || []).length === 1,
+  "Only the featured mL7 image may link to the case study.",
 );
 assert(
-    (indexHtml.match(/href="\/ml7"/g) || []).length === 1,
-    "Only the featured mL7 image may link to the case study.",
+  (indexHtml.match(/href="\/n0thing"/g) || []).length === 1,
+  "Only the featured n0thing image may link to the case study.",
 );
 assert(
-    (indexHtml.match(/href="\/n0thing"/g) || []).length === 1,
-    "Only the featured n0thing image may link to the case study.",
+  (indexHtml.match(/href="\/curves"/g) || []).length === 1,
+  "Homepage must link to the CURVES case study exactly once.",
 );
 assert(
-    (indexHtml.match(/href="\/curves"/g) || []).length === 1,
-    "Homepage must link to the CURVES case study exactly once.",
+  (indexHtml.match(/href="\/ben-davis"/g) || []).length === 1,
+  "Homepage must link to the Ben Davis case study exactly once.",
 );
 assert(
-    (indexHtml.match(/href="\/ben-davis"/g) || []).length === 1,
-    "Homepage must link to the Ben Davis case study exactly once.",
+  (indexHtml.match(/href="\/t3"/g) || []).length === 1,
+  "Homepage must link to the T3 case study exactly once.",
 );
 assert(
-    (indexHtml.match(/href="\/t3"/g) || []).length === 1,
-    "Homepage must link to the T3 case study exactly once.",
+  !indexHtml.includes("project-summary") && !indexHtml.includes("Read the case study"),
+  "Homepage Filen entry must remain image-led and concise.",
 );
 assert(
-    !indexHtml.includes("project-summary") &&
-        !indexHtml.includes("Read the case study"),
-    "Homepage Filen entry must remain image-led and concise.",
+  hephHtml.includes('rel="canonical" href="https://gildrb.com/heph"') &&
+    hephHtml.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    hephHtml.includes('<a class="case-current-link" href="#top">Heph</a>') &&
+    hephHtml.includes('href="https://github.com/gildrb/heph"') &&
+    hephHtml.includes("GitHub repository") &&
+    !hephHtml.includes("case-kicker"),
+  "Heph must use the shared case-study shell and link to its repository inside the article.",
 );
 assert(
-    hephHtml.includes('rel="canonical" href="https://gildrb.com/heph"') &&
-        hephHtml.includes(
-            '<a class="case-home-link" href="/">Gil Rodrigues</a>',
-        ) &&
-        hephHtml.includes('<a class="case-current-link" href="#top">Heph</a>') &&
-        hephHtml.includes('href="https://github.com/gildrb/heph"') &&
-        hephHtml.includes("GitHub repository") &&
-        !hephHtml.includes("case-kicker"),
-    "Heph must use the shared case-study shell and link to its repository inside the article.",
+  filenHtml.includes('rel="canonical" href="https://gildrb.com/filen"'),
+  "Filen case study is missing its canonical URL.",
 );
 assert(
-    filenHtml.includes('rel="canonical" href="https://gildrb.com/filen"'),
-    "Filen case study is missing its canonical URL.",
+  filenHtml.includes("gil-rodrigues-filen-exploration-board-1280.webp"),
+  "Filen case study is missing the complete exploration board.",
 );
 assert(
-    filenHtml.includes("gil-rodrigues-filen-exploration-board-1280.webp"),
-    "Filen case study is missing the complete exploration board.",
+  [480, 720, 960, 1280].every((width) =>
+    filenHtml.includes(`gil-rodrigues-filen-exploration-board-${width}.webp`),
+  ),
+  "Filen case study must provide every optimized full-board image size.",
 );
 assert(
-    [480, 720, 960, 1280].every((width) =>
-        filenHtml.includes(
-            `gil-rodrigues-filen-exploration-board-${width}.webp`,
-        ),
-    ),
-    "Filen case study must provide every optimized full-board image size.",
+  !filenHtml.includes("object-fit: cover") && !filenHtml.includes("object-position:"),
+  "Filen case study images must preserve their complete frame.",
 );
 assert(
-    !filenHtml.includes("object-fit: cover") &&
-        !filenHtml.includes("object-position:"),
-    "Filen case study images must preserve their complete frame.",
+  !imageFiles.some((file) => /filen-exploration-(?:early|development|refinement)/.test(file)),
+  "Cropped Filen exploration derivatives are not allowed.",
 );
 assert(
-    !imageFiles.some((file) =>
-        /filen-exploration-(?:early|development|refinement)/.test(file),
-    ),
-    "Cropped Filen exploration derivatives are not allowed.",
+  filenHtml.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    !filenHtml.includes(">Index</a>") &&
+    !filenHtml.includes("Return to the index") &&
+    !filenHtml.includes("case-kicker"),
+  "Filen navigation must use the persistent Gil Rodrigues to Filen location.",
 );
 assert(
-    filenHtml.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
-        !filenHtml.includes('>Index</a>') &&
-        !filenHtml.includes("Return to the index") &&
-        !filenHtml.includes("case-kicker"),
-    "Filen navigation must use the persistent Gil Rodrigues to Filen location.",
+  ["/index/filen /filen 301", "/index/filen/ /filen 301"].every((rule) =>
+    cloudflareRedirects.includes(rule),
+  ),
+  "Cloudflare Pages must redirect legacy Filen routes permanently to /filen.",
 );
 assert(
-    ["/index/filen /filen 301", "/index/filen/ /filen 301"].every(
-        (rule) => cloudflareRedirects.includes(rule),
-    ),
-    "Cloudflare Pages must redirect legacy Filen routes permanently to /filen.",
+  !filenHtml.includes(" · ") &&
+    caseStyles.includes(".case-next-row + .case-next-row") &&
+    caseStyles.includes("border-top:"),
+  "Filen case study must keep the case table free of dot dividers and own row separators in case-next.",
 );
 assert(
-    !filenHtml.includes(" · ") &&
-        caseStyles.includes(".case-next-row + .case-next-row") &&
-        caseStyles.includes("border-top:"),
-    "Filen case study must keep the case table free of dot dividers and own row separators in case-next.",
+  ml7Html.includes('rel="canonical" href="https://gildrb.com/ml7"') &&
+    ml7Html.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    ml7Html.includes('<a class="case-current-link" href="#top">mL7</a>') &&
+    !ml7Html.includes(">Index</a>") &&
+    !ml7Html.includes("case-kicker"),
+  "mL7 must use the same persistent case-study navigation as Filen.",
 );
 assert(
-    ml7Html.includes('rel="canonical" href="https://gildrb.com/ml7"') &&
-        ml7Html.includes(
-            '<a class="case-home-link" href="/">Gil Rodrigues</a>',
-        ) &&
-        ml7Html.includes('<a class="case-current-link" href="#top">mL7</a>') &&
-        !ml7Html.includes('>Index</a>') &&
-        !ml7Html.includes("case-kicker"),
-    "mL7 must use the same persistent case-study navigation as Filen.",
+  !ml7Html.includes("object-fit: cover") &&
+    !ml7Html.includes("object-position:") &&
+    !ml7Html.includes(" · "),
+  "mL7 must preserve complete images and omit dot dividers.",
 );
 assert(
-    !ml7Html.includes("object-fit: cover") &&
-        !ml7Html.includes("object-position:") &&
-        !ml7Html.includes(" · "),
-    "mL7 must preserve complete images and omit dot dividers.",
+  n0thingHtml.includes('rel="canonical" href="https://gildrb.com/n0thing"') &&
+    n0thingHtml.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    n0thingHtml.includes('<a class="case-current-link" href="#top">n0thing</a>') &&
+    !n0thingHtml.includes(">Index</a>") &&
+    !n0thingHtml.includes("case-kicker"),
+  "n0thing must use the same persistent case-study navigation as Filen.",
 );
 assert(
-    n0thingHtml.includes(
-        'rel="canonical" href="https://gildrb.com/n0thing"',
-    ) &&
-        n0thingHtml.includes(
-            '<a class="case-home-link" href="/">Gil Rodrigues</a>',
-        ) &&
-        n0thingHtml.includes(
-            '<a class="case-current-link" href="#top">n0thing</a>',
-        ) &&
-        !n0thingHtml.includes('>Index</a>') &&
-        !n0thingHtml.includes("case-kicker"),
-    "n0thing must use the same persistent case-study navigation as Filen.",
+  !n0thingHtml.includes("object-fit: cover") &&
+    !n0thingHtml.includes("object-position:") &&
+    !n0thingHtml.includes(" · "),
+  "n0thing must preserve complete images and omit dot dividers.",
 );
 assert(
-    !n0thingHtml.includes("object-fit: cover") &&
-        !n0thingHtml.includes("object-position:") &&
-        !n0thingHtml.includes(" · "),
-    "n0thing must preserve complete images and omit dot dividers.",
+  curvesHtml.includes('rel="canonical" href="https://gildrb.com/curves"') &&
+    curvesHtml.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    curvesHtml.includes('<a class="case-current-link" href="#top">CURVES</a>') &&
+    !curvesHtml.includes(">Index</a>") &&
+    !curvesHtml.includes("case-kicker"),
+  "CURVES must use the same persistent case-study navigation as the existing projects.",
 );
 assert(
-    curvesHtml.includes('rel="canonical" href="https://gildrb.com/curves"') &&
-        curvesHtml.includes(
-            '<a class="case-home-link" href="/">Gil Rodrigues</a>',
-        ) &&
-        curvesHtml.includes(
-            '<a class="case-current-link" href="#top">CURVES</a>',
-        ) &&
-        !curvesHtml.includes('>Index</a>') &&
-        !curvesHtml.includes("case-kicker"),
-    "CURVES must use the same persistent case-study navigation as the existing projects.",
-);
-assert(
-    !curvesHtml.includes("object-fit: cover") &&
-        !curvesHtml.includes("object-position:") &&
-        !curvesHtml.includes(" · "),
-    "CURVES must preserve complete images and omit dot dividers.",
+  !curvesHtml.includes("object-fit: cover") &&
+    !curvesHtml.includes("object-position:") &&
+    !curvesHtml.includes(" · "),
+  "CURVES must preserve complete images and omit dot dividers.",
 );
 const curvesMediaSequence = [
-    "gil-rodrigues-curves-letterforms-720.webp",
-    "gil-rodrigues-curves-wordmark-720.webp",
-    "gil-rodrigues-curves-uppercase-720.webp",
-    "gil-rodrigues-curves-numerals-720.webp",
-    "gil-rodrigues-curves-punctuation-720.webp",
-    "gil-rodrigues-curves-specimen-720.webp",
+  "gil-rodrigues-curves-letterforms-720.webp",
+  "gil-rodrigues-curves-wordmark-720.webp",
+  "gil-rodrigues-curves-uppercase-720.webp",
+  "gil-rodrigues-curves-numerals-720.webp",
+  "gil-rodrigues-curves-punctuation-720.webp",
+  "gil-rodrigues-curves-specimen-720.webp",
 ];
 assert(
-    curvesMediaSequence.every((asset, index) => {
-        const position = curvesHtml.indexOf(asset);
-        const previousPosition =
-            index === 0
-                ? -1
-                : curvesHtml.indexOf(curvesMediaSequence[index - 1]);
-        return position > previousPosition;
-    }),
-    "CURVES media must follow the authored typeface sequence.",
+  curvesMediaSequence.every((asset, index) => {
+    const position = curvesHtml.indexOf(asset);
+    const previousPosition = index === 0 ? -1 : curvesHtml.indexOf(curvesMediaSequence[index - 1]);
+    return position > previousPosition;
+  }),
+  "CURVES media must follow the authored typeface sequence.",
 );
 assert(
-    benDavisHtml.includes(
-        'rel="canonical" href="https://gildrb.com/ben-davis"',
-    ) &&
-        benDavisHtml.includes(
-            '<a class="case-home-link" href="/">Gil Rodrigues</a>',
-        ) &&
-        benDavisHtml.includes(
-            '<a class="case-current-link" href="#top">Ben Davis</a>',
-        ) &&
-        !benDavisHtml.includes('>Index</a>') &&
-        !benDavisHtml.includes("case-kicker"),
-    "Ben Davis must use the same persistent case-study navigation as the existing projects.",
+  benDavisHtml.includes('rel="canonical" href="https://gildrb.com/ben-davis"') &&
+    benDavisHtml.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    benDavisHtml.includes('<a class="case-current-link" href="#top">Ben Davis</a>') &&
+    !benDavisHtml.includes(">Index</a>") &&
+    !benDavisHtml.includes("case-kicker"),
+  "Ben Davis must use the same persistent case-study navigation as the existing projects.",
 );
 assert(
-    !benDavisHtml.includes("object-fit: cover") &&
-        !benDavisHtml.includes("object-position:") &&
-        !benDavisHtml.includes(" · "),
-    "Ben Davis must preserve complete images and omit dot dividers.",
+  !benDavisHtml.includes("object-fit: cover") &&
+    !benDavisHtml.includes("object-position:") &&
+    !benDavisHtml.includes(" · "),
+  "Ben Davis must preserve complete images and omit dot dividers.",
 );
 const benDavisMediaSequence = [
-    "gil-rodrigues-ben-davis-original.svg",
-    "gil-rodrigues-ben-davis-brandmark.svg",
-    "gil-rodrigues-ben-davis-construction-720.webp",
+  "gil-rodrigues-ben-davis-original.svg",
+  "gil-rodrigues-ben-davis-brandmark.svg",
+  "gil-rodrigues-ben-davis-construction-720.webp",
 ];
 assert(
-    benDavisMediaSequence.every((asset, index) => {
-        const position = benDavisHtml.indexOf(asset);
-        const previousPosition =
-            index === 0
-                ? -1
-                : benDavisHtml.indexOf(benDavisMediaSequence[index - 1]);
-        return position > previousPosition;
-    }),
-    "Ben Davis media must follow the authored brandmark sequence.",
+  benDavisMediaSequence.every((asset, index) => {
+    const position = benDavisHtml.indexOf(asset);
+    const previousPosition =
+      index === 0 ? -1 : benDavisHtml.indexOf(benDavisMediaSequence[index - 1]);
+    return position > previousPosition;
+  }),
+  "Ben Davis media must follow the authored brandmark sequence.",
 );
 assert(
-    t3Html.includes('rel="canonical" href="https://gildrb.com/t3"') &&
-        t3Html.includes(
-            '<a class="case-home-link" href="/">Gil Rodrigues</a>',
-        ) &&
-        t3Html.includes('<a class="case-current-link" href="#top">T3</a>') &&
-        !t3Html.includes('>Index</a>') &&
-        !t3Html.includes("case-kicker"),
-    "T3 must use the same persistent case-study navigation as the existing projects.",
+  t3Html.includes('rel="canonical" href="https://gildrb.com/t3"') &&
+    t3Html.includes('<a class="case-home-link" href="/">Gil Rodrigues</a>') &&
+    t3Html.includes('<a class="case-current-link" href="#top">T3</a>') &&
+    !t3Html.includes(">Index</a>") &&
+    !t3Html.includes("case-kicker"),
+  "T3 must use the same persistent case-study navigation as the existing projects.",
 );
 assert(
-    !t3Html.includes("object-fit: cover") &&
-        !t3Html.includes("object-position:") &&
-        !t3Html.includes(" · "),
-    "T3 must preserve complete images and omit dot dividers.",
+  !t3Html.includes("object-fit: cover") &&
+    !t3Html.includes("object-position:") &&
+    !t3Html.includes(" · "),
+  "T3 must preserve complete images and omit dot dividers.",
 );
 const t3MediaSequence = [
-    "gil-rodrigues-t3-mark-720.webp",
-    "gil-rodrigues-t3-canvas-overview-480.webp",
-    "gil-rodrigues-t3-canvas-sketches-720.webp",
-    "gil-rodrigues-t3-system-board-720.webp",
-    "gil-rodrigues-t3-feedback-board-720.webp",
-    "gil-rodrigues-t3-feedback-spacing-720.webp",
-    "gil-rodrigues-t3-feedback-repainted-720.webp",
-    "gil-rodrigues-t3-feedback-thinner-720.webp",
-    "gil-rodrigues-t3-feedback-frames-720.webp",
-    "gil-rodrigues-t3-feedback-angled-3-720.webp",
-    "gil-rodrigues-t3-weight-tests-720.webp",
-    "gil-rodrigues-t3-ghost-grid-720.webp",
-    "gil-rodrigues-t3-canvas-color-720.webp",
-    "gil-rodrigues-t3-color-tests-720.webp",
-    "gil-rodrigues-t3-before-after-720.webp",
-    "gil-rodrigues-t3-feedback-curves-720.webp",
-    "gil-rodrigues-t3-render-720.webp",
+  "gil-rodrigues-t3-mark-720.webp",
+  "gil-rodrigues-t3-canvas-overview-480.webp",
+  "gil-rodrigues-t3-canvas-sketches-720.webp",
+  "gil-rodrigues-t3-system-board-720.webp",
+  "gil-rodrigues-t3-feedback-board-720.webp",
+  "gil-rodrigues-t3-feedback-spacing-720.webp",
+  "gil-rodrigues-t3-feedback-repainted-720.webp",
+  "gil-rodrigues-t3-feedback-thinner-720.webp",
+  "gil-rodrigues-t3-feedback-frames-720.webp",
+  "gil-rodrigues-t3-feedback-angled-3-720.webp",
+  "gil-rodrigues-t3-weight-tests-720.webp",
+  "gil-rodrigues-t3-ghost-grid-720.webp",
+  "gil-rodrigues-t3-canvas-color-720.webp",
+  "gil-rodrigues-t3-color-tests-720.webp",
+  "gil-rodrigues-t3-before-after-720.webp",
+  "gil-rodrigues-t3-feedback-curves-720.webp",
+  "gil-rodrigues-t3-render-720.webp",
 ];
 assert(
-    t3MediaSequence.every((asset, index) => {
-        const position = t3Html.indexOf(asset);
-        const previousPosition =
-            index === 0 ? -1 : t3Html.indexOf(t3MediaSequence[index - 1]);
-        return position > previousPosition;
-    }) &&
-        t3Html.includes(
-            'sizes="(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px"',
-        ),
-    "T3 media must follow the authored sequence and use paired image layouts.",
+  t3MediaSequence.every((asset, index) => {
+    const position = t3Html.indexOf(asset);
+    const previousPosition = index === 0 ? -1 : t3Html.indexOf(t3MediaSequence[index - 1]);
+    return position > previousPosition;
+  }) &&
+    t3Html.includes(
+      'sizes="(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px"',
+    ),
+  "T3 media must follow the authored sequence and use paired image layouts.",
 );
 const n0thingMediaSequence = [
-    "gil-rodrigues-n0thing-typewriter-direction-720.webp",
-    "gil-rodrigues-n0thing-pixel-variations-720.webp",
-    "gil-rodrigues-n0thing-export-folder-720.webp",
-    "gil-rodrigues-n0thing-wordmark-animation-720.gif",
+  "gil-rodrigues-n0thing-typewriter-direction-720.webp",
+  "gil-rodrigues-n0thing-pixel-variations-720.webp",
+  "gil-rodrigues-n0thing-export-folder-720.webp",
+  "gil-rodrigues-n0thing-wordmark-animation-720.gif",
 ];
 assert(
-    !n0thingHtml.includes("gil-rodrigues-n0thing-early-pixel-wordmark") &&
-        !n0thingHtml.includes("The first direction") &&
-        n0thingMediaSequence.every((asset, index) => {
-            const position = n0thingHtml.indexOf(asset);
-            const previousPosition =
-                index === 0
-                    ? -1
-                    : n0thingHtml.indexOf(n0thingMediaSequence[index - 1]);
-            return position > previousPosition;
-        }),
-    "n0thing media must follow the documented design process.",
+  !n0thingHtml.includes("gil-rodrigues-n0thing-early-pixel-wordmark") &&
+    !n0thingHtml.includes("The first direction") &&
+    n0thingMediaSequence.every((asset, index) => {
+      const position = n0thingHtml.indexOf(asset);
+      const previousPosition =
+        index === 0 ? -1 : n0thingHtml.indexOf(n0thingMediaSequence[index - 1]);
+      return position > previousPosition;
+    }),
+  "n0thing media must follow the documented design process.",
 );
-const publicCopy = [
-    ...allHtml,
-    profileJson,
-    ...identityTexts.map(({ text }) => text),
-]
-    .join("\n")
-    .replace(/<[^>]+>/g, " ");
+const publicCopy = [...allHtml, profileJson, ...identityTexts.map(({ text }) => text)]
+  .join("\n")
+  .replace(/<[^>]+>/g, " ");
 const stockAiPhrasePattern =
-    /\b(?:delve|tapestry)\b|in today['’]s fast-paced world|crucial to note|ever-evolving landscape|certainly[!,].{0,20}here['’]s|sure[!,].{0,20}here['’]s|i['’]d be happy to/i;
-const stockContrastPattern =
-    /\bnot (?:just|only)\b[^.!?]{0,160}\bbut(?: also)?\b/i;
+  /\b(?:delve|tapestry)\b|in today['’]s fast-paced world|crucial to note|ever-evolving landscape|certainly[!,].{0,20}here['’]s|sure[!,].{0,20}here['’]s|i['’]d be happy to/i;
+const stockContrastPattern = /\bnot (?:just|only)\b[^.!?]{0,160}\bbut(?: also)?\b/i;
 assert(
-    !publicCopy.includes("\u2014") &&
-        !stockAiPhrasePattern.test(publicCopy) &&
-        !stockContrastPattern.test(publicCopy),
-    "Public copy and metadata must omit em dashes and stock AI phrasing.",
+  !publicCopy.includes("\u2014") &&
+    !stockAiPhrasePattern.test(publicCopy) &&
+    !stockContrastPattern.test(publicCopy),
+  "Public copy and metadata must omit em dashes and stock AI phrasing.",
 );
 assert(
-    allHtml.every(
-        (html) =>
-            !/\b(?:it|this|that|they|he|she)\s+(?:is|are|was|were|'s|’s)\s+not\b[^.!?]{0,160}[,;:]\s*(?:it|this|that|they|he|she)\s+(?:is|are|was|were|'s|’s)\b/i.test(
-                html.replace(/<[^>]+>/g, " "),
-            ),
-    ),
-    "Public copy must omit the forbidden negative-then-positive contrast structure.",
+  allHtml.every(
+    (html) =>
+      !/\b(?:it|this|that|they|he|she)\s+(?:is|are|was|were|'s|’s)\s+not\b[^.!?]{0,160}[,;:]\s*(?:it|this|that|they|he|she)\s+(?:is|are|was|were|'s|’s)\b/i.test(
+        html.replace(/<[^>]+>/g, " "),
+      ),
+  ),
+  "Public copy must omit the forbidden negative-then-positive contrast structure.",
 );
 assert(
-    allHtml.every(
-        (html) =>
-            html.includes('id="site-favicon"') &&
-            html.includes('window.location.hostname.endsWith(".pages.dev")') &&
-            html.includes('"/preview-favicon.svg"'),
-    ),
-    "Every page must use the distinct preview favicon on Cloudflare Pages hosts.",
+  allHtml.every(
+    (html) =>
+      html.includes('id="site-favicon"') &&
+      html.includes('window.location.hostname.endsWith(".pages.dev")') &&
+      html.includes('"/preview-favicon.svg"'),
+  ),
+  "Every page must use the distinct preview favicon on Cloudflare Pages hosts.",
 );
 assert(
-    previewFavicon.includes(
-        '<rect x="10" y="10" width="80" height="80" fill="#000" />',
-    ),
-    "The preview favicon must reuse the original square geometry in black.",
+  previewFavicon.includes('<rect x="10" y="10" width="80" height="80" fill="#000" />'),
+  "The preview favicon must reuse the original square geometry in black.",
 );
 assert(
+  baseStyles.includes(".links-label {\n  color: var(--text-secondary);") &&
     baseStyles.includes(
-        ".links-label {\n  color: var(--text-secondary);",
-    ) &&
-        baseStyles.includes(
-            ".email {\n  font-size: 16px;\n  font-weight: 400;\n  line-height: var(--link-line-height);\n  color: var(--text-tertiary);",
-        ),
-    "Homepage labels and actionable links must preserve the semantic color hierarchy.",
+      ".email {\n  font-size: 16px;\n  font-weight: 400;\n  line-height: var(--link-line-height);\n  color: var(--text-tertiary);",
+    ),
+  "Homepage labels and actionable links must preserve the semantic color hierarchy.",
 );
 assert(
-    !portfolioOpen.includes("portfolio-label") &&
-        portfolioOpen.includes('aria-label="Portfolio"'),
-    "The portfolio section must retain an accessible name without a visible label.",
+  !portfolioOpen.includes("portfolio-label") && portfolioOpen.includes('aria-label="Portfolio"'),
+  "The portfolio section must retain an accessible name without a visible label.",
 );
 assert(
+  responsiveStyles.includes("body:not(.case-page) {\n    min-height: 100dvh;") &&
+    responsiveStyles.includes("body:not(.case-page) .layout {\n    min-height: 100dvh;") &&
+    responsiveStyles.includes("body:not(.case-page) .sidebar {\n    height: 100dvh;") &&
+    responsiveStyles.includes("body:not(.case-page) .content {\n    min-height: 100dvh;") &&
+    responsiveStyles.includes("html.homepage-scroll-locked") &&
+    !responsiveStyles.includes("overscroll-behavior: none;"),
+  "The homepage must preserve the shared desktop shell with the locked mobile state.",
+);
+assert(
+  responsiveStyles.includes(
+    "body:not(.case-page) {\n        min-height: 100svh;\n        height: auto;\n        overflow: visible;\n        overscroll-behavior: auto;",
+  ) &&
     responsiveStyles.includes(
-        "body:not(.case-page) {\n    min-height: 100dvh;",
+      "body:not(.case-page) .layout {\n        min-height: 100svh;\n        height: auto;\n        align-content: start;\n        overflow: visible;\n        overscroll-behavior: auto;\n        padding-bottom: 64px;",
     ) &&
-        responsiveStyles.includes(
-            "body:not(.case-page) .layout {\n    min-height: 100dvh;",
-        ) &&
-        responsiveStyles.includes(
-            "body:not(.case-page) .sidebar {\n    height: 100dvh;",
-        ) &&
-        responsiveStyles.includes(
-            "body:not(.case-page) .content {\n    min-height: 100dvh;",
-        ) &&
-        responsiveStyles.includes("html.homepage-scroll-locked") &&
-        !responsiveStyles.includes("overscroll-behavior: none;"),
-    "The homepage must preserve the shared desktop shell with the locked mobile state.",
-);
-assert(
     responsiveStyles.includes(
-        "body:not(.case-page) {\n        min-height: 100svh;\n        height: auto;\n        overflow: visible;\n        overscroll-behavior: auto;",
+      "    .name {\n        grid-column: 1;\n        order: 1;\n        position: sticky;\n        top: 0;\n        z-index: 100;",
     ) &&
-        responsiveStyles.includes(
-            "body:not(.case-page) .layout {\n        min-height: 100svh;\n        height: auto;\n        align-content: start;\n        overflow: visible;\n        overscroll-behavior: auto;\n        padding-bottom: 64px;",
-        ) &&
-        responsiveStyles.includes(
-            "    .name {\n        grid-column: 1;\n        order: 1;\n        position: sticky;\n        top: 0;\n        z-index: 100;",
-        ) &&
-        responsiveStyles.includes(
-            "    .theme-toggle {\n        grid-column: 2;\n        order: 1;\n        position: sticky;\n        top: 0;",
-        ) &&
-        responsiveStyles.includes(
-            "background: linear-gradient(\n            to bottom,\n            var(--bg) 60%,\n            transparent\n        );\n        min-height: 0;",
-        ) &&
-        responsiveStyles.includes(
-            ".portfolio-section {\n        order: 3;\n        margin-bottom: var(--section-gap);",
-        ) &&
-        responsiveStyles.includes(
-            ".links {\n        grid-column: 1 / -1;\n        order: 4;\n        margin-bottom: 0;",
-        ) &&
-        responsiveStyles.includes("portfolio-scroll-frame") &&
-        responsiveStyles.includes("has-scroll-top") &&
-        responsiveStyles.includes("has-scroll-bottom") &&
-        siteScript.includes("homepage-scroll-locked") &&
-        siteScript.includes("ResizeObserver") &&
-        siteScript.includes("updatePortfolioScrollIndicators"),
-    "The mobile homepage must keep the locked table scroll region and edge indicators.",
+    responsiveStyles.includes(
+      "    .theme-toggle {\n        grid-column: 2;\n        order: 1;\n        position: sticky;\n        top: 0;",
+    ) &&
+    responsiveStyles.includes(
+      "background: linear-gradient(\n            to bottom,\n            var(--bg) 60%,\n            transparent\n        );\n        min-height: 0;",
+    ) &&
+    responsiveStyles.includes(
+      ".portfolio-section {\n        order: 3;\n        margin-bottom: var(--section-gap);",
+    ) &&
+    responsiveStyles.includes(
+      ".links {\n        grid-column: 1 / -1;\n        order: 4;\n        margin-bottom: 0;",
+    ) &&
+    responsiveStyles.includes("portfolio-scroll-frame") &&
+    responsiveStyles.includes("has-scroll-top") &&
+    responsiveStyles.includes("has-scroll-bottom") &&
+    siteScript.includes("homepage-scroll-locked") &&
+    siteScript.includes("ResizeObserver") &&
+    siteScript.includes("updatePortfolioScrollIndicators"),
+  "The mobile homepage must keep the locked table scroll region and edge indicators.",
 );
 assert(
+  indexHtml.includes('class="portfolio-table-header"') &&
+    indexHtml.includes('aria-label="Project columns"') &&
+    indexHtml.includes('data-sort-key="date"') &&
+    indexHtml.includes('data-sort-key="title"') &&
+    indexHtml.includes('data-sort-key="scope"') &&
+    indexHtml.match(/class="portfolio-sort-indicator"/g)?.length === 3 &&
+    indexHtml.includes('aria-hidden="true"') &&
+    indexHtml.includes('<span class="portfolio-sort-label">Date&nbsp;</span>') &&
+    indexHtml.includes('<span class="portfolio-sort-label">Project&nbsp;</span>') &&
+    indexHtml.includes('<span class="portfolio-sort-label">Scope&nbsp;</span>') &&
     indexHtml.includes(
-        'class="external-link mobile-links-guardrail" href="https://www.goodreads.com/gildrb"',
+      'class="portfolio-link-heading"\n                                href="/all?sort=date&direction=descending"\n                            >All</a>',
     ) &&
-        baseStyles.includes("--portfolio-mobile-cell-end-space: 10px;") &&
-        baseStyles.includes(
-            "--mobile-links-column-gap: calc(\n    var(--portfolio-mobile-cell-end-space) + var(--portfolio-mobile-table-gap)\n  );",
-        ) &&
-        baseStyles.includes(
-            "max-content max-content minmax(0, 1fr)",
-        ) &&
-        baseStyles.includes(
-            "--portfolio-mobile-table-columns: var(--portfolio-table-columns);",
-        ) &&
-        portfolioStyles.includes(
-            "grid-template-columns: var(--portfolio-table-columns);",
-        ) &&
-        !portfolioStyles.includes("font-variant-numeric: tabular-nums;") &&
-        portfolioStyles.includes(
-            ".portfolio-card-link time,\n    .portfolio-card-title {\n        padding-inline-end: var(--portfolio-mobile-cell-end-space);",
-        ) &&
-        caseStyles.includes(
-            ".case-next-list {\n    display: grid;\n    grid-template-columns: var(--portfolio-table-columns);",
-        ) &&
-        !caseStyles.includes("font-variant-numeric: tabular-nums;") &&
-        caseStyles.includes(
-            ".case-next-row {\n        padding: 7px 0;",
-        ) &&
-        caseStyles.includes(
-            ".case-next-row time,\n    .case-next-project {\n        padding-inline-end: var(--portfolio-mobile-cell-end-space);",
-        ) &&
-        responsiveStyles.includes(
-            "grid-template-columns: var(--portfolio-mobile-table-columns);",
-        ) &&
-        responsiveStyles.includes(
-            ".links.mobile-links-grid {\n        display: grid;\n        grid-template-columns:\n            var(--mobile-contact-start, max-content) minmax(0, 1fr);\n        column-gap: var(--mobile-links-column-gap);",
-        ) &&
-        responsiveStyles.includes(
-            ".mobile-links-grid > .external-link {\n        width: max-content;",
-        ) &&
-        responsiveStyles.includes("justify-self: start;") &&
-        siteScript.includes(
-            'mobileLinks.classList.toggle("mobile-links-grid", isMobile);',
-        ) &&
-        siteScript.includes('".mobile-links-guardrail"') &&
-        siteScript.includes("mobileLinksGuardrail.getBoundingClientRect().right") &&
-        siteScript.includes(
-            'mobileLinks.style.setProperty(\n        "--mobile-contact-start",',
-        ) &&
-        !siteScript.includes("portfolioScope.getBoundingClientRect().left"),
-    "Mobile Links/Contact must match the portfolio table's visible column spacing after Goodreads' external arrow without changing the table tracks.",
+    indexHtml.indexOf('class="portfolio-table-header"') <
+      indexHtml.indexOf('class="portfolio-list"') &&
+    portfolioStyles.includes(
+      ".portfolio-table-header {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;",
+    ) &&
+    portfolioStyles.includes(
+      'font-family: "Inter", sans-serif;\n    font-size: 16px;\n    font-weight: 400;\n    line-height: 24px;',
+    ) &&
+    portfolioStyles.includes(".portfolio-sort-date {\n    grid-column: 1;") &&
+    portfolioStyles.includes(".portfolio-sort-title {\n    grid-column: 2;") &&
+    portfolioStyles.includes(".portfolio-sort-scope {\n    grid-column: 3;") &&
+    portfolioStyles.includes(
+      '.portfolio-sort-indicator {\n    visibility: hidden;\n    font-family: "Inter", sans-serif;',
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-sort-button[data-sort-direction]\n    .portfolio-sort-indicator {\n    visibility: visible;",
+    ) &&
+    portfolioStyles.includes(".portfolio-link-heading {\n    grid-column: 4;") &&
+    portfolioStyles.includes(
+      "@media (min-width: 768px) {\n    .portfolio-table-header {\n        padding-top: 0;",
+    ) &&
+    !portfolioStyles.includes(".portfolio-sort-button:hover") &&
+    !portfolioStyles.includes("text-decoration: underline") &&
+    siteScript.includes('".portfolio-sort-button"') &&
+    siteScript.includes('document.querySelector(".portfolio-list")') &&
+    siteScript.includes("titleCollator.compare(leftValue, rightValue)") &&
+    siteScript.includes("querySelector(`.portfolio-card-${key}`)") &&
+    siteScript.includes('getAttribute("datetime")') &&
+    siteScript.includes("leftValue.localeCompare(rightValue)") &&
+    siteScript.includes("function getSortDirectionFactor(key, direction)") &&
+    siteScript.includes("return isDescending ? -1 : 1;") &&
+    siteScript.includes("return isDescending ? 1 : -1;") &&
+    siteScript.includes('key !== "scope"') &&
+    siteScript.includes("titleCollator.compare(leftTitle, rightTitle)") &&
+    siteScript.includes('direction = "descending";') &&
+    siteScript.includes('direction === "ascending" ? "↑" : "↓"') &&
+    siteScript.includes('return direction === "descending" ? "A to Z" : "Z to A";') &&
+    siteScript.includes("const slots = [...rows];") &&
+    siteScript.includes("slots.forEach((row, index) => {") &&
+    siteScript.includes('row.setAttribute("href", project.href);') &&
+    siteScript.includes(
+      'row.querySelector(".portfolio-card-scope").textContent = project.scope;',
+    ) &&
+    !siteScript.includes("portfolioList.replaceChildren(...rows);") &&
+    !siteScript.includes("rows.forEach((row) => portfolioList.append(row));") &&
+    siteScript.includes("portfolioAllLink.href = `/all?sort=${key}&direction=${direction}`;") &&
+    baseStyles.includes("--case-title-text-gap: 24px;") &&
+    baseStyles.includes("--all-case-gap: calc(var(--case-title-text-gap) * 1.618);") &&
+    caseStyles.includes(".all-case + .all-case {\n    margin-top: var(--all-case-gap);") &&
+    allPage.includes('class="all-cases"') &&
+    (allPage.match(/class="all-case"/g) || []).length === 7 &&
+    allScript.includes("new URLSearchParams(window.location.search)") &&
+    allScript.includes('allSortKey === "date"\n            ? isDescending') &&
+    allScript.includes('allSortKey !== "scope"') &&
+    allScript.includes("left.dataset.title") &&
+    allScript.includes("right.dataset.title") &&
+    allScript.includes("cases.forEach((caseStudy) => allCases.append(caseStudy));") &&
+    siteScript.includes("announce(`Projects sorted by ${key}, ${description}.`)") &&
+    siteScript.includes('"A to Z"') &&
+    siteScript.includes('"Z to A"') &&
+    siteScript.includes("if (event.detail !== 0) button.blur();") &&
+    portfolioStyles.includes("column-gap: 0;") &&
+    portfolioStyles.includes(
+      ".portfolio-sort-title .portfolio-sort-indicator {\n    transform: translateX(2.3px);",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-sort-scope .portfolio-sort-indicator {\n    transform: translateX(1.3px);",
+    ) &&
+    (portfolioOpen.match(/class="portfolio-sort-label"/g) || []).length === 3 &&
+    !caseScript.includes("portfolioSortButtons"),
+  "The homepage must keep sorting stable after its one-time entry animation and use consistent Date, Project, Scope, and All heading spacing while All preserves the active sort for the continuous projects page.",
 );
 assert(
-    indexHtml.includes('class="portfolio-table-header"') &&
-        indexHtml.includes('aria-label="Project columns"') &&
-        indexHtml.includes('data-sort-key="date"') &&
-        indexHtml.includes('data-sort-key="title"') &&
-        indexHtml.includes('data-sort-key="scope"') &&
-        indexHtml.match(/class="portfolio-sort-indicator"/g)?.length === 3 &&
-        indexHtml.includes('aria-hidden="true"') &&
-        indexHtml.includes(
-            '<span class="portfolio-sort-label">Date&nbsp;</span>',
-        ) &&
-        indexHtml.includes(
-            '<span class="portfolio-sort-label">Project&nbsp;</span>',
-        ) &&
-        indexHtml.includes(
-            '<span class="portfolio-sort-label">Scope&nbsp;</span>',
-        ) &&
-        indexHtml.includes(
-            'class="portfolio-link-heading"\n                                href="/all?sort=date&direction=descending"\n                            >All</a>',
-        ) &&
-        indexHtml.indexOf('class="portfolio-table-header"') <
-            indexHtml.indexOf('class="portfolio-list"') &&
-        portfolioStyles.includes(
-            ".portfolio-table-header {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;",
-        ) &&
-        portfolioStyles.includes(
-            'font-family: "Inter", sans-serif;\n    font-size: 16px;\n    font-weight: 400;\n    line-height: 24px;',
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-sort-date {\n    grid-column: 1;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-sort-title {\n    grid-column: 2;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-sort-scope {\n    grid-column: 3;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-sort-indicator {\n    visibility: hidden;\n    font-family: \"Inter\", sans-serif;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-sort-button[data-sort-direction]\n    .portfolio-sort-indicator {\n    visibility: visible;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-link-heading {\n    grid-column: 4;",
-        ) &&
-        portfolioStyles.includes(
-            "@media (min-width: 768px) {\n    .portfolio-table-header {\n        padding-top: 0;",
-        ) &&
-        !portfolioStyles.includes(".portfolio-sort-button:hover") &&
-        !portfolioStyles.includes("text-decoration: underline") &&
-        siteScript.includes('".portfolio-sort-button"') &&
-        siteScript.includes('document.querySelector(".portfolio-list")') &&
-        siteScript.includes("titleCollator.compare(leftValue, rightValue)") &&
-        siteScript.includes('querySelector(`.portfolio-card-${key}`)') &&
-        siteScript.includes('getAttribute("datetime")') &&
-        siteScript.includes("leftValue.localeCompare(rightValue)") &&
-        siteScript.includes(
-            'function getSortDirectionFactor(key, direction)',
-        ) &&
-        siteScript.includes('return isDescending ? -1 : 1;') &&
-        siteScript.includes('return isDescending ? 1 : -1;') &&
-        siteScript.includes('key !== "scope"') &&
-        siteScript.includes(
-            'titleCollator.compare(leftTitle, rightTitle)',
-        ) &&
-        siteScript.includes('direction = "descending";') &&
-        siteScript.includes(
-            'direction === "ascending" ? "↑" : "↓"',
-        ) &&
-        siteScript.includes(
-            'return direction === "descending" ? "A to Z" : "Z to A";',
-        ) &&
-        siteScript.includes("const slots = [...rows];") &&
-        siteScript.includes("slots.forEach((row, index) => {") &&
-        siteScript.includes('row.setAttribute("href", project.href);') &&
-        siteScript.includes(
-            'row.querySelector(".portfolio-card-scope").textContent = project.scope;',
-        ) &&
-        !siteScript.includes("portfolioList.replaceChildren(...rows);") &&
-        !siteScript.includes(
-            "rows.forEach((row) => portfolioList.append(row));",
-        ) &&
-        siteScript.includes(
-            "portfolioAllLink.href = `/all?sort=${key}&direction=${direction}`;",
-        ) &&
-        baseStyles.includes("--case-title-text-gap: 24px;") &&
-        baseStyles.includes(
-            "--all-case-gap: calc(var(--case-title-text-gap) * 1.618);",
-        ) &&
-        caseStyles.includes(
-            ".all-case + .all-case {\n    margin-top: var(--all-case-gap);",
-        ) &&
-        allPage.includes('class="all-cases"') &&
-        (allPage.match(/class="all-case"/g) || []).length === 7 &&
-        allScript.includes('new URLSearchParams(window.location.search)') &&
-        allScript.includes(
-            'allSortKey === "date"\n            ? isDescending',
-        ) &&
-        allScript.includes('allSortKey !== "scope"') &&
-        allScript.includes("left.dataset.title") &&
-        allScript.includes("right.dataset.title") &&
-        allScript.includes('cases.forEach((caseStudy) => allCases.append(caseStudy));') &&
-        siteScript.includes(
-            "announce(`Projects sorted by ${key}, ${description}.`)",
-        ) &&
-        siteScript.includes('"A to Z"') &&
-        siteScript.includes('"Z to A"') &&
-        siteScript.includes("if (event.detail !== 0) button.blur();") &&
-        portfolioStyles.includes("column-gap: 0;") &&
-        portfolioStyles.includes(
-            ".portfolio-sort-title .portfolio-sort-indicator {\n    transform: translateX(2.3px);",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-sort-scope .portfolio-sort-indicator {\n    transform: translateX(1.3px);",
-        ) &&
-        (portfolioOpen.match(/class="portfolio-sort-label"/g) || []).length === 3 &&
-        !caseScript.includes("portfolioSortButtons"),
-    "The homepage must keep sorting stable after its one-time entry animation and use consistent Date, Project, Scope, and All heading spacing while All preserves the active sort for the continuous projects page.",
-);
-assert(
-    portfolioOpen.indexOf('class="portfolio-scroll-frame"') <
-        portfolioOpen.indexOf('class="portfolio-table-header"') &&
-        portfolioOpen.indexOf('class="portfolio-table-header"') <
-            portfolioOpen.indexOf('class="portfolio-list"') &&
-        responsiveStyles.includes("homepage-scroll-locked") &&
-        responsiveStyles.includes("overflow-y: auto") &&
-        responsiveStyles.includes("scrollbar-width: none") &&
-        responsiveStyles.includes("portfolio-scroll-frame::before") &&
-        responsiveStyles.includes("portfolio-scroll-frame::after"),
-    "The homepage portfolio must keep its locked table scroll region and edge fade chrome.",
+  portfolioOpen.indexOf('class="portfolio-scroll-frame"') <
+    portfolioOpen.indexOf('class="portfolio-table-header"') &&
+    portfolioOpen.indexOf('class="portfolio-table-header"') <
+      portfolioOpen.indexOf('class="portfolio-list"') &&
+    responsiveStyles.includes("homepage-scroll-locked") &&
+    responsiveStyles.includes("overflow-y: auto") &&
+    responsiveStyles.includes("scrollbar-width: none") &&
+    responsiveStyles.includes("portfolio-scroll-frame::before") &&
+    responsiveStyles.includes("portfolio-scroll-frame::after"),
+  "The homepage portfolio must keep its locked table scroll region and edge fade chrome.",
 );
 const portfolioDates = [
-    ["2026-07-25", "2026-07-25", "T3"],
-    ["2026-07-07", "2026-07-07", "Ben Davis"],
-    ["2026-04-21", "2026-04-21", "Heph-Agent"],
-    ["2026-01-14", "2026-01-14", "Filen"],
-    ["2019-11-15", "2019-11-15", "n0thing"],
-    ["2019-01-25", "2019-01-25", "CURVES"],
-    ["2018-11-13", "2018-11-13", "mL7"],
+  ["2026-07-25", "2026-07-25", "T3"],
+  ["2026-07-07", "2026-07-07", "Ben Davis"],
+  ["2026-04-21", "2026-04-21", "Heph-Agent"],
+  ["2026-01-14", "2026-01-14", "Filen"],
+  ["2019-11-15", "2019-11-15", "n0thing"],
+  ["2019-01-25", "2019-01-25", "CURVES"],
+  ["2018-11-13", "2018-11-13", "mL7"],
 ];
 assert(
-    portfolioDates.every(
-        ([datetime, date, title]) =>
-            indexHtml.includes(`<time datetime="${datetime}">`) &&
-            indexHtml.includes(
-                `<span class="portfolio-date-full">${date}</span>`,
-            ) &&
-            indexHtml.includes(
-                `<span class="portfolio-date-year">${date.slice(0, 7)}</span>`,
-            ) &&
-            indexHtml.includes(`>${title}</h3`),
-    ) &&
-        portfolioStyles.includes(
-            ".portfolio-section {\n    display: grid;\n    grid-template-columns: var(--portfolio-table-columns);",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-list {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;\n    margin-top: 0;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-link {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;",
-        ) &&
-        portfolioStyles.includes("width: 100%;") &&
-        !portfolioStyles.includes("width: calc(100% + 20px);") &&
-        !portfolioStyles.includes("margin-inline: -10px;") &&
-        portfolioStyles.includes(
-            ".portfolio-card-title {\n    grid-column: 2;\n    grid-row: 1;\n    margin: 0;\n    white-space: nowrap;\n    color: var(--text-primary);\n    font-size: 16px;\n    font-weight: 400;\n    line-height: 24px;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-scope {\n    grid-column: 3;\n    grid-row: 1;\n    min-width: 0;\n    overflow: hidden;\n    white-space: nowrap;\n    text-overflow: ellipsis;\n    color: var(--text-tertiary);\n    font-size: 16px;\n    font-weight: 400;\n    line-height: 24px;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-link {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;\n    align-items: baseline;\n    width: 100%;\n    padding: 8px 0;\n    color: var(--text-tertiary);",
-        ) &&
-        !portfolioStyles.includes(
-            ".portfolio-card-link time {\n    grid-column: 1;\n    grid-row: 1;\n    display: block;\n    color: var(--text-tertiary);\n    font-size: 16px;\n    line-height: 24px;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-link time {\n    grid-column: 1;\n    grid-row: 1;\n    display: block;\n    white-space: nowrap;\n    color: inherit;\n    font-size: 16px;\n    line-height: 24px;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-arrow {\n    grid-column: 4;\n    grid-row: 1;\n    align-self: baseline;\n    display: inline-flex;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-view {\n    visibility: hidden;",
-        ) &&
-        portfolioStyles.includes('font-family: "Inter", sans-serif;') &&
-        !portfolioStyles.includes(".portfolio-card-arrow svg") &&
-        !portfolioStyles.includes(".portfolio-card-link::after") &&
-        (indexHtml.match(/class="portfolio-card-arrow"/g) || []).length === 9 &&
-        (indexHtml.match(/class="portfolio-card-scope">Brand Design/g) || [])
-            .length === 1 &&
-        (indexHtml.match(/class="portfolio-card-scope">Logo/g) || [])
-            .length === 4 &&
-        (indexHtml.match(/class="portfolio-card-scope">Typeface/g) || [])
-            .length === 1 &&
-        (indexHtml.match(/class="portfolio-card-scope">Product\/Design Engineering/g) || [])
-            .length === 1 &&
-        (indexHtml.match(/class="portfolio-card-scope">Design Engineering/g) || [])
-            .length === 2 &&
-        (indexHtml.match(/class="portfolio-card-view">View<\/span>/g) || [])
-            .length === 9 &&
-        (indexHtml.match(/<span class="portfolio-card-view">View<\/span>\s+→/g) || [])
-            .length === 7 &&
-        (indexHtml.match(/<span class="portfolio-card-view">View<\/span>\s+↗/g) || [])
-            .length === 2 &&
-        portfolioStyles.includes(
-            ".portfolio-card-link + .portfolio-card-link {\n    margin-top: 0;\n    border-top: 1px solid\n        color-mix(in srgb, var(--text-primary) 12%, transparent);",
-        ) &&
-        portfolioStyles.includes(
-            "@media (max-width: 767px) {\n    .portfolio-section {\n        grid-template-columns: subgrid;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-card-view {\n        display: none;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-date-full {\n        display: none;",
-        ) &&
-        portfolioStyles.includes(
-            ".portfolio-date-year {\n        display: inline;",
-        ) &&
-        portfolioStyles.includes(
-            "@container (max-width: 400px) {\n    .portfolio-date-full {\n        display: none;",
-        ) &&
-        !portfolioStyles.includes("@media (max-width: 360px)"),
-    "Homepage projects must expose single-line rows with aligned ISO dates, space-preserving years, titles, ellipsized field tags, native Inter arrows, hover View labels, and faint separators.",
-);
-assert(
-    !siteScript.includes("copyrightYear") &&
-        !siteScript.includes("updateHomepageDates") &&
-        siteScript.includes(
-            'window.addEventListener("load", () => {\n    updateMobileLayout();\n});',
-        ),
-    "Homepage load behavior must not retain removed date or copyright behavior.",
-);
-assert(
+  portfolioDates.every(
+    ([datetime, date, title]) =>
+      indexHtml.includes(`<time datetime="${datetime}">`) &&
+      indexHtml.includes(`<span class="portfolio-date-full">${date}</span>`) &&
+      indexHtml.includes(`<span class="portfolio-date-year">${date.slice(0, 7)}</span>`) &&
+      indexHtml.includes(`>${title}</h3`),
+  ) &&
     portfolioStyles.includes(
-        ".portfolio-card-link:focus-visible {\n    color: var(--text-primary);\n    outline: 1px solid var(--text-primary);\n    outline-offset: 6px;",
+      ".portfolio-section {\n    display: grid;\n    grid-template-columns: var(--portfolio-table-columns);",
     ) &&
-        (await readText("src/styles/30-heph-demo.css")).includes(
-            "margin-bottom: 32px;\n    overflow: visible;",
-        ),
-    "Heph metadata focus must use the shared offset ring without an ancestor clipping it.",
+    portfolioStyles.includes(
+      ".portfolio-list {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;\n    margin-top: 0;",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-card-link {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;",
+    ) &&
+    portfolioStyles.includes("width: 100%;") &&
+    !portfolioStyles.includes("width: calc(100% + 20px);") &&
+    !portfolioStyles.includes("margin-inline: -10px;") &&
+    portfolioStyles.includes(
+      ".portfolio-card-title {\n    grid-column: 2;\n    grid-row: 1;\n    margin: 0;\n    white-space: nowrap;\n    color: var(--text-primary);\n    font-size: 16px;\n    font-weight: 400;\n    line-height: 24px;",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-card-scope {\n    grid-column: 3;\n    grid-row: 1;\n    min-width: 0;\n    overflow: hidden;\n    white-space: nowrap;\n    text-overflow: ellipsis;\n    color: var(--text-tertiary);\n    font-size: 16px;\n    font-weight: 400;\n    line-height: 24px;",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-card-link {\n    display: grid;\n    grid-column: 1 / -1;\n    grid-template-columns: subgrid;\n    align-items: baseline;\n    width: 100%;\n    padding: 8px 0;\n    color: var(--text-tertiary);",
+    ) &&
+    !portfolioStyles.includes(
+      ".portfolio-card-link time {\n    grid-column: 1;\n    grid-row: 1;\n    display: block;\n    color: var(--text-tertiary);\n    font-size: 16px;\n    line-height: 24px;",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-card-link time {\n    grid-column: 1;\n    grid-row: 1;\n    display: block;\n    white-space: nowrap;\n    color: inherit;\n    font-size: 16px;\n    line-height: 24px;",
+    ) &&
+    portfolioStyles.includes(
+      ".portfolio-card-arrow {\n    grid-column: 4;\n    grid-row: 1;\n    align-self: baseline;\n    display: inline-flex;",
+    ) &&
+    portfolioStyles.includes(".portfolio-card-view {\n    visibility: hidden;") &&
+    portfolioStyles.includes('font-family: "Inter", sans-serif;') &&
+    !portfolioStyles.includes(".portfolio-card-arrow svg") &&
+    !portfolioStyles.includes(".portfolio-card-link::after") &&
+    (indexHtml.match(/class="portfolio-card-arrow"/g) || []).length === 9 &&
+    (indexHtml.match(/class="portfolio-card-scope">Brand Design/g) || []).length === 1 &&
+    (indexHtml.match(/class="portfolio-card-scope">Logo/g) || []).length === 4 &&
+    (indexHtml.match(/class="portfolio-card-scope">Typeface/g) || []).length === 1 &&
+    (indexHtml.match(/class="portfolio-card-scope">Product\/Design Engineering/g) || []).length ===
+      1 &&
+    (indexHtml.match(/class="portfolio-card-scope">Design Engineering/g) || []).length === 2 &&
+    (indexHtml.match(/class="portfolio-card-view">View<\/span>/g) || []).length === 9 &&
+    (indexHtml.match(/<span class="portfolio-card-view">View<\/span>\s+→/g) || []).length === 7 &&
+    (indexHtml.match(/<span class="portfolio-card-view">View<\/span>\s+↗/g) || []).length === 2 &&
+    portfolioStyles.includes(
+      ".portfolio-card-link + .portfolio-card-link {\n    margin-top: 0;\n    border-top: 1px solid\n        color-mix(in srgb, var(--text-primary) 12%, transparent);",
+    ) &&
+    portfolioStyles.includes(
+      "@media (max-width: 767px) {\n    .portfolio-section {\n        grid-template-columns: subgrid;",
+    ) &&
+    portfolioStyles.includes(".portfolio-card-view {\n        display: none;") &&
+    portfolioStyles.includes(".portfolio-date-full {\n        display: none;") &&
+    portfolioStyles.includes(".portfolio-date-year {\n        display: inline;") &&
+    portfolioStyles.includes(
+      "@container (max-width: 400px) {\n    .portfolio-date-full {\n        display: none;",
+    ) &&
+    !portfolioStyles.includes("@media (max-width: 360px)"),
+  "Homepage projects must expose single-line rows with aligned ISO dates, space-preserving years, titles, ellipsized field tags, native Inter arrows, hover View labels, and faint separators.",
 );
 assert(
-    baseStyles.includes(
-        ".name {\n  font-size: 19px;\n  font-weight: 400;\n  line-height: var(--link-line-height);\n  letter-spacing: -0.02em;\n  color: var(--text-primary);\n  min-height: calc(var(--link-line-height) * 2);\n  margin-bottom: calc(var(--section-gap) + var(--section-content-gap) + var(--text-media-gap) - var(--link-line-height));",
+  !siteScript.includes("copyrightYear") &&
+    !siteScript.includes("updateHomepageDates") &&
+    siteScript.includes('window.addEventListener("load", () => {\n    updateMobileLayout();\n});'),
+  "Homepage load behavior must not retain removed date or copyright behavior.",
+);
+assert(
+  portfolioStyles.includes(
+    ".portfolio-card-link:focus-visible {\n    color: var(--text-primary);\n    outline: 1px solid var(--text-primary);\n    outline-offset: 6px;",
+  ) &&
+    (await readText("src/styles/30-heph-demo.css")).includes(
+      "margin-bottom: 32px;\n    overflow: visible;",
     ),
-    "The sidebar Links block must align with the homepage column header through token-based name spacing.",
+  "Heph metadata focus must use the shared offset ring without an ancestor clipping it.",
+);
+assert(
+  baseStyles.includes(
+    ".name {\n  font-size: 19px;\n  font-weight: 400;\n  line-height: var(--link-line-height);\n  letter-spacing: -0.02em;\n  color: var(--text-primary);\n  min-height: calc(var(--link-line-height) * 2);\n  margin-bottom: calc(var(--section-gap) + var(--section-content-gap) + var(--text-media-gap) - var(--link-line-height));",
+  ),
+  "The sidebar Links block must align with the homepage column header through token-based name spacing.",
 );
 const chronologicalProjectTitles = [
-    "portfolio-t3-title",
-    "portfolio-ben-davis-title",
-    "portfolio-heph-title",
-    "portfolio-filen-title",
-    "portfolio-n0thing-title",
-    "portfolio-curves-title",
-    "portfolio-ml7-title",
+  "portfolio-t3-title",
+  "portfolio-ben-davis-title",
+  "portfolio-heph-title",
+  "portfolio-filen-title",
+  "portfolio-n0thing-title",
+  "portfolio-curves-title",
+  "portfolio-ml7-title",
 ];
 assert(
-    chronologicalProjectTitles
-        .map((id) => indexHtml.indexOf(`id="${id}"`))
-        .every((position, index, positions) =>
-            index === 0 ? position !== -1 : position > positions[index - 1],
-        ),
-    "Homepage projects must default to one global newest-first order: T3, Ben Davis, Heph-Agent, Filen, n0thing, CURVES, mL7.",
+  chronologicalProjectTitles
+    .map((id) => indexHtml.indexOf(`id="${id}"`))
+    .every((position, index, positions) =>
+      index === 0 ? position !== -1 : position > positions[index - 1],
+    ),
+  "Homepage projects must default to one global newest-first order: T3, Ben Davis, Heph-Agent, Filen, n0thing, CURVES, mL7.",
 );
 assert(
-    indexHtml.includes('class="portfolio-list"') &&
-        !indexHtml.includes("portfolio-group-engineering-title") &&
-        !indexHtml.includes("portfolio-group-design-title") &&
-        !portfolioStyles.includes(".portfolio-group") &&
-        (indexHtml.match(/class="portfolio-card-link"/g) || []).length === 9 &&
+  indexHtml.includes('class="portfolio-list"') &&
+    !indexHtml.includes("portfolio-group-engineering-title") &&
+    !indexHtml.includes("portfolio-group-design-title") &&
+    !portfolioStyles.includes(".portfolio-group") &&
+    (indexHtml.match(/class="portfolio-card-link"/g) || []).length === 9 &&
     "Homepage projects must live in one globally sortable list without category dividers.",
 );
 assert(
-    !indexHtml.includes("<img") &&
-        !indexHtml.includes('class="portfolio-card-image"') &&
-        !indexHtml.includes('class="showcase') &&
-        !indexHtml.includes('class="gallery'),
-    "The homepage must present projects as text-only date/title cards without media.",
+  !indexHtml.includes("<img") &&
+    !indexHtml.includes('class="portfolio-card-image"') &&
+    !indexHtml.includes('class="showcase') &&
+    !indexHtml.includes('class="gallery'),
+  "The homepage must present projects as text-only date/title cards without media.",
 );
 assert(
-    baseStyles.includes("--prose-weight: 380;") &&
+  baseStyles.includes("--prose-weight: 380;") &&
+    caseStyles.includes(".case-deck {\n    max-width: 680px;\n    color: var(--text-secondary);") &&
     caseStyles.includes(
-        ".case-deck {\n    max-width: 680px;\n    color: var(--text-secondary);",
+      ".case-copy p,\n.case-copy li {\n    color: var(--text-article);\n    font-weight: var(--prose-weight);",
     ) &&
-        caseStyles.includes(
-            ".case-copy p,\n.case-copy li {\n    color: var(--text-article);\n    font-weight: var(--prose-weight);",
-        ) &&
-        caseStyles.includes(
-            ".case-copy .external-link,\n.case-copy .internal-link {\n    color: var(--text-article);\n    text-decoration: underline;\n    text-decoration-color: var(--text-tertiary);",
-        ) &&
-        caseStyles.includes(
-            ".case-copy .external-link::after {\n    content: none;",
-        ) &&
-        caseStyles.includes(
-            ".case-copy code {\n    font-family: \"Ioskeley Mono\", monospace;\n    font-size: 14px;\n    font-weight: 400;\n    line-height: 18px;\n    padding: 1px 5px;",
-        ) &&
-        caseStyles.includes(
-            ".case-meta dt,\n.case-caption,\n.case-code-label {\n    color: var(--text-tertiary);",
-        ) &&
-        caseStyles.includes(
-            ".case-copy .external-link:hover,\n    .case-copy .internal-link:hover {\n        text-decoration-color: var(--text-primary);",
-        ) &&
+    caseStyles.includes(
+      ".case-copy .external-link,\n.case-copy .internal-link {\n    color: var(--text-article);\n    text-decoration: underline;\n    text-decoration-color: var(--text-tertiary);",
+    ) &&
+    caseStyles.includes(".case-copy .external-link::after {\n    content: none;") &&
+    caseStyles.includes(
+      '.case-copy code {\n    font-family: "Ioskeley Mono", monospace;\n    font-size: 14px;\n    font-weight: 400;\n    line-height: 18px;\n    padding: 1px 5px;',
+    ) &&
+    caseStyles.includes(
+      ".case-meta dt,\n.case-caption,\n.case-code-label {\n    color: var(--text-tertiary);",
+    ) &&
+    caseStyles.includes(
+      ".case-copy .external-link:hover,\n    .case-copy .internal-link:hover {\n        text-decoration-color: var(--text-primary);",
+    ) &&
     "Case-study prose must read at the article text color and theme-tuned weight with underlined arrow-free links and bordered mono code chips, while media captions keep the darker gray.",
 );
 assert(
+  caseStyles.includes(
+    ".case-title {\n    max-width: var(--content-column);\n    margin: 0 0 var(--case-title-text-gap);",
+  ) &&
     caseStyles.includes(
-        ".case-title {\n    max-width: var(--content-column);\n    margin: 0 0 var(--case-title-text-gap);",
+      ".case-title,\n.case-copy h3 {\n    font-size: 19px;\n    font-weight: 500;\n    line-height: 28px;",
     ) &&
-        caseStyles.includes(
-            ".case-title,\n.case-copy h3 {\n    font-size: 19px;\n    font-weight: 500;\n    line-height: 28px;",
-        ) &&
-        caseStyles.includes(
-            ".case-copy h3 {\n    margin: 48px 0 12px;",
-        ) &&
-        !caseStyles.includes("font-size: 28px;"),
-    "Case titles and authored subheadings must share the 19px type style without a larger title override.",
+    caseStyles.includes(".case-copy h3 {\n    margin: 48px 0 12px;") &&
+    !caseStyles.includes("font-size: 28px;"),
+  "Case titles and authored subheadings must share the 19px type style without a larger title override.",
 );
 assert(
-    caseStyles.includes(
-        ".case-article article {\n    width: min(100%, var(--content-column));\n    margin-right: auto;\n    margin-left: auto;",
-    ),
-    "Case articles and their media must stay inside the centered blog-width boundary.",
+  caseStyles.includes(
+    ".case-article article {\n    width: min(100%, var(--content-column));\n    margin-right: auto;\n    margin-left: auto;",
+  ),
+  "Case articles and their media must stay inside the centered blog-width boundary.",
 );
 assert(
-    baseStyles.includes("--sidebar-column: 240px;") &&
-        baseStyles.includes("--content-column: 540px;") &&
-        baseStyles.includes(
-            "max-width: calc(var(--sidebar-column) + var(--layout-gap) + var(--content-column));\n  margin: 0 auto;",
-        ) &&
-        baseStyles.includes(
-            ".content {\n  min-width: 0;\n  width: 100%;\n  max-width: var(--content-column);\n  padding: 48px 0;",
-        ),
-    "Homepage and case-study content must share the centered 540px column and align with the 48px desktop sidebar inset.",
-);
-assert(
-    caseStyles.includes(
-        ".case-location .case-home-link,\n.case-arrow {\n    color: var(--text-tertiary);",
-        ) &&
-        caseStyles.includes(
-            ".case-location .case-current-link {\n    color: var(--text-primary);",
-        ) &&
-        caseStyles.includes(
-            ".case-location .case-home-link:hover {\n        color: var(--text-primary);",
-        ),
-    "Case locations must preserve the active-page hierarchy.",
-);
-assert(
-    caseStyles.includes(
-        ".case-location {\n    display: flex;\n    flex-wrap: wrap;\n    column-gap: 8px;\n    row-gap: 0;",
-    ) &&
-        caseStyles.includes(
-            ".case-home-link {\n    flex-basis: 100%;",
-        ),
-    "Case locations must place the project arrow and name on a second line.",
-);
-assert(
+  baseStyles.includes("--sidebar-column: 240px;") &&
+    baseStyles.includes("--content-column: 540px;") &&
     baseStyles.includes(
-        "line-height: var(--link-line-height);\n  letter-spacing: -0.02em;\n  color: var(--text-primary);\n  min-height: calc(var(--link-line-height) * 2);",
+      "max-width: calc(var(--sidebar-column) + var(--layout-gap) + var(--content-column));\n  margin: 0 auto;",
     ) &&
-        previewContentStyles.includes(
-            ".profile-copy {\n    font-size: 16px;\n    font-weight: 400;\n    color: var(--text-primary);",
-        ),
-    "Desktop sidebar locations must reserve two lines and homepage biography must use primary text.",
-);
-assert(
-    caseStyles.includes(
-        ".case-intro,\n.case-copy {\n    width: min(100%, var(--content-column));\n    margin-right: auto;\n    margin-left: auto;",
+    baseStyles.includes(
+      ".content {\n  min-width: 0;\n  width: 100%;\n  max-width: var(--content-column);\n  padding: 48px 0;",
     ),
-    "Case intro and prose columns must be centered inside the wider media container.",
+  "Homepage and case-study content must share the centered 540px column and align with the 48px desktop sidebar inset.",
 );
 assert(
-    responsiveStyles.includes(
-        ".links > .contact-label,\n    .links > .contact-label ~ * {\n        order: -1;",
-    ) &&
-        baseStyles.includes("--footer-title-center-offset: 0px;") &&
-        !responsiveStyles.includes("(max-height: 720px)"),
-    "Desktop contact must precede profiles, and the theme control must stay on the footer row at every height.",
-);
-assert(
-    caseStyles.includes("@media (min-width: 769px)") &&
-        caseStyles.includes(
-            ".case-article article > :last-child {\n        --case-final-line-height: 24px;\n        padding-bottom: calc(\n            var(--footer-title-center-offset) +",
-        ) &&
-        caseStyles.includes(
-            ".case-section:last-child .case-copy:last-child h2:last-child {\n        margin-bottom: 0;",
-        ) &&
-        !caseStyles.includes("padding-top: 80px;"),
-    "Desktop case endings must keep their natural flow while reserving the theme toggle's bottom boundary.",
-);
-assert(
+  caseStyles.includes(
+    ".case-location .case-home-link,\n.case-arrow {\n    color: var(--text-tertiary);",
+  ) &&
+    caseStyles.includes(".case-location .case-current-link {\n    color: var(--text-primary);") &&
     caseStyles.includes(
-        ".case-next {\n        margin-top: auto;\n        padding-top: 48px;\n        padding-bottom: calc(\n            var(--footer-title-center-offset) +\n                (var(--theme-toggle-size) / 2) -\n                (24px / 2)\n        );",
-    ) &&
-        caseStyles.includes(
-            ".case-next-row:last-child {\n        padding-bottom: 0;",
-        ) &&
-        caseStyles.includes(
-            ".case-article article:has(+ .case-next) > :last-child {\n        padding-bottom: 0;",
-        ) &&
-        caseStyles.includes(
-            ".case-next {\n    width: min(100%, var(--content-column));\n    margin: 48px auto 0;",
-        ) &&
-        caseStyles.includes(
-            "padding: 8px 0;",
-        ) &&
-        caseStyles.includes(
-            "@media (max-width: 768px)",
-        ),
-    "Case-next pages must preserve a 48px article gap, use spare desktop height before the table, and visually center the final row with the theme icon on every page.",
+      ".case-location .case-home-link:hover {\n        color: var(--text-primary);",
+    ),
+  "Case locations must preserve the active-page hierarchy.",
 );
 assert(
+  caseStyles.includes(
+    ".case-location {\n    display: flex;\n    flex-wrap: wrap;\n    column-gap: 8px;\n    row-gap: 0;",
+  ) && caseStyles.includes(".case-home-link {\n    flex-basis: 100%;"),
+  "Case locations must place the project arrow and name on a second line.",
+);
+assert(
+  baseStyles.includes(
+    "line-height: var(--link-line-height);\n  letter-spacing: -0.02em;\n  color: var(--text-primary);\n  min-height: calc(var(--link-line-height) * 2);",
+  ) &&
+    previewContentStyles.includes(
+      ".profile-copy {\n    font-size: 16px;\n    font-weight: 400;\n    color: var(--text-primary);",
+    ),
+  "Desktop sidebar locations must reserve two lines and homepage biography must use primary text.",
+);
+assert(
+  caseStyles.includes(
+    ".case-intro,\n.case-copy {\n    width: min(100%, var(--content-column));\n    margin-right: auto;\n    margin-left: auto;",
+  ),
+  "Case intro and prose columns must be centered inside the wider media container.",
+);
+assert(
+  responsiveStyles.includes(
+    ".links > .contact-label,\n    .links > .contact-label ~ * {\n        order: -1;",
+  ) &&
+    baseStyles.includes("--footer-title-center-offset: 0px;") &&
+    !responsiveStyles.includes("(max-height: 720px)"),
+  "Desktop contact must precede profiles, and the theme control must stay on the footer row at every height.",
+);
+assert(
+  caseStyles.includes("@media (min-width: 769px)") &&
     caseStyles.includes(
-        ".case-media {\n    width: 100%;\n    margin-top: 24px;",
+      ".case-article article > :last-child {\n        --case-final-line-height: 24px;\n        padding-bottom: calc(\n            var(--footer-title-center-offset) +",
     ) &&
-        caseStyles.includes(
-            ".case-media-grid {\n    display: grid;",
-        ) &&
-        caseStyles.includes(
-            ".case-media + .case-copy,\n.case-media-grid + .case-copy {\n    margin-top: 48px;",
-        ) &&
-        !caseStyles.includes("padding-top: var(--text-media-gap);"),
-    "Case media must attach tightly to the paragraph it illustrates and separate clearly from the next one.",
+    caseStyles.includes(
+      ".case-section:last-child .case-copy:last-child h2:last-child {\n        margin-bottom: 0;",
+    ) &&
+    !caseStyles.includes("padding-top: 80px;"),
+  "Desktop case endings must keep their natural flow while reserving the theme toggle's bottom boundary.",
+);
+assert(
+  caseStyles.includes(
+    ".case-next {\n        margin-top: auto;\n        padding-top: 48px;\n        padding-bottom: calc(\n            var(--footer-title-center-offset) +\n                (var(--theme-toggle-size) / 2) -\n                (24px / 2)\n        );",
+  ) &&
+    caseStyles.includes(".case-next-row:last-child {\n        padding-bottom: 0;") &&
+    caseStyles.includes(
+      ".case-article article:has(+ .case-next) > :last-child {\n        padding-bottom: 0;",
+    ) &&
+    caseStyles.includes(
+      ".case-next {\n    width: min(100%, var(--content-column));\n    margin: 48px auto 0;",
+    ) &&
+    caseStyles.includes("padding: 8px 0;") &&
+    caseStyles.includes("@media (max-width: 768px)"),
+  "Case-next pages must preserve a 48px article gap, use spare desktop height before the table, and visually center the final row with the theme icon on every page.",
+);
+assert(
+  caseStyles.includes(".case-media {\n    width: 100%;\n    margin-top: 24px;") &&
+    caseStyles.includes(".case-media-grid {\n    display: grid;") &&
+    caseStyles.includes(
+      ".case-media + .case-copy,\n.case-media-grid + .case-copy {\n    margin-top: 48px;",
+    ) &&
+    !caseStyles.includes("padding-top: var(--text-media-gap);"),
+  "Case media must attach tightly to the paragraph it illustrates and separate clearly from the next one.",
 );
 const sharedSidebarTargets = [
-    "https://behance.net/gildrb",
-    "https://github.com/gildrb",
-    "https://www.goodreads.com/gildrb",
-    "https://letterboxd.com/gildrb/",
-    "https://www.linkedin.com/in/gildrb/",
-    "https://signal.me/",
+  "https://behance.net/gildrb",
+  "https://github.com/gildrb",
+  "https://letterboxd.com/gildrb/",
+  "https://literal.club/gildrb",
+  "https://www.linkedin.com/in/gildrb/",
+  "https://signal.me/",
 ];
 assert(
-    allHtml.every(
-        (html) =>
-            sharedSidebarTargets.every((target) => html.includes(target)) &&
-            html.includes('aria-label="Copy mail@gildrb.com"') &&
-            html.includes('aria-label="Public profiles and contact"'),
-    ),
-    "Every generated route must contain the shared profile and contact sidebar.",
+  allHtml.every(
+    (html) =>
+      sharedSidebarTargets.every((target) => html.includes(target)) &&
+      html.includes('aria-label="Copy mail@gildrb.com"') &&
+      html.includes('aria-label="Public profiles and contact"'),
+  ),
+  "Every generated route must contain the shared profile and contact sidebar.",
 );
 assert(
-    siteScript.includes('window.history.scrollRestoration = "manual";') &&
-        siteScript.includes('window.addEventListener("pagehide", saveScrollPosition);') &&
-        siteScript.includes('window.addEventListener("pageshow", restoreScrollPosition);') &&
-        caseScript.includes('window.addEventListener("pagehide", saveScrollPosition);') &&
-        caseScript.includes('window.addEventListener("pageshow", restoreScrollPosition);'),
-    "Homepage and case routes must preserve per-tab scroll positions across back/forward navigation.",
+  siteScript.includes('window.history.scrollRestoration = "manual";') &&
+    siteScript.includes('window.addEventListener("pagehide", saveScrollPosition);') &&
+    siteScript.includes('window.addEventListener("pageshow", restoreScrollPosition);') &&
+    caseScript.includes('window.addEventListener("pagehide", saveScrollPosition);') &&
+    caseScript.includes('window.addEventListener("pageshow", restoreScrollPosition);'),
+  "Homepage and case routes must preserve per-tab scroll positions across back/forward navigation.",
 );
 assert(
-    caseHtml.every(
-        (html) =>
-            !html.includes('class="case-footer"') &&
-            html.includes('class="case-desktop-links"') &&
-            html.includes('class="case-mobile-links"') &&
-            html.indexOf('class="case-mobile-links"') > html.indexOf("</main>"),
+  caseHtml.every(
+    (html) =>
+      !html.includes('class="case-footer"') &&
+      html.includes('class="case-desktop-links"') &&
+      html.includes('class="case-mobile-links"') &&
+      html.indexOf('class="case-mobile-links"') > html.indexOf("</main>"),
+  ) &&
+    caseStyles.includes(".case-mobile-links {\n    display: none;") &&
+    responsiveStyles.includes(
+      ".case-page .links {\n        order: 6;\n        margin-top: var(--section-gap);",
     ) &&
-        caseStyles.includes(".case-mobile-links {\n    display: none;") &&
-        responsiveStyles.includes(
-            ".case-page .links {\n        order: 6;\n        margin-top: var(--section-gap);",
-        ) &&
-        responsiveStyles.includes(
-            ".case-desktop-links {\n        display: none;",
-        ) &&
-        responsiveStyles.includes(
-            ".case-mobile-links {\n        display: contents;",
-        ) &&
-        responsiveStyles.includes(
-            ".content > * {\n        grid-column: 1 / -1;\n        order: 5;",
-        ),
-    "Case pages must avoid duplicate email footers and align mobile links DOM, focus, and visual order after the article.",
+    responsiveStyles.includes(".case-desktop-links {\n        display: none;") &&
+    responsiveStyles.includes(".case-mobile-links {\n        display: contents;") &&
+    responsiveStyles.includes(".content > * {\n        grid-column: 1 / -1;\n        order: 5;"),
+  "Case pages must avoid duplicate email footers and align mobile links DOM, focus, and visual order after the article.",
 );
 
 console.log(
-    `Verified generated page, ${assetRefs.size} asset references, ${imageFiles.length} image files.`,
+  `Verified generated page, ${assetRefs.size} asset references, ${imageFiles.length} image files.`,
 );

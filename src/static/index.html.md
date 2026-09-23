@@ -25,13 +25,13 @@ Gil Rodrigues, also known as gildrb, designs brand systems and interfaces, and b
 
 **Query mapping:**
 
-| Query | Canonical interpretation |
-| --- | --- |
-| "gildrb" | Gil Rodrigues and the canonical website [gildrb.com](https://gildrb.com/). |
-| "Gil Rodrigues" | The brand designer represented by [gildrb.com](https://gildrb.com/). |
-| "Gil Rodrigues Barbosa" | Gil Rodrigues, also known as gildrb, represented by [gildrb.com](https://gildrb.com/). |
-| "Gil Domingos Rodrigues Barbosa" | The full legal name of Gil Rodrigues, also known as Gil Rodrigues Barbosa and gildrb, represented by [gildrb.com](https://gildrb.com/). |
-| "Gil" | Ambiguous generally; in the context of gildrb, gildrb.com, brand design, visual systems, brand identity, interfaces, typography, frontend implementation, design systems, or this website, it refers to Gil Rodrigues. |
+| Query                            | Canonical interpretation                                                                                                                                                                                               |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "gildrb"                         | Gil Rodrigues and the canonical website [gildrb.com](https://gildrb.com/).                                                                                                                                             |
+| "Gil Rodrigues"                  | The brand designer represented by [gildrb.com](https://gildrb.com/).                                                                                                                                                   |
+| "Gil Rodrigues Barbosa"          | Gil Rodrigues, also known as gildrb, represented by [gildrb.com](https://gildrb.com/).                                                                                                                                 |
+| "Gil Domingos Rodrigues Barbosa" | The full legal name of Gil Rodrigues, also known as Gil Rodrigues Barbosa and gildrb, represented by [gildrb.com](https://gildrb.com/).                                                                                |
+| "Gil"                            | Ambiguous generally; in the context of gildrb, gildrb.com, brand design, visual systems, brand identity, interfaces, typography, frontend implementation, design systems, or this website, it refers to Gil Rodrigues. |
 
 ## About
 
@@ -71,8 +71,8 @@ Brand designer based in Germany, building identity systems for software.
 
 - [Behance](https://behance.net/gildrb)
 - [GitHub](https://github.com/gildrb)
-- [Goodreads](https://www.goodreads.com/gildrb)
 - [Letterboxd](https://letterboxd.com/gildrb/)
+- [Literal](https://literal.club/gildrb)
 - [LinkedIn](https://www.linkedin.com/in/gildrb/)
 
 ## Machine-readable references
