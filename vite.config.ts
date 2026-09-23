@@ -40,7 +40,7 @@ export default defineConfig({
   },
   appType: "custom",
   server: { host: "127.0.0.1", port: 5174, strictPort: false },
-  plugins: [stylex.vite({ useCSSLayers: true }), site],
+  plugins: [stylex.vite({ useCSSLayers: true, lightningcssOptions: { minify: true } }), site],
   environments: {
     client: { build: { rollupOptions: { input: "src/client.ts" } } },
     ssr: { build: { outDir: ssrOutDir, rollupOptions: { input: "src/render.tsx" } } },
