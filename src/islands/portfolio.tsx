@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
-import { colors, denseMarker, media, space } from "../tokens.stylex.ts";
+import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { entry, timing } from "../entry.ts";
 
@@ -148,7 +148,7 @@ const styles = stylex.create({
     gridTemplateRows: {
       default: null,
       [media.mobile]: "auto minmax(0, 1fr)",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
         [media.desktop]: "auto minmax(0, 1fr)",
       },
     },
@@ -157,36 +157,36 @@ const styles = stylex.create({
     alignSelf: {
       default: null,
       [media.desktop]: "start",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "stretch" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "stretch" },
     },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     containerType: "inline-size",
     position: {
       default: null,
       [media.mobile]: "relative",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "relative" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "relative" },
     },
     minHeight: {
       default: null,
       [media.mobile]: 0,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     marginBottom: {
       default: "32px",
       [media.mobile]: space.sectionGap,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     timelineScope: "--portfolio",
     "::before": {
       content: {
         default: null,
         [media.mobile]: '""',
-        [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: '""' },
+        [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: '""' },
       },
       // Just below the header.
       top: {
         default: "41px",
-        [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+        [stylex.when.ancestor("[data-dense]", rootMarker)]: {
           [media.desktop]: `calc(${space.linkLineHeight} + ${space.portfolioRowPadding})`,
         },
       },
@@ -206,7 +206,7 @@ const styles = stylex.create({
       content: {
         default: null,
         [media.mobile]: '""',
-        [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: '""' },
+        [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: '""' },
       },
       bottom: 0,
       backgroundImage: `linear-gradient(to top, ${colors.bg}, transparent)`,
@@ -230,7 +230,7 @@ const styles = stylex.create({
     gridRow: {
       default: null,
       [media.mobile]: 1,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 1 },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 1 },
     },
     gridTemplateColumns: "subgrid",
     alignItems: "baseline",
@@ -263,33 +263,33 @@ const styles = stylex.create({
     display: {
       default: "grid",
       [media.desktop]: "contents",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "grid" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "grid" },
     },
     gridTemplateColumns: "subgrid",
     gridColumn: "1 / -1",
     gridRow: {
       default: null,
       [media.mobile]: 2,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 2 },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 2 },
     },
     minWidth: 0,
     minHeight: {
       default: null,
       [media.mobile]: 0,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     alignContent: "start",
     overflowY: {
       default: null,
       [media.mobile]: "auto",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "auto" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto" },
     },
     scrollbarWidth: "none",
     scrollTimeline: "--portfolio y",
     paddingBottom: {
       default: null,
       [media.mobile]: "8px",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "8px" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "8px" },
     },
     "::-webkit-scrollbar": { display: "none" },
   },

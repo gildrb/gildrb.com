@@ -37,6 +37,22 @@ const nearViewport = new IntersectionObserver(
   { rootMargin: "50%" },
 );
 
+// Once the homepage entrance has played, drop it (see `entry`), so items the layout hides and
+// shows again appear at once. Scroll-driven animations and endless ones are not part of it.
+void Promise.all(
+  document
+    .getAnimations()
+    .filter(
+      (animation) =>
+        animation.timeline === document.timeline &&
+        animation.effect?.getComputedTiming().endTime !== Infinity,
+    )
+    .map((animation) => animation.finished),
+).then(
+  () => (document.documentElement.dataset.entered = ""),
+  () => (document.documentElement.dataset.entered = ""),
+);
+
 requestAnimationFrame(() => {
   for (const element of document.querySelectorAll<HTMLElement>("[data-island]")) {
     // Island wrappers are `display: contents` and have no box to observe; watch their content.

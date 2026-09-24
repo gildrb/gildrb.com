@@ -77,7 +77,7 @@ export const space = stylex.defineVars({
   footerInset: "48px",
   sidebarColumn: "240px",
   contentColumn: "540px",
-  layoutGap: { default: "48px", "@media (max-width: 1400px)": "32px" },
+  layoutGap: "48px",
   mediaRadius: "22px",
   tableGap: "16px",
   mobileTableGap: "clamp(8px, 3vw, 16px)",
@@ -89,7 +89,8 @@ export const space = stylex.defineVars({
 export const rowMarker = stylex.defineMarker();
 
 /**
- * Put on <html>. `align.ts` sets `data-dense` there when a desktop viewport is too short for the
- * bottom-anchored metadata and theme toggle to clear the content.
+ * Put on <html>, which carries page-wide state: `data-dense` and `data-compact` when a desktop
+ * viewport is too short for the full layout (see `align.ts`), and `data-entered` once the homepage
+ * entrance has played (see `client.ts`).
  */
-export const denseMarker = stylex.defineMarker();
+export const rootMarker = stylex.defineMarker();

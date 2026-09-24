@@ -7,7 +7,7 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { contacts, type Link, person, profiles } from "./site.ts";
 import { themeScript } from "./theme.ts";
-import { colors, denseMarker, media, space } from "./tokens.stylex.ts";
+import { colors, media, rootMarker, space } from "./tokens.stylex.ts";
 import { type Style, ui } from "./ui.tsx";
 
 export type Assets = { script: string; css: string };
@@ -57,7 +57,7 @@ export function Document({
   children: ComponentChildren;
 }) {
   return (
-    <html lang="en" {...stylex.props(denseMarker, styles.html, home && styles.fixedViewport)}>
+    <html lang="en" {...stylex.props(rootMarker, styles.html, home && styles.fixedViewport)}>
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -242,12 +242,14 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
       data-mobile-links={phone || home || undefined}
     >
       <p
-        {...stylex.props(styles.label, styles.profileLabel, rise)}
+        {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup, rise)}
         style={home ? stagger(0) : undefined}
       >
         <span data-nosnippet>Links</span>
       </p>
-      {profiles.map((item, index) => link(item, index + 1, styles.profile, true))}
+      {profiles.map((item, index) =>
+        link(item, index + 1, [styles.profile, styles.profileGroup], true),
+      )}
       <p
         {...stylex.props(styles.label, styles.contact, styles.contactLabel, rise)}
         style={home ? stagger(6) : undefined}
@@ -275,11 +277,19 @@ const styles = stylex.create({
     scrollbarGutter: { default: null, [media.desktop]: "stable" },
     backgroundColor: colors.bg,
   },
-  /** The phone homepage fits the viewport; only the project list scrolls. */
+  /**
+   * The phone homepage fits the viewport; only the project list scrolls. So does the dense desktop
+   * one, by design; clipping covers heights too short for even its compact sidebar, so a
+   * scrollbar never appears.
+   */
   fixedViewport: {
     height: { default: null, [media.mobile]: "100dvh" },
     minHeight: { default: null, [media.mobile]: "100dvh" },
-    overflow: { default: null, [media.mobile]: "hidden" },
+    overflow: {
+      default: null,
+      [media.mobile]: "hidden",
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "hidden" },
+    },
   },
   body: {
     // Held hidden by the font gate until Inter is ready; see `fontGate`.
@@ -303,11 +313,8 @@ const styles = stylex.create({
   wrapper: {
     maxWidth: "1900px",
     margin: "0 auto",
-    paddingInline: {
-      default: "48px",
-      "@media (max-width: 1400px)": "32px",
-      [media.mobile]: "12px",
-    },
+    // A minimum margin: the layout keeps its full width until the viewport cannot fit it.
+    paddingInline: { default: "32px", [media.mobile]: "12px" },
   },
   layout: {
     display: "grid",
@@ -327,14 +334,14 @@ const styles = stylex.create({
       [media.mobile]: "auto auto minmax(0, 1fr) auto",
       // Dense: like on phones, the page holds to the viewport and the project list scrolls. The
       // list's row still grows to fit the sidebar links, so those are never cut off.
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "auto 1fr auto" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto 1fr auto" },
     },
     rowGap: 0,
     paddingBlock: { default: null, [media.desktop]: "48px" },
     height: {
       default: null,
       [media.mobile]: "100dvh",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "100dvh" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "100dvh" },
     },
     // The positioning box for the theme toggle once the viewport is dense.
     position: { default: null, [media.desktop]: "relative" },
@@ -375,7 +382,7 @@ const styles = stylex.create({
     // Dense: centered over the table's arrows, whose column ends at the layout's right edge.
     right: {
       default: null,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
         [media.desktop]: `calc((${space.arrowWidth} - ${space.toggleSize}) / 2)`,
       },
     },
@@ -466,6 +473,13 @@ const styles = stylex.create({
   },
   label: { color: colors.secondary, width: "fit-content" },
   profileLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
+  /** Compact (a dense homepage too short for the whole sidebar, see `align.ts`): contact stays. */
+  profileGroup: {
+    display: {
+      default: null,
+      [stylex.when.ancestor("[data-compact]", rootMarker)]: { [media.desktop]: "none" },
+    },
+  },
   link: {
     paddingBlock: `calc(${space.sectionContentGap} / 2)`,
     marginBlock: `calc(${space.sectionContentGap} / -2)`,

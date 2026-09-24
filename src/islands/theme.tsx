@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { type Theme, themeClass } from "../theme.ts";
-import { colors, denseMarker, media, space } from "../tokens.stylex.ts";
+import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { type Style, ui } from "../ui.tsx";
 
 /** Touch releases this far outside the button still count, forgiving thumbs on small icons. */
@@ -135,7 +135,7 @@ const styles = stylex.create({
       default: null,
       [media.mobile]: "sticky",
       [media.desktop]: "fixed",
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "absolute" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "absolute" },
     },
     zIndex: { default: null, [media.mobile]: 101 },
     top: {
@@ -143,18 +143,18 @@ const styles = stylex.create({
       [media.mobile]: 0,
       [media.desktop]: "auto",
       // The top padding above the name, less the toggle's overhang around its first line.
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
         [media.desktop]: `calc(48px + (${space.linkLineHeight} - ${space.toggleSize}) / 2)`,
       },
     },
     right: {
       default: null,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     bottom: {
       default: null,
       [media.desktop]: space.footerInset,
-      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "auto" },
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto" },
     },
     gridColumn: { default: null, [media.mobile]: 2 },
     order: { default: null, [media.mobile]: 1 },
@@ -177,7 +177,10 @@ const styles = stylex.create({
       default: "auto 0 0",
       // Phones: centered over the arrows of the table below, which ends where this column does.
       [media.mobile]: `0 calc((${space.arrowWidth} - ${space.toggleSize}) / 2) 0 16px`,
-      [media.desktop]: 0,
+      // Desktop: centered where a row arrow set flush against the sidebar's left edge would be,
+      // mirroring the dense placement over the table's arrows.
+      [media.desktop]: `0 0 0 calc((${space.arrowWidth} - ${space.toggleSize}) / 2)`,
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     color: colors.tertiary,
     borderRadius: "50%",
