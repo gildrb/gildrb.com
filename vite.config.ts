@@ -8,6 +8,14 @@ type Render = typeof import("./src/render.tsx");
 
 const ssrOutDir = "node_modules/.site-ssr";
 
+// StyleX's plugin exposes the CSS it has collected so far; the dev server inlines it, so pages are
+// styled from their first byte exactly as in production (no separate stylesheet or runtime).
+const stylexPlugin: Plugin & { __stylexCollectCss?: () => string } = stylex.vite({
+  useCSSLayers: true,
+  lightningcssOptions: { minify: true },
+  devMode: "css-only",
+});
+
 const site: Plugin = {
   name: "site",
   configureServer(server) {
@@ -18,12 +26,13 @@ const site: Plugin = {
     server.middlewares.use(async (request, response, next) => {
       const { pathname } = new URL(request.url ?? "/", "http://localhost");
       const { render } = (await server.ssrLoadModule("/src/render.tsx")) as Render;
-      const files = render({ script: "/src/client.ts", css: "" });
-      const file = [
-        pathname.slice(1),
-        `${pathname.slice(1) || "index"}.html`,
-        path.join(pathname.slice(1), "index.html"),
-      ].find((name) => name in files);
+      const files = render({
+        script: "/src/client.ts",
+        css: stylexPlugin.__stylexCollectCss?.() ?? "",
+      });
+      const file = [pathname.slice(1), `${pathname.slice(1) || "index"}.html`].find(
+        (name) => name in files,
+      );
       if (!file) return next();
       const body = files[file] ?? "";
       response.setHeader("Content-Type", file.endsWith(".html") ? "text/html" : "text/plain");
@@ -42,7 +51,7 @@ export default defineConfig({
   },
   appType: "custom",
   server: { host: "127.0.0.1", port: 5174, strictPort: false },
-  plugins: [stylex.vite({ useCSSLayers: true, lightningcssOptions: { minify: true } }), site],
+  plugins: [stylexPlugin, site],
   environments: {
     client: { build: { rollupOptions: { input: "src/client.ts" } } },
     ssr: { build: { outDir: ssrOutDir, rollupOptions: { input: "src/render.tsx" } } },
