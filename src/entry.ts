@@ -38,11 +38,13 @@ const riseIn = stylex.keyframes({
 });
 
 /**
- * Runs in the homepage `<head>`: holds the entrance until Inter has loaded, so every arrow and
- * letter enters in the final face. Capped at one second so a slow or blocked font never hangs the
- * page. Without JavaScript nothing is held.
+ * Runs in every page's `<head>`, right after the stylesheet: until Inter has loaded, the page stays
+ * hidden and the homepage entrance holds, so the first frame is always the intended one (browsers
+ * keep the previous page on screen meanwhile). Capped at one second so a slow or blocked font never
+ * hangs the page; the metric-matched fallback then shows and swaps to Inter once it arrives.
+ * Without JavaScript nothing is held.
  */
-export const entryGate = `const r=document.documentElement;r.style.setProperty("--entry-state","paused");const go=()=>r.style.removeProperty("--entry-state");document.fonts.load('400 16px Inter').then(go,go);setTimeout(go,1000)`;
+export const fontGate = `const r=document.documentElement;const inter=[...document.fonts].find(f=>f.family.replace(/"/g,"")==="Inter");if(inter&&inter.status!=="loaded"){r.style.setProperty("--first-paint","hidden");r.style.setProperty("--entry-state","paused");const go=()=>{window.__align?.();r.style.removeProperty("--first-paint");r.style.removeProperty("--entry-state")};inter.load().then(go,go);setTimeout(go,1000)}`;
 
 /** Items set `--entry-delay` (and `--entry-delay-mobile` where phones differ) inline to stagger. */
 export const entry = stylex.create({
