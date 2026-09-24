@@ -1,4 +1,5 @@
 import { type FunctionComponent, h, hydrate } from "preact";
+import { align } from "./align.ts";
 import type { Islands } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { Portfolio } from "./islands/portfolio.tsx";
@@ -45,76 +46,18 @@ requestAnimationFrame(() => {
   }
 });
 
-const phone = matchMedia("(max-width: 767px)");
-const desktop = matchMedia("(min-width: 768px)");
-const content = document.querySelector("main");
-const sidebarLinks = document.querySelector("aside nav");
-const mobileLinks = document.querySelector<HTMLElement>("[data-mobile-links]");
-const measure = document.createElement("canvas").getContext("2d");
-
-/**
- * Sizes the desktop intro to the homepage summary as it wraps in the content column, on every
- * page, so the sidebar links line up with the project table and stay put across navigation.
- */
-function updateIntroHeight() {
-  if (!desktop.matches || !content || !sidebarLinks || !measure) {
-    document.body.style.removeProperty("--desktop-intro-height");
-    return;
-  }
-  const style = getComputedStyle(sidebarLinks);
-  measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-  const width = content.getBoundingClientRect().width;
-  let line = "";
-  let lines = 1;
-  for (const word of (document.body.dataset.intro ?? "").split(/\s+/)) {
-    const next = line ? `${line} ${word}` : word;
-    if (line && measure.measureText(next).width > width) {
-      lines += 1;
-      line = word;
-    } else {
-      line = next;
-    }
-  }
-  const gap = Number.parseFloat(style.getPropertyValue(space.sectionContentGap.slice(4, -1)));
-  document.body.style.setProperty(
-    "--desktop-intro-height",
-    `${(lines + 1) * Number.parseFloat(style.lineHeight) + gap}px`,
-  );
-}
-
-/** On phones, starts the contact column where the table's scope column starts. */
-function updateContactColumn() {
-  if (!mobileLinks) return;
-  if (!phone.matches) {
-    mobileLinks.style.removeProperty("--mobile-contact-start");
-    return;
-  }
-  const origin = mobileLinks.getBoundingClientRect().left;
-  const scope = document.querySelector("[data-scope-column]");
-  const start = scope
-    ? scope.getBoundingClientRect().left -
-      origin -
-      Number.parseFloat(getComputedStyle(mobileLinks).columnGap)
-    : (mobileLinks.querySelector("[data-guardrail]")?.getBoundingClientRect().right ?? origin) -
-      origin;
-  mobileLinks.style.setProperty("--mobile-contact-start", `${Math.max(0, start)}px`);
-}
-
-function updateLayout() {
-  updateIntroHeight();
-  updateContactColumn();
-}
-
+// The first alignment already ran inline before the first paint; keep it current afterwards.
+const updateLayout = () => align(space.sectionContentGap.slice(4, -1));
 const resized = new ResizeObserver(() => setTimeout(updateLayout, 0));
 for (const target of [
-  content,
-  sidebarLinks,
-  mobileLinks,
+  document.querySelector("main"),
+  document.querySelector("aside nav"),
+  document.querySelector("[data-mobile-links]"),
   document.querySelector("[data-island=portfolio]")?.firstElementChild,
 ]) {
   if (target) resized.observe(target);
 }
-document.fonts.addEventListener("loadingdone", updateIntroHeight);
+document.fonts.addEventListener("loadingdone", updateLayout);
 addEventListener("load", updateLayout);
 addEventListener("resize", updateLayout);
 

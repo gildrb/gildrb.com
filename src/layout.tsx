@@ -1,9 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
-import { entry, entryGate, timing } from "./entry.ts";
+import { entry, fontGate, timing } from "./entry.ts";
 import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
+import { align } from "./align.ts";
 import { contacts, type Link, person, profiles } from "./site.ts";
 import { themeScript } from "./theme.ts";
 import { colors, media, space } from "./tokens.stylex.ts";
@@ -18,7 +19,7 @@ const fontRanges =
 /** The few rules StyleX cannot attach to an element, layered beneath StyleX's own layers. */
 const globalCss = [
   "@layer reset;",
-  `@font-face{font-family:"Inter";font-weight:380 600;font-display:fallback;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
+  `@font-face{font-family:"Inter";font-weight:380 600;font-display:swap;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
   `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("/fonts/ioskeley-mono.woff2") format("woff2");unicode-range:${fontRanges}}`,
   // Arial (or metric-identical Liberation Sans) scaled to Inter's metrics, so text laid out
   // before the web font arrives does not move when it does.
@@ -60,6 +61,9 @@ export function Document({
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* Hold the first paint until the whole page is parsed and aligned, so it never arrives
+            in pieces or shifts. Preact's typings lack `blocking` on <link>, hence the spread. */}
+        <link rel="expect" href="#aligned" {...{ blocking: "render" }} />
         {head}
         <title>{title}</title>
         <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -82,7 +86,7 @@ export function Document({
         )}
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
-        {home && <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: entryGate }} />}
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: fontGate }} />
         {/* Low priority keeps the island code out of the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
         <script
@@ -108,6 +112,15 @@ export function Document({
           aria-atomic="true"
         />
         {children}
+        {/* Align the layout before the first paint (see the render-blocking `expect` in <head>). */}
+        <script
+          data-cfasync="false"
+          dangerouslySetInnerHTML={{
+            // Also exposed for the font gate, which realigns with the final font before revealing.
+            __html: `window.__align=()=>(${align.toString()})(${JSON.stringify(space.sectionContentGap.slice(4, -1))});window.__align()`,
+          }}
+        />
+        <div id="aligned" hidden />
       </body>
     </html>
   );
@@ -257,7 +270,11 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
 }
 
 const styles = stylex.create({
-  html: { scrollbarGutter: { default: null, [media.desktop]: "stable" } },
+  // The background lives on <html> too, so the held first frame is already the theme color.
+  html: {
+    scrollbarGutter: { default: null, [media.desktop]: "stable" },
+    backgroundColor: colors.bg,
+  },
   /** The phone homepage fits the viewport; only the project list scrolls. */
   fixedViewport: {
     height: { default: null, [media.mobile]: "100dvh" },
@@ -265,6 +282,8 @@ const styles = stylex.create({
     overflow: { default: null, [media.mobile]: "hidden" },
   },
   body: {
+    // Held hidden by the font gate until Inter is ready; see `fontGate`.
+    visibility: "var(--first-paint, visible)",
     backgroundColor: colors.bg,
     color: colors.primary,
     fontFamily:
