@@ -19,6 +19,9 @@
   Cache-Control: public, max-age=0, must-revalidate
   X-Robots-Tag: index, follow, max-snippet:-1, max-image-preview:large
 
+/about
+  Cache-Control: public, max-age=0, must-revalidate, no-transform
+
 /404.html
   Cache-Control: public, max-age=0, must-revalidate
   X-Robots-Tag: noindex, follow
