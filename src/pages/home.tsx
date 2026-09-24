@@ -4,7 +4,7 @@ import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
 import { type Assets, Document, JsonLd, Links, Main, Name, Shell, Sidebar } from "../layout.tsx";
 import { origin, person, profiles } from "../site.ts";
-import { colors, media, space } from "../tokens.stylex.ts";
+import { colors, denseMarker, media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
 const title = `${person.name} (${person.handle})`;
@@ -115,7 +115,12 @@ const styles = stylex.create({
   },
   heading: { color: colors.secondary, marginBottom: space.sectionContentGap },
   footer: {
-    display: { default: null, [media.mobile]: "none" },
+    display: {
+      default: null,
+      [media.mobile]: "none",
+      // Too short a viewport: the table matters more than the metadata.
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "none" },
+    },
     gridRow: { default: null, [media.desktop]: 3 },
     alignSelf: { default: null, [media.desktop]: "center" },
     position: { default: null, [media.desktop]: "sticky" },

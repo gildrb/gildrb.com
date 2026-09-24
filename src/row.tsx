@@ -48,7 +48,7 @@ export function Row({
         <span {...stylex.props(styles.view, home ? styles.viewHome : styles.viewNext)}>
           {project.external ? "Visit" : "View"}
         </span>
-        {project.external ? "↗" : "→"}
+        <span {...stylex.props(styles.glyph)}>{project.external ? "↗" : "→"}</span>
       </span>
     </a>
   );
@@ -127,6 +127,7 @@ const styles = stylex.create({
     justifyContent: "flex-end",
     gap: "8px",
   },
+  glyph: { flexShrink: 0, width: space.arrowWidth, textAlign: "center" },
   view: {
     visibility: {
       default: "hidden",

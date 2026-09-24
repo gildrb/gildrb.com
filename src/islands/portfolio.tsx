@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
-import { colors, media, space } from "../tokens.stylex.ts";
+import { colors, denseMarker, media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { entry, timing } from "../entry.ts";
 
@@ -143,19 +143,53 @@ const styles = stylex.create({
   frame: {
     display: "grid",
     gridTemplateColumns: space.tableColumns,
-    gridTemplateRows: { default: null, [media.mobile]: "auto minmax(0, 1fr)" },
+    // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls under
+    // the header, between edge fades.
+    gridTemplateRows: {
+      default: null,
+      [media.mobile]: "auto minmax(0, 1fr)",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+        [media.desktop]: "auto minmax(0, 1fr)",
+      },
+    },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
     gridRow: { default: null, [media.mobile]: 3, [media.desktop]: 2 },
-    alignSelf: { default: null, [media.desktop]: "start" },
+    alignSelf: {
+      default: null,
+      [media.desktop]: "start",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "stretch" },
+    },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     containerType: "inline-size",
-    position: { default: null, [media.mobile]: "relative" },
-    minHeight: { default: null, [media.mobile]: 0 },
-    marginBottom: { default: "32px", [media.mobile]: space.sectionGap },
+    position: {
+      default: null,
+      [media.mobile]: "relative",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "relative" },
+    },
+    minHeight: {
+      default: null,
+      [media.mobile]: 0,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+    },
+    marginBottom: {
+      default: "32px",
+      [media.mobile]: space.sectionGap,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+    },
     timelineScope: "--portfolio",
     "::before": {
-      content: { default: null, [media.mobile]: '""' },
-      top: "41px",
+      content: {
+        default: null,
+        [media.mobile]: '""',
+        [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: '""' },
+      },
+      // Just below the header.
+      top: {
+        default: "41px",
+        [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+          [media.desktop]: `calc(${space.linkLineHeight} + ${space.portfolioRowPadding})`,
+        },
+      },
       backgroundImage: `linear-gradient(to bottom, ${colors.bg}, transparent)`,
       opacity: 0,
       position: "absolute",
@@ -169,7 +203,11 @@ const styles = stylex.create({
       animationFillMode: "both",
     },
     "::after": {
-      content: { default: null, [media.mobile]: '""' },
+      content: {
+        default: null,
+        [media.mobile]: '""',
+        [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: '""' },
+      },
       bottom: 0,
       backgroundImage: `linear-gradient(to top, ${colors.bg}, transparent)`,
       opacity: "var(--list-overflows, 0)",
@@ -189,7 +227,11 @@ const styles = stylex.create({
   header: {
     display: "grid",
     gridColumn: "1 / -1",
-    gridRow: { default: null, [media.mobile]: 1 },
+    gridRow: {
+      default: null,
+      [media.mobile]: 1,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 1 },
+    },
     gridTemplateColumns: "subgrid",
     alignItems: "baseline",
     paddingBlock: { default: "8px", [media.desktop]: `0 ${space.portfolioRowPadding}` },
@@ -218,17 +260,37 @@ const styles = stylex.create({
   visible: { visibility: "visible" },
   all: { gridColumn: 4, color: "inherit", textAlign: "right", textDecoration: "none" },
   section: {
-    display: { default: "grid", [media.desktop]: "contents" },
+    display: {
+      default: "grid",
+      [media.desktop]: "contents",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "grid" },
+    },
     gridTemplateColumns: "subgrid",
     gridColumn: "1 / -1",
-    gridRow: { default: null, [media.mobile]: 2 },
+    gridRow: {
+      default: null,
+      [media.mobile]: 2,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 2 },
+    },
     minWidth: 0,
-    minHeight: { default: null, [media.mobile]: 0 },
+    minHeight: {
+      default: null,
+      [media.mobile]: 0,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+    },
     alignContent: "start",
-    overflowY: { default: null, [media.mobile]: "auto" },
+    overflowY: {
+      default: null,
+      [media.mobile]: "auto",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "auto" },
+    },
     scrollbarWidth: "none",
     scrollTimeline: "--portfolio y",
-    paddingBottom: { default: null, [media.mobile]: "8px" },
+    paddingBottom: {
+      default: null,
+      [media.mobile]: "8px",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "8px" },
+    },
     "::-webkit-scrollbar": { display: "none" },
   },
   list: { display: "grid", gridColumn: "1 / -1", gridTemplateColumns: "subgrid" },
