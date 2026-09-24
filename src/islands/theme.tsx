@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { type Theme, themeClass } from "../theme.ts";
-import { colors, media, space } from "../tokens.stylex.ts";
+import { colors, denseMarker, media, space } from "../tokens.stylex.ts";
 import { type Style, ui } from "../ui.tsx";
 
 /** Touch releases this far outside the button still count, forgiving thumbs on small icons. */
@@ -127,10 +127,35 @@ export function ThemeToggle({ style }: { style?: Style }) {
 
 const styles = stylex.create({
   toggle: {
-    position: { default: null, [media.mobile]: "sticky", [media.desktop]: "fixed" },
+    // Desktop: fixed to the bottom of the viewport, level with the homepage metadata. When the
+    // viewport is too short for that (see `align.ts`), it moves to the top-right corner of its
+    // positioning box, level with the name: the layout on the homepage, where it lines up with
+    // the table's right edge as on phones, and the sidebar on inner pages.
+    position: {
+      default: null,
+      [media.mobile]: "sticky",
+      [media.desktop]: "fixed",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "absolute" },
+    },
     zIndex: { default: null, [media.mobile]: 101 },
-    top: { default: null, [media.mobile]: 0, [media.desktop]: "auto" },
-    bottom: { default: null, [media.desktop]: space.footerInset },
+    top: {
+      default: null,
+      [media.mobile]: 0,
+      [media.desktop]: "auto",
+      // The top padding above the name, less the toggle's overhang around its first line.
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+        [media.desktop]: `calc(48px + (${space.linkLineHeight} - ${space.toggleSize}) / 2)`,
+      },
+    },
+    right: {
+      default: null,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: 0 },
+    },
+    bottom: {
+      default: null,
+      [media.desktop]: space.footerInset,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "auto" },
+    },
     gridColumn: { default: null, [media.mobile]: 2 },
     order: { default: null, [media.mobile]: 1 },
     justifySelf: { default: null, [media.mobile]: "end" },
@@ -148,7 +173,12 @@ const styles = stylex.create({
       default: 0,
       [media.mobile]: `calc(24px + ${space.toggleOpticalOffset}) 0 calc(8px - ${space.toggleOpticalOffset})`,
     },
-    margin: { default: "auto 0 0", [media.mobile]: "0 0 0 16px", [media.desktop]: 0 },
+    margin: {
+      default: "auto 0 0",
+      // Phones: centered over the arrows of the table below, which ends where this column does.
+      [media.mobile]: `0 calc((${space.arrowWidth} - ${space.toggleSize}) / 2) 0 16px`,
+      [media.desktop]: 0,
+    },
     color: colors.tertiary,
     borderRadius: "50%",
     boxShadow: { default: null, ":focus-visible": `0 0 0 1px ${colors.primary}` },
@@ -156,7 +186,8 @@ const styles = stylex.create({
     "::before": {
       content: { default: null, [media.mobile]: '""' },
       position: { default: null, [media.mobile]: "absolute" },
-      inset: { default: null, [media.mobile]: "6px -6px" },
+      // Stops at the page's side padding on the right, where the toggle now overhangs the column.
+      inset: { default: null, [media.mobile]: "6px -4px 6px -6px" },
     },
   },
   hoverable: { color: { default: colors.tertiary, ":hover": { [media.hover]: colors.primary } } },

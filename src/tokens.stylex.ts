@@ -71,6 +71,8 @@ export const space = stylex.defineVars({
   sidebarBaselinePitch: "2rem",
   portfolioRowPadding: "calc((2.5rem - 1.5rem) / 2)",
   toggleSize: "32px",
+  /** The box each row's arrow is centered in, so ↗ and → share one axis with the theme toggle. */
+  arrowWidth: "16px",
   toggleOpticalOffset: "2px",
   footerInset: "48px",
   sidebarColumn: "240px",
@@ -85,3 +87,9 @@ export const space = stylex.defineVars({
 
 /** Put on a table row so its cells can react to the row's hover and focus. */
 export const rowMarker = stylex.defineMarker();
+
+/**
+ * Put on <html>. `align.ts` sets `data-dense` there when a desktop viewport is too short for the
+ * bottom-anchored metadata and theme toggle to clear the content.
+ */
+export const denseMarker = stylex.defineMarker();

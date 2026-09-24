@@ -3,6 +3,7 @@
  *
  * - Desktop: sizes the sidebar intro to the homepage summary as it wraps in the content column,
  *   on every page, so the sidebar links line up with the project table and stay put across pages.
+ *   Marks short viewports as dense (see below).
  * - Phones: starts the contact column where the table's scope column starts, and shows the
  *   project list's bottom fade in the first frame when it overflows (the scroll-driven animation
  *   takes over from the next frame).
@@ -36,6 +37,24 @@ export function align(gapProperty: string): void {
     );
   } else {
     body.style.removeProperty("--desktop-intro-height");
+  }
+
+  // Desktop, short viewports: the footer metadata and the theme toggle hang from the bottom of the
+  // viewport, so once the content reaches them `data-dense` drops the metadata, moves the toggle
+  // up level with the name and, on the homepage, holds the page to the viewport and scrolls the
+  // project list instead, as on phones. Measured in the regular layout, so it does not flip-flop.
+  const root = document.documentElement;
+  const toggle = document.querySelector<HTMLElement>("aside [data-island=theme] button");
+  delete root.dataset.dense;
+  if (matchMedia("(min-width: 768px)").matches && sidebarLinks && toggle) {
+    const dense = document.querySelector("main > footer")
+      ? // Homepage: the page fits the viewport exactly until the content pushes it taller.
+        root.scrollHeight > root.clientHeight
+      : // Inner pages: the sidebar is sticky, so its links and the toggle hold still on screen;
+        // keep a toggle's height of clearance between them.
+        sidebarLinks.getBoundingClientRect().bottom + toggle.offsetHeight >
+        toggle.getBoundingClientRect().top;
+    if (dense) root.dataset.dense = "";
   }
 
   const list = document.querySelector<HTMLElement>("[data-scroll-list]");

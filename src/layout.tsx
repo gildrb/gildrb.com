@@ -7,7 +7,7 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { contacts, type Link, person, profiles } from "./site.ts";
 import { themeScript } from "./theme.ts";
-import { colors, media, space } from "./tokens.stylex.ts";
+import { colors, denseMarker, media, space } from "./tokens.stylex.ts";
 import { type Style, ui } from "./ui.tsx";
 
 export type Assets = { script: string; css: string };
@@ -57,7 +57,7 @@ export function Document({
   children: ComponentChildren;
 }) {
   return (
-    <html lang="en" {...stylex.props(styles.html, home && styles.fixedViewport)}>
+    <html lang="en" {...stylex.props(denseMarker, styles.html, home && styles.fixedViewport)}>
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -150,7 +150,7 @@ export function Sidebar({
   return (
     <aside {...stylex.props(styles.sidebar, home && styles.homeColumn)} {...label}>
       {children}
-      <Island name="theme" component={ThemeToggle} props={{ style: home && styles.firstRow }} />
+      <Island name="theme" component={ThemeToggle} props={{ style: home && styles.homeToggle }} />
     </aside>
   );
 }
@@ -325,10 +325,19 @@ const styles = stylex.create({
       default: null,
       [media.desktop]: "auto minmax(min-content, 1fr) auto",
       [media.mobile]: "auto auto minmax(0, 1fr) auto",
+      // Dense: like on phones, the page holds to the viewport and the project list scrolls. The
+      // list's row still grows to fit the sidebar links, so those are never cut off.
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "auto 1fr auto" },
     },
     rowGap: 0,
     paddingBlock: { default: null, [media.desktop]: "48px" },
-    height: { default: null, [media.mobile]: "100dvh" },
+    height: {
+      default: null,
+      [media.mobile]: "100dvh",
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: { [media.desktop]: "100dvh" },
+    },
+    // The positioning box for the theme toggle once the viewport is dense.
+    position: { default: null, [media.desktop]: "relative" },
     minHeight: "100dvh",
     alignContent: { default: null, [media.mobile]: "start" },
   },
@@ -361,7 +370,16 @@ const styles = stylex.create({
   },
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
   caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "26px" },
-  firstRow: { gridRow: { default: null, [media.mobile]: 1 } },
+  homeToggle: {
+    gridRow: { default: null, [media.mobile]: 1 },
+    // Dense: centered over the table's arrows, whose column ends at the layout's right edge.
+    right: {
+      default: null,
+      [stylex.when.ancestor("[data-dense]", denseMarker)]: {
+        [media.desktop]: `calc((${space.arrowWidth} - ${space.toggleSize}) / 2)`,
+      },
+    },
+  },
   name: {
     fontSize: "19px",
     fontWeight: 400,
