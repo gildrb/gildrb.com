@@ -13,3 +13,4 @@ dist/
 *.pfx
 credentials.json
 secrets.json
+.idea/
