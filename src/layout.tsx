@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
-import { entry, timing } from "./entry.ts";
+import { entry, entryGate, timing } from "./entry.ts";
 import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
@@ -81,6 +81,8 @@ export function Document({
           />
         )}
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
+        {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
+        {home && <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: entryGate }} />}
         {/* Low priority keeps the island code out of the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
         <script
