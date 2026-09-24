@@ -3,7 +3,9 @@
  *
  * - Desktop: sizes the sidebar intro to the homepage summary as it wraps in the content column,
  *   on every page, so the sidebar links line up with the project table and stay put across pages.
- * - Phones: starts the contact column where the table's scope column starts.
+ * - Phones: starts the contact column where the table's scope column starts, and shows the
+ *   project list's bottom fade in the first frame when it overflows (the scroll-driven animation
+ *   takes over from the next frame).
  *
  * Self-contained on purpose: `alignScript` inlines its source at the end of `<body>`.
  */
@@ -35,6 +37,12 @@ export function align(gapProperty: string): void {
   } else {
     body.style.removeProperty("--desktop-intro-height");
   }
+
+  const list = document.querySelector<HTMLElement>("[data-scroll-list]");
+  list?.parentElement?.style.setProperty(
+    "--list-overflows",
+    list.scrollHeight - list.clientHeight - list.scrollTop > 1 ? "1" : "0",
+  );
 
   const links = document.querySelector<HTMLElement>("[data-mobile-links]");
   if (!links) return;
