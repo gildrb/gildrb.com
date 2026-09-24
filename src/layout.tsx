@@ -81,7 +81,14 @@ export function Document({
           />
         )}
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
-        <script data-cfasync="false" type="module" src={assets.script} fetchpriority="low" />
+        {/* Low priority keeps the island code out of the first paint. Preact's typings lack
+            `fetchpriority` on <script> although browsers support it, hence the spread. */}
+        <script
+          data-cfasync="false"
+          type="module"
+          src={assets.script}
+          {...{ fetchpriority: "low" }}
+        />
       </head>
       <body
         {...stylex.props(
