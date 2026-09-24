@@ -6,7 +6,7 @@ import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
 import { colors, media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
-import { entry } from "../entry.ts";
+import { entry, timing } from "../entry.ts";
 
 const columns = [
   { key: "date", label: "Date" },
@@ -69,7 +69,7 @@ export function Portfolio() {
     >
       <div
         {...stylex.props(ui.text, ui.sans, styles.header, entry.rise)}
-        style={{ "--entry-delay": "120ms" }}
+        style={{ "--entry-delay": `${timing.header}ms` }}
         aria-label="Project columns"
       >
         {columns.map(({ key, label }) => {
@@ -117,7 +117,7 @@ export function Portfolio() {
               first={index === 0}
               home
               style={!sorted && entry.rise}
-              delay={`${165 + index * 45}ms`}
+              delay={`${timing.row(index)}ms`}
             />
           ))}
         </div>
