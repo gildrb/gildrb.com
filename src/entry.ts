@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { media } from "./tokens.stylex.ts";
+import { media, rootMarker } from "./tokens.stylex.ts";
 
 /**
  * Homepage entry. The name, the About line and the theme toggle are there from the first paint;
@@ -46,10 +46,21 @@ const riseIn = stylex.keyframes({
  */
 export const fontGate = `const r=document.documentElement;const inter=[...document.fonts].find(f=>f.family.replace(/"/g,"")==="Inter");if(inter&&inter.status!=="loaded"){r.style.setProperty("--first-paint","hidden");r.style.setProperty("--entry-state","paused");const go=()=>{window.__align?.();r.style.removeProperty("--first-paint");r.style.removeProperty("--entry-state")};inter.load().then(go,go);setTimeout(go,1000)}`;
 
-/** Items set `--entry-delay` (and `--entry-delay-mobile` where phones differ) inline to stagger. */
+/**
+ * Items set `--entry-delay` (and `--entry-delay-mobile` where phones differ) inline to stagger.
+ * The entrance plays once: after it, items the layout hides and shows again (see `align.ts`)
+ * appear at once instead of entering again. The animations end where no animation starts, so
+ * dropping them changes nothing on screen.
+ */
 export const entry = stylex.create({
   fade: {
-    animationName: { default: null, [media.motion]: fadeIn },
+    animationName: {
+      default: null,
+      [media.motion]: {
+        default: fadeIn,
+        [stylex.when.ancestor("[data-entered]", rootMarker)]: "none",
+      },
+    },
     animationDuration: duration,
     animationTimingFunction: spring,
     animationFillMode: "both",
@@ -60,7 +71,13 @@ export const entry = stylex.create({
     },
   },
   rise: {
-    animationName: { default: null, [media.motion]: `${fadeIn}, ${riseIn}` },
+    animationName: {
+      default: null,
+      [media.motion]: {
+        default: `${fadeIn}, ${riseIn}`,
+        [stylex.when.ancestor("[data-entered]", rootMarker)]: "none",
+      },
+    },
     animationDuration: `${fadeDuration}, ${duration}`,
     animationTimingFunction: spring,
     animationFillMode: "both",

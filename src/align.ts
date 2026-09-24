@@ -42,12 +42,16 @@ export function align(gapProperty: string): void {
   // Desktop, short viewports: the footer metadata and the theme toggle hang from the bottom of the
   // viewport, so once the content reaches them `data-dense` drops the metadata, moves the toggle
   // up level with the name and, on the homepage, holds the page to the viewport and scrolls the
-  // project list instead, as on phones. Measured in the regular layout, so it does not flip-flop.
+  // project list instead, as on phones. When even the sidebar links outgrow the dense homepage,
+  // `data-compact` drops the profile links too, keeping contact.
+  // Each step is measured in the layout before it, so neither flip-flops.
   const root = document.documentElement;
   const toggle = document.querySelector<HTMLElement>("aside [data-island=theme] button");
+  const home = document.querySelector("main > footer");
   delete root.dataset.dense;
+  delete root.dataset.compact;
   if (matchMedia("(min-width: 768px)").matches && sidebarLinks && toggle) {
-    const dense = document.querySelector("main > footer")
+    const dense = home
       ? // Homepage: the page fits the viewport exactly until the content pushes it taller.
         root.scrollHeight > root.clientHeight
       : // Inner pages: the sidebar is sticky, so its links and the toggle hold still on screen;
@@ -55,6 +59,13 @@ export function align(gapProperty: string): void {
         sidebarLinks.getBoundingClientRect().bottom + toggle.offsetHeight >
         toggle.getBoundingClientRect().top;
     if (dense) root.dataset.dense = "";
+    // The dense homepage layout is the viewport's height; the links must end above its padding.
+    const layout = sidebarLinks.closest("aside")?.parentElement;
+    if (dense && home && layout) {
+      const box = layout.getBoundingClientRect();
+      const end = box.bottom - Number.parseFloat(getComputedStyle(layout).paddingBottom);
+      if (sidebarLinks.getBoundingClientRect().bottom > end + 0.5) root.dataset.compact = "";
+    }
   }
 
   const list = document.querySelector<HTMLElement>("[data-scroll-list]");
