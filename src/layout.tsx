@@ -18,7 +18,7 @@ const fontRanges =
 /** The few rules StyleX cannot attach to an element, layered beneath StyleX's own layers. */
 const globalCss = [
   "@layer reset;",
-  `@font-face{font-family:"Inter";font-weight:380 600;font-display:swap;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
+  `@font-face{font-family:"Inter";font-weight:380 600;font-display:fallback;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
   `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("/fonts/ioskeley-mono.woff2") format("woff2");unicode-range:${fontRanges}}`,
   // Arial (or metric-identical Liberation Sans) scaled to Inter's metrics, so text laid out
   // before the web font arrives does not move when it does.
