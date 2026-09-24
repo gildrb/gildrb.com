@@ -12,6 +12,8 @@ const spring =
   "linear(0, 0.078, 0.235, 0.401, 0.549, 0.669, 0.762, 0.831, 0.882, 0.918, 0.944, 0.962, 0.974, 0.982, 0.988, 0.992, 0.995, 0.996, 0.998, 0.998, 1)";
 
 const duration = "550ms";
+// Items go solid over the first 60% of the rise, then settle: they never look ghostly in motion.
+const fadeDuration = "330ms";
 
 /** Delays in milliseconds; the phone layout stacks the links below the table, so they wait longer. */
 export const timing = {
@@ -31,8 +33,8 @@ const fadeIn = stylex.keyframes({
 });
 
 const riseIn = stylex.keyframes({
-  from: { opacity: 0, transform: "translateY(8px)" },
-  to: { opacity: 1, transform: "translateY(0)" },
+  from: { transform: "translateY(8px)" },
+  to: { transform: "translateY(0)" },
 });
 
 /** Items set `--entry-delay` (and `--entry-delay-mobile` where phones differ) inline to stagger. */
@@ -48,8 +50,8 @@ export const entry = stylex.create({
     },
   },
   rise: {
-    animationName: { default: null, [media.motion]: riseIn },
-    animationDuration: duration,
+    animationName: { default: null, [media.motion]: `${fadeIn}, ${riseIn}` },
+    animationDuration: `${fadeDuration}, ${duration}`,
     animationTimingFunction: spring,
     animationFillMode: "both",
     animationDelay: {
