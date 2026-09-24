@@ -105,8 +105,10 @@ export function Portfolio() {
           All
         </a>
       </div>
-      <section ref={section} {...stylex.props(styles.section)} aria-label="Portfolio">
-        <h2 {...stylex.props(ui.srOnly)}>Portfolio</h2>
+      <section ref={section} {...stylex.props(styles.section)} aria-labelledby="portfolio-title">
+        <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
+          Portfolio: case studies and projects by Gil Rodrigues, each linking to its full write-up
+        </h2>
         <div {...stylex.props(styles.list)}>
           {rows.map((project, index) => (
             <Row
