@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
-import { entry } from "./entry.ts";
+import { entry, timing } from "./entry.ts";
 import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
@@ -183,10 +183,6 @@ export function PageLinks({ phone }: { phone: boolean }) {
   );
 }
 
-// Profiles, then contacts; desktop shows contacts first and phones stagger both columns together.
-const desktopDelays = [320, 370, 420, 470, 520, 570, 120, 170, 220, 270];
-const phoneDelays = [525, 570, 615, 660, 705, 750, 525, 570, 615, 660];
-
 /**
  * Profile and contact links. On phones they form two columns; `client.ts` aligns the second
  * with the table's scope column through `--mobile-contact-start`.
@@ -194,8 +190,8 @@ const phoneDelays = [525, 570, 615, 660, 705, 750, 525, 570, 615, 660];
 export function Links({ home = false, phone = false }: { home?: boolean; phone?: boolean }) {
   const rise = home && entry.rise;
   const stagger = (index: number) => ({
-    "--entry-delay": `${desktopDelays[index]}ms`,
-    "--entry-delay-mobile": `${phoneDelays[index]}ms`,
+    "--entry-delay": `${timing.link.desktop[index]}ms`,
+    "--entry-delay-mobile": `${timing.link.phone[index]}ms`,
   });
   const link = (item: Link, index: number, placement: Style, me: boolean) => {
     return (
@@ -219,7 +215,14 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
         styles.links,
         home ? [styles.homeLinks, entry.fade] : styles.caseLinks,
       )}
-      style={home ? { "--entry-delay": "80ms", "--entry-delay-mobile": "480ms" } : undefined}
+      style={
+        home
+          ? {
+              "--entry-delay": `${timing.links.desktop}ms`,
+              "--entry-delay-mobile": `${timing.links.phone}ms`,
+            }
+          : undefined
+      }
       aria-label="Public profiles and contact"
       data-mobile-links={phone || home || undefined}
     >
