@@ -37,6 +37,13 @@ const riseIn = stylex.keyframes({
   to: { transform: "translateY(0)" },
 });
 
+/**
+ * Runs in the homepage `<head>`: holds the entrance until Inter has loaded, so every arrow and
+ * letter enters in the final face. Capped at one second so a slow or blocked font never hangs the
+ * page. Without JavaScript nothing is held.
+ */
+export const entryGate = `const r=document.documentElement;r.style.setProperty("--entry-state","paused");const go=()=>r.style.removeProperty("--entry-state");document.fonts.load('400 16px Inter').then(go,go);setTimeout(go,1000)`;
+
 /** Items set `--entry-delay` (and `--entry-delay-mobile` where phones differ) inline to stagger. */
 export const entry = stylex.create({
   fade: {
@@ -44,6 +51,7 @@ export const entry = stylex.create({
     animationDuration: duration,
     animationTimingFunction: spring,
     animationFillMode: "both",
+    animationPlayState: "var(--entry-state, running)",
     animationDelay: {
       default: "var(--entry-delay, 0ms)",
       [media.mobile]: "var(--entry-delay-mobile, var(--entry-delay, 0ms))",
@@ -54,6 +62,7 @@ export const entry = stylex.create({
     animationDuration: `${fadeDuration}, ${duration}`,
     animationTimingFunction: spring,
     animationFillMode: "both",
+    animationPlayState: "var(--entry-state, running)",
     animationDelay: {
       default: "var(--entry-delay, 0ms)",
       [media.mobile]: "var(--entry-delay-mobile, var(--entry-delay, 0ms))",
