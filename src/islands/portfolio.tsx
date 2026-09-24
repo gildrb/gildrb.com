@@ -30,9 +30,11 @@ export function Portfolio() {
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const section = useRef<HTMLElement>(null);
 
+  // Browsers with scroll-driven animations tie the edge fades to the scroll position in CSS, so
+  // they are right from the first frame; this fallback only serves the others.
   useEffect(() => {
     const element = section.current;
-    if (!element) return;
+    if (!element || CSS.supports("animation-timeline: scroll()")) return;
     const update = () =>
       setEdges({
         top: element.scrollTop > 1,
@@ -105,7 +107,12 @@ export function Portfolio() {
           All
         </a>
       </div>
-      <section ref={section} {...stylex.props(styles.section)} aria-labelledby="portfolio-title">
+      <section
+        data-scroll-list
+        ref={section}
+        {...stylex.props(styles.section)}
+        aria-labelledby="portfolio-title"
+      >
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
           Portfolio: case studies and projects by Gil Rodrigues, each linking to its full write-up
         </h2>
@@ -126,6 +133,12 @@ export function Portfolio() {
   );
 }
 
+const scrollDriven = "@supports (animation-timeline: scroll())";
+
+// Scroll-linked: the top fade appears once the list scrolls, the bottom one leaves at the end.
+const revealTop = stylex.keyframes({ "0%": { opacity: 0 }, "4%, 100%": { opacity: 1 } });
+const hideBottom = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opacity: 0 } });
+
 const styles = stylex.create({
   frame: {
     display: "grid",
@@ -139,6 +152,7 @@ const styles = stylex.create({
     position: { default: null, [media.mobile]: "relative" },
     minHeight: { default: null, [media.mobile]: 0 },
     marginBottom: { default: "32px", [media.mobile]: space.sectionGap },
+    timelineScope: "--portfolio",
     "::before": {
       content: { default: null, [media.mobile]: '""' },
       top: "41px",
@@ -149,19 +163,25 @@ const styles = stylex.create({
       zIndex: 2,
       height: "56px",
       pointerEvents: "none",
-      transition: "opacity 160ms ease-out",
+      animationName: { default: null, [scrollDriven]: revealTop },
+      animationTimeline: "--portfolio",
+      animationTimingFunction: "linear",
+      animationFillMode: "both",
     },
     "::after": {
       content: { default: null, [media.mobile]: '""' },
       bottom: 0,
       backgroundImage: `linear-gradient(to top, ${colors.bg}, transparent)`,
-      opacity: 0,
+      opacity: "var(--list-overflows, 0)",
       position: "absolute",
       insetInline: 0,
       zIndex: 2,
       height: "56px",
       pointerEvents: "none",
-      transition: "opacity 160ms ease-out",
+      animationName: { default: null, [scrollDriven]: hideBottom },
+      animationTimeline: "--portfolio",
+      animationTimingFunction: "linear",
+      animationFillMode: "both",
     },
   },
   fadeTop: { "::before": { opacity: 1 } },
@@ -207,6 +227,7 @@ const styles = stylex.create({
     alignContent: "start",
     overflowY: { default: null, [media.mobile]: "auto" },
     scrollbarWidth: "none",
+    scrollTimeline: "--portfolio y",
     paddingBottom: { default: null, [media.mobile]: "8px" },
     "::-webkit-scrollbar": { display: "none" },
   },
