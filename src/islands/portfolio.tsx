@@ -78,9 +78,8 @@ export function Portfolio() {
           const active = sort.key === key;
           return (
             <button
-              {...stylex.props(ui.reset, ui.focusRing, styles.sort, styles[key])}
+              {...stylex.props(ui.target, ui.reset, ui.focusRing, styles.sort, styles[key])}
               type="button"
-              data-scope-column={key === "scope" || undefined}
               aria-pressed={active}
               aria-label={`Sort projects by ${key}${active ? `, currently ${describe(key, sort.direction)}` : ""}`}
               onClick={(event) => select(key, event)}
@@ -101,7 +100,7 @@ export function Portfolio() {
           );
         })}
         <a
-          {...stylex.props(ui.focusRing, styles.all)}
+          {...stylex.props(ui.target, ui.focusRing, styles.all)}
           href={`/all?sort=${sort.key}&direction=${sort.direction}`}
         >
           All
@@ -114,7 +113,9 @@ export function Portfolio() {
         aria-labelledby="portfolio-title"
       >
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
-          Portfolio: case studies and projects by Gil Rodrigues, each linking to its full write-up
+          <span data-nosnippet>
+            Portfolio: case studies and projects by Gil Rodrigues, each linking to its full write-up
+          </span>
         </h2>
         <div {...stylex.props(styles.list)}>
           {rows.map((project, index) => (
@@ -183,9 +184,9 @@ const styles = stylex.create({
         [media.mobile]: '""',
         [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: '""' },
       },
-      // Just below the header.
+      // Just below the header: one touch target on phones.
       top: {
-        default: "41px",
+        default: space.touchTarget,
         [stylex.when.ancestor("[data-dense]", rootMarker)]: {
           [media.desktop]: `calc(${space.linkLineHeight} + ${space.portfolioRowPadding})`,
         },
@@ -234,15 +235,13 @@ const styles = stylex.create({
     },
     gridTemplateColumns: "subgrid",
     alignItems: "baseline",
-    paddingBlock: { default: "8px", [media.desktop]: `0 ${space.portfolioRowPadding}` },
+    paddingBlock: { default: space.touchInset, [media.desktop]: `0 ${space.portfolioRowPadding}` },
     position: { default: null, [media.mobile]: "relative" },
     zIndex: { default: null, [media.mobile]: 3 },
     backgroundColor: { default: null, [media.mobile]: colors.bg },
     color: colors.secondary,
-    borderBottomWidth: { default: "1px", [media.desktop]: 0 },
-    borderBottomStyle: "solid",
-    borderBottomColor: colors.hairline,
-    boxShadow: { default: null, [media.desktop]: `inset 0 -1px ${colors.hairline}` },
+    // A hairline drawn inside the header, so it never adds to the header's height.
+    boxShadow: `inset 0 -1px ${colors.hairline}`,
   },
   sort: {
     display: "inline-grid",
@@ -285,6 +284,8 @@ const styles = stylex.create({
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto" },
     },
     scrollbarWidth: "none",
+    // The list scrolls inside a page that does not: reaching its end must not drag the page.
+    overscrollBehavior: "contain",
     scrollTimeline: "--portfolio y",
     paddingBottom: {
       default: null,

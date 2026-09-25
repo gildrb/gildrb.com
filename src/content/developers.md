@@ -24,4 +24,4 @@ There is no CLI tool; scripts should use the API or the MCP server above.
 
 ## Source
 
-The site's source is at [github.com/gildrb/web](https://github.com/gildrb/web).
+The site’s source is at [github.com/gildrb/web](https://github.com/gildrb/web).

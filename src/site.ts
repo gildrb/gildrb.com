@@ -41,7 +41,6 @@ export type Case = Row & {
   /** Breadcrumb and document title. */
   name: string;
   description: string;
-  ogTitle: string;
   ogDescription: string;
   /** Social preview image, relative to `/images/optimized/`. */
   ogImage?: string;
@@ -58,7 +57,6 @@ export const cases: readonly Case[] = [
     scope: "Logo",
     description:
       "A self-initiated T3 logomark exploration built across products, icons, and a family of rejected directions.",
-    ogTitle: "T3 logomark exploration | Gil Rodrigues",
     ogDescription:
       "A self-initiated T3 logomark exploration developed across products, icons, and a family of rejected directions.",
     ogImage: "gil-rodrigues-t3-mark-1200.webp",
@@ -70,7 +68,6 @@ export const cases: readonly Case[] = [
     name: "Ben Davis",
     scope: "Logo",
     description: "A personal db monogram redesign Gil Rodrigues drew for developer Ben Davis.",
-    ogTitle: "Ben Davis brandmark redesign by Gil Rodrigues",
     ogDescription:
       "An unsolicited db monogram redesign for developer Ben Davis, built from mirrored letterforms and one central diagonal.",
     ogImage: "gil-rodrigues-ben-davis-construction-1280.webp",
@@ -83,7 +80,6 @@ export const cases: readonly Case[] = [
     scope: "Product/Design Engineering",
     description:
       "Heph answers questions from your own files and shows where each answer came from.",
-    ogTitle: "Heph local document agent by Gil Rodrigues",
     ogDescription: "Ask your own files a question and see the passages behind the answer.",
   },
   {
@@ -94,7 +90,6 @@ export const cases: readonly Case[] = [
     scope: "Brand Design",
     description:
       "How Gil Rodrigues developed a self-initiated identity concept for Filen, from rejected marks to an app icon and campaign system.",
-    ogTitle: "Filen identity system | Gil Rodrigues",
     ogDescription:
       "A self-initiated Filen identity concept developed through sketches, scale tests, an app icon, and privacy-focused campaign work.",
     ogImage: "gil-rodrigues-filen-wordmark-1600.webp",
@@ -107,7 +102,6 @@ export const cases: readonly Case[] = [
     scope: "Logo",
     description:
       "How Gil Rodrigues developed Jordan “n0thing” Gilbert's commissioned pixel wordmark through a rejected typewriter study, final exports, and motion.",
-    ogTitle: "n0thing wordmark by Gil Rodrigues",
     ogDescription:
       "From an early pixel mark and typewriter exploration to final exports and an animated wordmark.",
     ogImage: "gil-rodrigues-n0thing-wordmark-animation-1280.gif",
@@ -120,7 +114,6 @@ export const cases: readonly Case[] = [
     scope: "Typeface",
     description:
       "CURVES is a free display typeface Gil Rodrigues designed in 2019, built from geometric forms and released as a 96-glyph unicase font.",
-    ogTitle: "CURVES free display typeface by Gil Rodrigues",
     ogDescription:
       "A 96-glyph unicase display typeface built from geometric forms and released for free.",
     ogImage: "gil-rodrigues-curves-letterforms-1280.webp",
@@ -132,7 +125,6 @@ export const cases: readonly Case[] = [
     name: "mL7",
     scope: "Logo",
     description: "How Gil Rodrigues designed the compact mL7 channel logo in 2018.",
-    ogTitle: "mL7 identity | Gil Rodrigues",
     ogDescription:
       "A compact identity built from a custom black wordmark and an orange directional stroke.",
     ogImage: "gil-rodrigues-ml7-logo-system-1600.webp",
@@ -164,6 +156,13 @@ export const projects: readonly Project[] = [
 
 export const slugs = cases.map((item) => item.slug);
 
+/** Where people and agents find the API, MCP server and Markdown access. */
+export const developers = {
+  slug: "developers",
+  name: "Developers",
+  description: "Public read-only API, MCP server and Markdown access for gildrb.com.",
+} as const;
+
 /** Plain pages written in `src/content/<slug>.md`. */
 export const pages = [
   {
@@ -173,11 +172,7 @@ export const pages = [
   },
   { slug: "contact", name: "Contact", description: "How to contact Gil Rodrigues (gildrb)." },
   { slug: "privacy", name: "Privacy", description: "Privacy statement for gildrb.com." },
-  {
-    slug: "developers",
-    name: "Developers",
-    description: "Public read-only API, MCP server and Markdown access for gildrb.com.",
-  },
+  developers,
 ] as const;
 
 export type SortKey = "date" | "title" | "scope";

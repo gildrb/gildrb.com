@@ -69,7 +69,6 @@ const resized = new ResizeObserver(() => setTimeout(updateLayout, 0));
 for (const target of [
   document.querySelector("main"),
   document.querySelector("aside nav"),
-  document.querySelector("[data-mobile-links]"),
   document.querySelector("[data-island=portfolio]")?.firstElementChild,
 ]) {
   if (target) resized.observe(target);

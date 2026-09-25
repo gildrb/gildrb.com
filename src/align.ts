@@ -4,9 +4,9 @@
  * - Desktop: sizes the sidebar intro to the homepage summary as it wraps in the content column,
  *   on every page, so the sidebar links line up with the project table and stay put across pages.
  *   Marks short viewports as dense (see below).
- * - Phones: starts the contact column where the table's scope column starts, and shows the
- *   project list's bottom fade in the first frame when it overflows (the scroll-driven animation
- *   takes over from the next frame).
+ * - Phones: shows the project list's bottom fade in the first frame when it overflows (the
+ *   scroll-driven animation takes over from the next frame). The contact column needs no help:
+ *   it shares the table's columns (see `Links`).
  *
  * Self-contained on purpose: `alignScript` inlines its source at the end of `<body>`.
  */
@@ -73,19 +73,4 @@ export function align(gapProperty: string): void {
     "--list-overflows",
     list.scrollHeight - list.clientHeight - list.scrollTop > 1 ? "1" : "0",
   );
-
-  const links = document.querySelector<HTMLElement>("[data-mobile-links]");
-  if (!links) return;
-  if (!matchMedia("(max-width: 767px)").matches) {
-    links.style.removeProperty("--mobile-contact-start");
-    return;
-  }
-  const origin = links.getBoundingClientRect().left;
-  const scope = document.querySelector("[data-scope-column]");
-  const start = scope
-    ? scope.getBoundingClientRect().left -
-      origin -
-      Number.parseFloat(getComputedStyle(links).columnGap)
-    : (links.querySelector("[data-guardrail]")?.getBoundingClientRect().right ?? origin) - origin;
-  links.style.setProperty("--mobile-contact-start", `${Math.max(0, start)}px`);
 }

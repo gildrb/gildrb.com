@@ -21,9 +21,9 @@ const monoBlocks = (markdown: string) =>
       (block.type === "media" && block.items.some(({ id }) => id === "heph-demo")),
   );
 
+/** Every inner page's tab reads like its breadcrumb: "Gil Rodrigues → T3". */
 function Frame({
   assets,
-  title,
   description,
   current,
   head,
@@ -31,7 +31,6 @@ function Frame({
   children,
 }: {
   assets: Assets;
-  title: string;
   description: string;
   current: string;
   head: preact.ComponentChildren;
@@ -41,7 +40,7 @@ function Frame({
   return (
     <Document
       assets={assets}
-      title={title}
+      title={`${person.name} → ${current}`}
       mono={mono}
       head={
         <>
@@ -132,7 +131,6 @@ export function CasePage({
   return (
     <Frame
       assets={assets}
-      title={item.name}
       description={item.description}
       current={item.name}
       mono={monoBlocks(markdown)}
@@ -142,11 +140,11 @@ export function CasePage({
           <Alternates slug={item.slug} name={item.name} />
           <meta property="og:type" content="article" />
           <meta property="og:url" content={url} />
-          <meta property="og:title" content={item.ogTitle} />
+          <meta property="og:title" content={`${person.name} → ${item.name}`} />
           <meta property="og:description" content={item.ogDescription} />
           {image && <meta property="og:image" content={image} />}
           <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
-          <meta name="twitter:title" content={item.ogTitle} />
+          <meta name="twitter:title" content={`${person.name} → ${item.name}`} />
           <meta name="twitter:description" content={item.ogDescription} />
           {image && <meta name="twitter:image" content={image} />}
           <JsonLd
@@ -203,7 +201,6 @@ export function AllPage({
   return (
     <Frame
       assets={assets}
-      title="All"
       description={description}
       current="All"
       mono
@@ -214,10 +211,10 @@ export function AllPage({
           <HeroPreload markdown={markdown[cases[0]?.slug ?? ""] ?? ""} />
           <meta property="og:type" content="website" />
           <meta property="og:url" content={`${origin}/all`} />
-          <meta property="og:title" content="All projects | Gil Rodrigues" />
+          <meta property="og:title" content={`${person.name} → All`} />
           <meta property="og:description" content={description} />
           <meta name="twitter:card" content="summary" />
-          <meta name="twitter:title" content="All projects | Gil Rodrigues" />
+          <meta name="twitter:title" content={`${person.name} → All`} />
           <meta name="twitter:description" content={description} />
         </>
       }
@@ -295,11 +292,10 @@ export function DocPage({
   markdown: string;
 }) {
   const url = `${origin}/${page.slug}`;
-  const title = `${page.name} - ${person.name} (${person.handle})`;
+  const title = `${person.name} → ${page.name}`;
   return (
     <Frame
       assets={assets}
-      title={title}
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}

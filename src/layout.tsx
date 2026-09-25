@@ -5,10 +5,10 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
-import { contacts, type Link, person, profiles } from "./site.ts";
-import { themeScript } from "./theme.ts";
+import { contacts, type Link, person, profiles, projects } from "./site.ts";
+import { themeColor, themeScript } from "./theme.ts";
 import { colors, media, rootMarker, space } from "./tokens.stylex.ts";
-import { type Style, ui } from "./ui.tsx";
+import { Figures, type Style, ui, untranslated } from "./ui.tsx";
 
 export type Assets = { script: string; css: string };
 
@@ -26,6 +26,10 @@ const globalCss = [
   '@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans");size-adjust:107.35%;ascent-override:90.24%;descent-override:22.47%;line-gap-override:0%}',
   "@layer reset{*{margin:0;padding:0;box-sizing:border-box}}",
   `::selection{color:${colors.bg};background:${colors.primary}}`,
+  // Every control answers a press with its own `:active` state instead of the grey tap flash.
+  "a,button{-webkit-tap-highlight-color:transparent}",
+  // In-page links (skip to content, back to top) glide unless motion is reduced.
+  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
 ].join("\n");
 
 export function JsonLd({ value }: { value: unknown }) {
@@ -65,6 +69,9 @@ export function Document({
             in pieces or shifts. Preact's typings lack `blocking` on <link>, hence the spread. */}
         <link rel="expect" href="#aligned" {...{ blocking: "render" }} />
         {head}
+        {/* The browser chrome takes the page color; a saved theme retargets both (`themeScript`). */}
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content={themeColor.dark} />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content={themeColor.light} />
         <title>{title}</title>
         <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
@@ -149,6 +156,9 @@ export function Sidebar({
 }) {
   return (
     <aside {...stylex.props(styles.sidebar, home && styles.homeColumn)} {...label}>
+      <a {...stylex.props(ui.heading, ui.focusRing, styles.skip)} href="#content">
+        <span data-nosnippet>Skip to content</span>
+      </a>
       {children}
       <Island name="theme" component={ThemeToggle} props={{ style: home && styles.homeToggle }} />
     </aside>
@@ -163,6 +173,9 @@ export function Main({ home = false, children }: { home?: boolean; children: Com
         home ? [styles.homeColumn, styles.homeContent] : styles.caseContent,
       )}
     >
+      {/* The skip link's target. `<main>` itself cannot take focus on phones, where it is
+          `display: contents`; this marker can, and being out of flow it takes no grid cell. */}
+      <span {...stylex.props(styles.skipTarget)} id="content" tabIndex={-1} />
       {children}
     </main>
   );
@@ -172,19 +185,21 @@ export function Main({ home = false, children }: { home?: boolean; children: Com
 export function Name({ current }: { current?: string }) {
   return current ? (
     <p {...stylex.props(ui.heading, styles.name, styles.caseName)}>
-      <a {...stylex.props(ui.focusRing, styles.home)} href="/">
+      <a {...stylex.props(ui.target, ui.focusRing, styles.home)} href="/" {...untranslated}>
         Gil Rodrigues
       </a>
       <span {...stylex.props(styles.arrow)} aria-hidden="true">
         →
       </span>
-      <a {...stylex.props(ui.focusRing, styles.current)} href="#top">
+      <a {...stylex.props(ui.target, ui.focusRing, styles.current)} href="#top">
         {current}
       </a>
     </p>
   ) : (
     <h1 {...stylex.props(ui.heading, styles.name, styles.homeName)} id="site-title" itemprop="name">
-      <span data-nosnippet>Gil Rodrigues</span>
+      <span data-nosnippet {...untranslated}>
+        Gil Rodrigues
+      </span>
     </h1>
   );
 }
@@ -199,8 +214,9 @@ export function PageLinks({ phone }: { phone: boolean }) {
 }
 
 /**
- * Profile and contact links. On phones they form two columns; `client.ts` aligns the second
- * with the table's scope column through `--mobile-contact-start`.
+ * Profile and contact links. On phones they share the homepage table's columns: hidden ruler
+ * cells carry every project's date and title, so the contact column starts exactly where the
+ * table's scope column does, on every page, whether or not a table is shown.
  */
 export function Links({ home = false, phone = false }: { home?: boolean; phone?: boolean }) {
   const rise = home && entry.rise;
@@ -208,16 +224,17 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
     "--entry-delay": `${timing.link.desktop[index]}ms`,
     "--entry-delay-mobile": `${timing.link.phone[index]}ms`,
   });
-  const link = (item: Link, index: number, placement: Style, me: boolean) => {
+  const link = (item: Link, index: number, placement: Style, me: boolean, row?: number) => {
     return (
       <a
         {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, placement, rise)}
-        style={home ? stagger(index) : undefined}
+        // Phones place each profile link on its own grid row; flex ignores it on desktop.
+        style={{ ...(home && stagger(index)), ...(row !== undefined && { gridRow: String(row) }) }}
         href={item.href}
         target="_blank"
         rel={me ? "me noopener noreferrer" : "noopener noreferrer"}
         itemprop={me ? "sameAs" : undefined}
-        data-guardrail={item.label === "Letterboxd" || undefined}
+        {...untranslated}
       >
         <span data-nosnippet>{item.label}</span>
       </a>
@@ -241,6 +258,23 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
       aria-label="Public profiles and contact"
       data-mobile-links={phone || home || undefined}
     >
+      {(phone || home) &&
+        projects.flatMap((project) => [
+          <span
+            {...stylex.props(ui.text, styles.ruler, styles.rulerDate)}
+            aria-hidden="true"
+            data-nosnippet
+          >
+            <Figures text={project.date.slice(0, 7)} />
+          </span>,
+          <span
+            {...stylex.props(ui.text, styles.ruler, styles.rulerTitle)}
+            aria-hidden="true"
+            data-nosnippet
+          >
+            {project.title}
+          </span>,
+        ])}
       <p
         {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup, rise)}
         style={home ? stagger(0) : undefined}
@@ -248,7 +282,7 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
         <span data-nosnippet>Links</span>
       </p>
       {profiles.map((item, index) =>
-        link(item, index + 1, [styles.profile, styles.profileGroup], true),
+        link(item, index + 1, [styles.profile, styles.profileGroup], true, index + 2),
       )}
       <p
         {...stylex.props(styles.label, styles.contact, styles.contactLabel, rise)}
@@ -271,11 +305,15 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
   );
 }
 
+/** The phone page's side margin; the sticky name bar bleeds across it to the viewport edge. */
+const phoneGutter = "12px";
+
 const styles = stylex.create({
   // The background lives on <html> too, so the held first frame is already the theme color.
   html: {
     scrollbarGutter: { default: null, [media.desktop]: "stable" },
     backgroundColor: colors.bg,
+    colorScheme: colors.scheme,
   },
   /**
    * The phone homepage fits the viewport; only the project list scrolls. So does the dense desktop
@@ -314,13 +352,13 @@ const styles = stylex.create({
     maxWidth: "1900px",
     margin: "0 auto",
     // A minimum margin: the layout keeps its full width until the viewport cannot fit it.
-    paddingInline: { default: "32px", [media.mobile]: "12px" },
+    paddingInline: { default: "32px", [media.mobile]: phoneGutter },
   },
   layout: {
     display: "grid",
     gridTemplateColumns: {
       default: `${space.sidebarColumn} 1fr`,
-      [media.mobile]: "minmax(0, 1fr) 32px",
+      [media.mobile]: `minmax(0, 1fr) ${space.toggleSize}`,
     },
     maxWidth: `calc(${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn})`,
     margin: "0 auto",
@@ -337,7 +375,7 @@ const styles = stylex.create({
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto 1fr auto" },
     },
     rowGap: 0,
-    paddingBlock: { default: null, [media.desktop]: "48px" },
+    paddingBlock: { default: null, [media.desktop]: space.pageInset },
     height: {
       default: null,
       [media.mobile]: "100dvh",
@@ -353,7 +391,7 @@ const styles = stylex.create({
     top: 0,
     zIndex: 100,
     height: { default: "100vh", [media.mobile]: "auto" },
-    padding: { default: "48px 0", [media.mobile]: 0 },
+    padding: { default: `${space.pageInset} 0`, [media.mobile]: 0 },
     display: { default: "flex", [media.mobile]: "contents" },
     flexDirection: "column",
   },
@@ -371,9 +409,25 @@ const styles = stylex.create({
     minWidth: 0,
     width: "100%",
     maxWidth: space.contentColumn,
-    padding: { default: "48px 0", [media.mobile]: 0 },
+    padding: { default: `${space.pageInset} 0`, [media.mobile]: 0 },
     display: { default: "flex", [media.mobile]: "contents" },
     flexDirection: "column",
+  },
+  // Focused only through the skip link, which is its own cue.
+  skipTarget: { position: "absolute", outline: "none" },
+  /**
+   * Hidden until focused, then set exactly over the name: same type, same place (the sidebar's
+   * inset on desktop, the name bar's padding on phones), on the page color.
+   */
+  skip: {
+    position: { default: "absolute", [media.mobile]: "fixed" },
+    top: { default: space.pageInset, [media.mobile]: space.sectionGap },
+    left: { default: 0, [media.mobile]: phoneGutter },
+    zIndex: 102,
+    lineHeight: space.linkLineHeight,
+    textDecoration: "none",
+    backgroundColor: colors.bg,
+    clipPath: { default: "inset(50%)", ":focus-visible": "none" },
   },
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
   caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "26px" },
@@ -399,9 +453,16 @@ const styles = stylex.create({
     position: { default: null, [media.mobile]: "sticky" },
     top: { default: null, [media.mobile]: 0 },
     zIndex: { default: null, [media.mobile]: 100 },
-    width: { default: null, [media.mobile]: "calc(100% + 56px)" },
-    marginLeft: { default: null, [media.mobile]: "-12px" },
-    padding: { default: null, [media.mobile]: "24px 44px 8px 12px" },
+    // Bleeds across both gutters and the toggle column, and pads back to the text column.
+    width: {
+      default: null,
+      [media.mobile]: `calc(100% + ${phoneGutter} * 2 + ${space.toggleSize})`,
+    },
+    marginLeft: { default: null, [media.mobile]: `calc(${phoneGutter} * -1)` },
+    padding: {
+      default: null,
+      [media.mobile]: `${space.sectionGap} calc(${space.toggleSize} + ${phoneGutter}) 8px ${phoneGutter}`,
+    },
     backgroundImage: {
       default: null,
       [media.mobile]: `linear-gradient(to bottom, ${colors.bg} 60%, transparent)`,
@@ -434,6 +495,7 @@ const styles = stylex.create({
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
       ":focus-visible": colors.primary,
+      ":active": colors.primary,
     },
     textDecoration: "none",
   },
@@ -444,18 +506,9 @@ const styles = stylex.create({
   links: {
     display: { default: "flex", [media.mobile]: "grid" },
     flexDirection: "column",
-    rowGap: {
-      default: `calc(${space.sidebarBaselinePitch} - ${space.linkLineHeight})`,
-      [media.mobile]: space.sectionContentGap,
-    },
-    gridTemplateColumns: {
-      default: null,
-      [media.mobile]: "var(--mobile-contact-start, max-content) minmax(0, 1fr)",
-    },
-    columnGap: {
-      default: null,
-      [media.mobile]: `calc(${space.mobileCellEndSpace} + ${space.mobileTableGap})`,
-    },
+    rowGap: space.linkGap,
+    gridTemplateColumns: { default: null, [media.mobile]: space.tableColumns },
+    columnGap: { default: null, [media.mobile]: space.mobileTableGap },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
   },
   homeLinks: {
@@ -468,7 +521,26 @@ const styles = stylex.create({
     marginTop: { default: null, [media.mobile]: space.sectionGap },
   },
   label: { color: colors.secondary, width: "fit-content" },
-  profileLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
+  profileLabel: {
+    marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch },
+    gridRow: { default: null, [media.mobile]: 1 },
+    gridColumn: { default: null, [media.mobile]: "1 / 3" },
+  },
+  /**
+   * A table cell's width without its height: the date and title columns size to every project,
+   * exactly as the homepage table's do, while the rulers themselves take no space or voice.
+   */
+  ruler: {
+    display: { default: "none", [media.mobile]: "block" },
+    gridRow: 1,
+    height: 0,
+    overflow: "hidden",
+    visibility: "hidden",
+    whiteSpace: "nowrap",
+    paddingInlineEnd: space.mobileCellEndSpace,
+  },
+  rulerDate: { gridColumn: 1 },
+  rulerTitle: { gridColumn: 2 },
   /** Compact (a dense homepage too short for the whole sidebar, see `align.ts`): contact stays. */
   profileGroup: {
     display: {
@@ -477,17 +549,17 @@ const styles = stylex.create({
     },
   },
   link: {
-    paddingBlock: `calc(${space.sectionContentGap} / 2)`,
-    marginBlock: `calc(${space.sectionContentGap} / -2)`,
+    paddingBlock: `calc(${space.linkGap} / 2)`,
+    marginBlock: `calc(${space.linkGap} / -2)`,
   },
   profile: {
-    gridColumn: { default: null, [media.mobile]: 1 },
+    gridColumn: { default: null, [media.mobile]: "1 / 3" },
     justifySelf: "start",
     width: { default: "fit-content", [media.mobile]: "max-content" },
   },
   contact: {
     order: { default: null, [media.desktop]: -1 },
-    gridColumn: { default: null, [media.mobile]: 2 },
+    gridColumn: { default: null, [media.mobile]: "3 / -1" },
     justifySelf: "start",
   },
   contactLabel: {

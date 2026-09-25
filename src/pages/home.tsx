@@ -3,11 +3,11 @@ import { profile } from "../files.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
 import { type Assets, Document, JsonLd, Links, Main, Name, Shell, Sidebar } from "../layout.tsx";
-import { origin, person, profiles } from "../site.ts";
+import { developers, origin, person, profiles } from "../site.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
-const title = `${person.name} (${person.handle})`;
+const title = person.name;
 
 /** Machine-readable versions of this page, advertised to crawlers and agents. */
 const alternates: [rel: string, type: string, path: string, title: string][] = [
@@ -18,6 +18,8 @@ const alternates: [rel: string, type: string, path: string, title: string][] = [
   ["alternate", "application/rss+xml", "/feed.xml", "Feed"],
   ["author", "text/plain", "/humans.txt", "humans.txt"],
   ["sitemap", "application/xml", "/sitemap.xml", "Sitemap"],
+  // RFC 8631: the service documentation, found by agents without any text on the page.
+  ["service-doc", "text/html", `/${developers.slug}`, developers.description],
 ];
 
 function Head() {
@@ -63,9 +65,6 @@ export function Home({ assets }: { assets: Assets }) {
           <Links home />
         </Sidebar>
         <Main home>
-          <a {...stylex.props(ui.srOnly)} href="/developers" tabIndex={-1}>
-            gildrb.com developer resources
-          </a>
           <section {...stylex.props(styles.summary)} aria-labelledby="profile-summary-title">
             <h2 {...stylex.props(ui.text, styles.heading)} id="profile-summary-title">
               <span data-nosnippet>About</span>
@@ -124,18 +123,18 @@ const styles = stylex.create({
     gridRow: { default: null, [media.desktop]: 3 },
     alignSelf: { default: null, [media.desktop]: "center" },
     position: { default: null, [media.desktop]: "sticky" },
-    bottom: { default: null, [media.desktop]: space.footerInset },
+    bottom: { default: null, [media.desktop]: space.pageInset },
     minHeight: { default: null, [media.desktop]: space.toggleSize },
   },
   references: {
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
-    rowGap: `calc(${space.sidebarBaselinePitch} - ${space.linkLineHeight})`,
+    rowGap: space.linkGap,
     paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
   },
   reference: {
-    paddingBlock: `calc(${space.sectionContentGap} / 2)`,
-    marginBlock: `calc(${space.sectionContentGap} / -2)`,
+    paddingBlock: `calc(${space.linkGap} / 2)`,
+    marginBlock: `calc(${space.linkGap} / -2)`,
   },
 });
