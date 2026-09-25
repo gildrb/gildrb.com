@@ -7,7 +7,7 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { contacts, type Link, person, profiles, projects } from "./site.ts";
 import { themeColor, themeScript } from "./theme.ts";
-import { colors, media, rootMarker, space } from "./tokens.stylex.ts";
+import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
 import { Figures, type Style, ui, untranslated } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -336,7 +336,7 @@ const styles = stylex.create({
     color: colors.primary,
     fontFamily:
       'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    fontFeatureSettings: '"liga" 1, "calt" 1',
+    fontFeatureSettings: fontFeatures.interface,
     fontWeight: 400,
     // Every element sets its own size; this keeps stray whitespace from adding height.
     fontSize: "1px",

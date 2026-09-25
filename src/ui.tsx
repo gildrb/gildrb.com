@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors, figureUnits, media, space } from "./tokens.stylex.ts";
+import { colors, figureUnits, fontFeatures, media, space } from "./tokens.stylex.ts";
 
 /** Anything `stylex.props` accepts: a style, `false`, `null`, or a nested array of them. */
 export type Style = stylex.StyleXArray<stylex.CompiledStyles | boolean | null | undefined>;
@@ -35,8 +35,8 @@ export const ui = stylex.create({
     color: colors.primary,
     textWrap: "balance",
   },
-  /** Running text: no line ends on a lone word. */
-  prose: { textWrap: "pretty" },
+  /** Running text: no line ends on a lone word, and hyphens sit among lowercase letters. */
+  prose: { textWrap: "pretty", fontFeatureSettings: fontFeatures.prose },
   /**
    * On phones, a text-sized control that stands alone (breadcrumb, table header) answers to at
    * least one touch target around its center, without moving any layout. Link lists do not use
@@ -64,6 +64,8 @@ export const ui = stylex.create({
     fontSize: "inherit",
     fontWeight: "inherit",
     lineHeight: "inherit",
+    // Browsers reset a button's font features; controls take the page's, case forms included.
+    fontFeatureSettings: "inherit",
     textAlign: "left",
     cursor: "pointer",
     touchAction: "manipulation",
