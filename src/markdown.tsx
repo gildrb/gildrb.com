@@ -59,6 +59,14 @@ export function parse(markdown: string): { title: string; blocks: Block[] } {
       blocks.push({ type: "p", text: text.join(" ") });
     }
   }
+  const ids = blocks
+    .flatMap((block) => (block.type === "media" ? block.items : []))
+    .map(({ id }) => id);
+  const late = ids.find(
+    (id, index) => media[id]?.video && ids.slice(0, index).some((before) => !media[before]?.video),
+  );
+  if (late)
+    throw new Error(`Video media:${late} must come before every image: videos lead the page.`);
   return { title: titleLine.slice(2), blocks };
 }
 

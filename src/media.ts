@@ -23,26 +23,6 @@ export const media: Readonly<Record<string, Media>> = {
     height: 1112,
     mark: "center",
   },
-  "ben-davis-site-ai": {
-    alt: "davis7.sh State of AI page in dark mode, an editorial list of models and tools",
-    width: 2560,
-    height: 1600,
-  },
-  "ben-davis-site-home-server": {
-    alt: "davis7.sh Home Server page in dark mode, a rack build beside its parts and cost",
-    width: 2560,
-    height: 1600,
-  },
-  "ben-davis-site-macos": {
-    alt: "davis7.sh macOS setup page in light mode, notes with inline keyboard shortcuts",
-    width: 2560,
-    height: 1600,
-  },
-  "ben-davis-site-sponsors": {
-    alt: "davis7.sh Sponsors page in light mode, sponsor cards on soft color fields",
-    width: 2560,
-    height: 1600,
-  },
   "ben-davis-site-tour": {
     alt: "Screen recording of davis7.sh: the db mark turning into the wordmark, hovering links, the Sponsors page and switching to light mode",
     width: 1080,
