@@ -2,14 +2,18 @@
 # requires-python = ">=3.11"
 # dependencies = ["fonttools[woff]==4.60.1", "certifi"]
 # ///
-"""Builds public/fonts/inter.woff2 from the official Inter release.
+"""Builds the site's two Inter files from the official Inter release.
 
     uv run scripts/inter.py
 
-Keeps the site's characters (the ranges in `interRanges`, src/layout.tsx), the features the page
-uses (`fontFeatures`, src/tokens.stylex.ts; `tnum` for dates), weights 380 to 600, and builds
-the grotesque G (Inter's cv10) into the character map, so every renderer draws it, the share
-image included, with no setting to remember.
+public/fonts/inter.woff2, for the page: the site's characters (the ranges in `interRanges`,
+src/layout.tsx), the features the page uses (`fontFeatures`, src/tokens.stylex.ts; `tnum` for
+dates), weights 380 to 600, and the grotesque G (Inter's cv10) built into the character map.
+
+src/fonts/inter-share.woff2, for the link-preview image (src/og.tsx), whose renderer cannot turn
+on OpenType features: the same font with the case forms the page turns on built in as well, for
+the hyphen and the arrows, which the image only sets beside capitals and figures. The @ keeps its
+default form, as in the page's email address.
 """
 
 import io
@@ -24,7 +28,9 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 
 RELEASE = "https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip"
-OUTPUT = Path(__file__).resolve().parent.parent / "public/fonts/inter.woff2"
+ROOT = Path(__file__).resolve().parent.parent
+PAGE = ROOT / "public/fonts/inter.woff2"
+SHARE = ROOT / "src/fonts/inter-share.woff2"
 # Must match `interRanges` in src/layout.tsx.
 RANGES = [
     (0x0020, 0x007E), (0x00A0, 0x00FF), (0x0100, 0x017F), (0x0131, 0x0131), (0x0152, 0x0153),
@@ -32,7 +38,8 @@ RANGES = [
     (0x2122, 0x2122), (0x2190, 0x21FF), (0x2212, 0x2212), (0x2500, 0x257F),
 ]
 FEATURES = ["calt", "case", "dnom", "frac", "kern", "locl", "numr", "tnum"]
-BUILT_IN = "cv10"
+# The hyphen and every arrow the font has a case form for.
+SHARE_CASE = {0x002D} | set(range(0x2190, 0x2200))
 
 
 def single_substitutions(font: TTFont, tag: str) -> dict[str, str]:
@@ -50,20 +57,18 @@ def single_substitutions(font: TTFont, tag: str) -> dict[str, str]:
     return mapping
 
 
-def main() -> None:
-    # certifi's CA bundle, so the download verifies on any machine, whatever its system store.
-    context = ssl.create_default_context(cafile=certifi.where())
-    with urllib.request.urlopen(RELEASE, context=context) as response:
-        archive = zipfile.ZipFile(io.BytesIO(response.read()))
-    font = TTFont(io.BytesIO(archive.read("InterVariable.ttf")), lazy=False)
-
+def build(source: bytes, output: Path, case: set[int]) -> None:
+    font = TTFont(io.BytesIO(source), lazy=False)
     characters = sorted({c for start, end in RANGES for c in range(start, end + 1)} & set(font.getBestCmap()))
-    alternates = single_substitutions(font, BUILT_IN)
+    grotesque = single_substitutions(font, "cv10")
+    case_forms = single_substitutions(font, "case")
     for cmap in font["cmap"].tables:
         if cmap.isUnicode():
             for codepoint, glyph in list(cmap.cmap.items()):
-                if glyph in alternates:
-                    cmap.cmap[codepoint] = alternates[glyph]
+                glyph = grotesque.get(glyph, glyph)
+                if codepoint in case:
+                    glyph = case_forms.get(glyph, glyph)
+                cmap.cmap[codepoint] = glyph
 
     options = subset.Options()
     options.layout_features = FEATURES
@@ -74,8 +79,18 @@ def main() -> None:
     subsetter.subset(font)
     font = instancer.instantiateVariableFont(font, {"wght": (380, 600)})
     font.flavor = "woff2"
-    font.save(OUTPUT)
-    print(f"{OUTPUT}: {len(characters)} characters, {OUTPUT.stat().st_size} bytes")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    font.save(output)
+    print(f"{output.relative_to(ROOT)}: {len(characters)} characters, {output.stat().st_size} bytes")
+
+
+def main() -> None:
+    # certifi's CA bundle, so the download verifies on any machine, whatever its system store.
+    context = ssl.create_default_context(cafile=certifi.where())
+    with urllib.request.urlopen(RELEASE, context=context) as response:
+        source = zipfile.ZipFile(io.BytesIO(response.read())).read("InterVariable.ttf")
+    build(source, PAGE, case=set())
+    build(source, SHARE, case=SHARE_CASE)
 
 
 if __name__ == "__main__":
