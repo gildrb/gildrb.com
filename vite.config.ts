@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import stylex from "@stylexjs/unplugin";
 import { defineConfig, type Plugin } from "vite-plus";
@@ -25,7 +25,7 @@ const site: Plugin = {
     });
     server.middlewares.use(async (request, response, next) => {
       const { pathname } = new URL(request.url ?? "/", "http://localhost");
-      const { render, ogImage, shareImagePath } = (await server.ssrLoadModule(
+      const { render, ogImage, shareImagePath, versionedCopies } = (await server.ssrLoadModule(
         "/src/render.tsx",
       )) as Render;
       const css = stylexPlugin.__stylexCollectCss?.() ?? "";
@@ -35,6 +35,12 @@ const site: Plugin = {
         return;
       }
       const files = render({ script: "/src/client.ts", css, shareImage: shareImagePath });
+      // A stamped font or image: serve the public file it copies.
+      const copy = versionedCopies().get(pathname);
+      if (copy) {
+        request.url = copy;
+        return next();
+      }
       const file = [pathname.slice(1), `${pathname.slice(1) || "index"}.html`].find(
         (name) => name in files,
       );
@@ -75,22 +81,25 @@ export default defineConfig({
       const outDir = browser.config.build.outDir;
       const cssFile = path.join(outDir, "assets/stylex.css");
       const css = await readFile(cssFile, "utf8");
-      const { render, ogImage, shareImagePath, stamp } = (await import(
+      const { render, ogImage, shareImagePath, stamp, versionedCopies } = (await import(
         path.resolve(ssrOutDir, "render.mjs")
       )) as Render;
-      // The share image first: the pages link it by a URL stamped with its bytes.
+      // The share image first: the pages link it by a name stamped with its bytes.
       const shareImage = await ogImage(css);
-      await writeFile(path.join(outDir, shareImagePath), shareImage);
-      const assets = {
-        script: `/${entry.fileName}`,
-        css,
-        shareImage: stamp(shareImagePath, shareImage),
-      };
+      const shareImageUrl = stamp(shareImagePath, shareImage);
+      await writeFile(path.join(outDir, shareImageUrl), shareImage);
+      const assets = { script: `/${entry.fileName}`, css, shareImage: shareImageUrl };
       await Promise.all(
         Object.entries(render(assets)).map(async ([file, body]) => {
           await mkdir(path.dirname(path.join(outDir, file)), { recursive: true });
           await writeFile(path.join(outDir, file), body);
         }),
+      );
+      // Rendering named every stamped font and image; copy each public file to its stamped name.
+      await Promise.all(
+        [...versionedCopies()].map(([stamped, source]) =>
+          copyFile(path.join(outDir, source), path.join(outDir, stamped)),
+        ),
       );
       await Promise.all([rm(cssFile), rm(ssrOutDir, { recursive: true })]);
     },
