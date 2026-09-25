@@ -9,6 +9,7 @@ import { contacts, type Link, person, profiles, projects } from "./site.ts";
 import { themeColor, themeScript } from "./theme.ts";
 import { colors, media, rootMarker, space } from "./tokens.stylex.ts";
 import { Figures, type Style, ui, untranslated } from "./ui.tsx";
+import { versioned } from "./versioned.ts";
 
 export type Assets = { script: string; css: string };
 
@@ -16,11 +17,15 @@ export type Assets = { script: string; css: string };
 const fontRanges =
   "U+0020-007E,U+00A0-00FF,U+0131,U+0152-0153,U+02C6,U+02DA,U+02DC,U+2010-205E,U+20AC,U+2122,U+2190-21FF,U+2212,U+2500-257F";
 
+// One URL per face, shared by its @font-face and its preload so the browser fetches it once.
+const interUrl = versioned("/fonts/inter.woff2");
+const monoUrl = versioned("/fonts/ioskeley-mono.woff2");
+
 /** The few rules StyleX cannot attach to an element, layered beneath StyleX's own layers. */
 const globalCss = [
   "@layer reset;",
-  `@font-face{font-family:"Inter";font-weight:380 600;font-display:swap;src:url("/fonts/inter.woff2") format("woff2");unicode-range:${fontRanges}}`,
-  `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("/fonts/ioskeley-mono.woff2") format("woff2");unicode-range:${fontRanges}}`,
+  `@font-face{font-family:"Inter";font-weight:380 600;font-display:swap;src:url("${interUrl}") format("woff2");unicode-range:${fontRanges}}`,
+  `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("${monoUrl}") format("woff2");unicode-range:${fontRanges}}`,
   // Arial (or metric-identical Liberation Sans) scaled to Inter's metrics, so text laid out
   // before the web font arrives does not move when it does.
   '@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans");size-adjust:107.35%;ascent-override:90.24%;descent-override:22.47%;line-gap-override:0%}',
@@ -75,21 +80,9 @@ export function Document({
         <title>{title}</title>
         <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link
-          rel="preload"
-          href="/fonts/inter.woff2"
-          as="font"
-          type="font/woff2"
-          crossorigin="anonymous"
-        />
+        <link rel="preload" href={interUrl} as="font" type="font/woff2" crossorigin="anonymous" />
         {mono && (
-          <link
-            rel="preload"
-            href="/fonts/ioskeley-mono.woff2"
-            as="font"
-            type="font/woff2"
-            crossorigin="anonymous"
-          />
+          <link rel="preload" href={monoUrl} as="font" type="font/woff2" crossorigin="anonymous" />
         )}
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}

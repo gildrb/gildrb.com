@@ -1,4 +1,5 @@
 import { cases, email, origin, pages, person, profiles, projects } from "./site.ts";
+import { versioned } from "./versioned.ts";
 
 /**
  * Identity and discovery files for search engines and agents. Everything comes from `site.ts`,
@@ -60,7 +61,7 @@ export const profile = {
       url: url(`/${item.slug}`),
       name: item.name,
       description: item.description,
-      ...(item.ogImage && { image: url(`/images/optimized/${item.ogImage}`) }),
+      ...(item.ogImage && { image: url(versioned(`/images/optimized/${item.ogImage}`)) }),
       inLanguage: "en",
       author: { "@id": url("/#person") },
       isPartOf: { "@id": url("/#website") },

@@ -13,6 +13,7 @@ import {
 import { Row } from "../row.tsx";
 import { type Case, cases, origin, pages, person, projects } from "../site.ts";
 import { colors, media, space } from "../tokens.stylex.ts";
+import { versioned } from "../versioned.ts";
 
 const monoBlocks = (markdown: string) =>
   parse(markdown).blocks.some(
@@ -127,7 +128,7 @@ export function CasePage({
   markdown: string;
 }) {
   const url = `${origin}/${item.slug}`;
-  const image = item.ogImage && `${origin}/images/optimized/${item.ogImage}`;
+  const image = item.ogImage && `${origin}${versioned(`/images/optimized/${item.ogImage}`)}`;
   return (
     <Frame
       assets={assets}

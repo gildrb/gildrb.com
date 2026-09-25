@@ -6,6 +6,7 @@ import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
 import { colors, space } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
+import { versioned } from "./versioned.ts";
 
 type Block =
   | { type: "h2" | "h3" | "p"; text: string }
@@ -135,9 +136,11 @@ export function sources(id: string): { src: string; srcset?: string } {
     .sort((left, right) => left.width - right.width);
   const widest = files.findLast(({ width }) => width <= 960) ?? files[0];
   if (!widest) throw new Error(`No image files for media id: ${id}`);
-  const src = `/images/optimized/${widest.file}`;
+  const src = versioned(`/images/optimized/${widest.file}`);
   if (!widest.width) return { src };
-  const srcset = files.map(({ file, width }) => `/images/optimized/${file} ${width}w`).join(", ");
+  const srcset = files
+    .map(({ file, width }) => `${versioned(`/images/optimized/${file}`)} ${width}w`)
+    .join(", ");
   return { src, srcset };
 }
 
