@@ -6,6 +6,13 @@ import { AllPage, CasePage, DocPage } from "./pages/case.tsx";
 import { Home } from "./pages/home.tsx";
 import { cases, origin, pages } from "./site.ts";
 
+// For the build (`vite.config.ts`), which renders the share image before the pages that link it.
+export { ogImage } from "./og.tsx";
+export { stamp } from "./versioned.ts";
+
+/** Where the rendered share image is served. */
+export const shareImagePath = "/images/og-image.png";
+
 const sources = import.meta.glob<string>("./content/*.md", {
   query: "?raw",
   import: "default",

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors, media, space } from "./tokens.stylex.ts";
+import { colors, figureUnits, media, space } from "./tokens.stylex.ts";
 
 /** Anything `stylex.props` accepts: a style, `false`, `null`, or a nested array of them. */
 export type Style = stylex.StyleXArray<stylex.CompiledStyles | boolean | null | undefined>;
@@ -113,15 +113,12 @@ export const ui = stylex.create({
    */
   figures: {
     fontVariantNumeric: "tabular-nums",
-    // Digit to digit.
-    letterSpacing: "calc(-95.1 / 2048 * 1em)",
+    letterSpacing: `calc(${figureUnits.digit} / ${figureUnits.unitsPerEm} * 1em)`,
   },
   /** A date's hyphen, set proportionally, with the gaps on each side matched as above. */
   separator: {
-    // Digit to hyphen; the digit's own tracking has already been applied.
-    marginInlineStart: "calc(17 / 2048 * 1em)",
-    // Hyphen to digit.
-    marginInlineEnd: "calc(-88.2 / 2048 * 1em)",
+    marginInlineStart: `calc(${figureUnits.beforeHyphen} / ${figureUnits.unitsPerEm} * 1em)`,
+    marginInlineEnd: `calc(${figureUnits.afterHyphen} / ${figureUnits.unitsPerEm} * 1em)`,
   },
 });
 

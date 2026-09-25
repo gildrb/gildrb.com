@@ -25,11 +25,16 @@ const site: Plugin = {
     });
     server.middlewares.use(async (request, response, next) => {
       const { pathname } = new URL(request.url ?? "/", "http://localhost");
-      const { render } = (await server.ssrLoadModule("/src/render.tsx")) as Render;
-      const files = render({
-        script: "/src/client.ts",
-        css: stylexPlugin.__stylexCollectCss?.() ?? "",
-      });
+      const { render, ogImage, shareImagePath } = (await server.ssrLoadModule(
+        "/src/render.tsx",
+      )) as Render;
+      const css = stylexPlugin.__stylexCollectCss?.() ?? "";
+      if (pathname === shareImagePath) {
+        response.setHeader("Content-Type", "image/png");
+        response.end(await ogImage(css));
+        return;
+      }
+      const files = render({ script: "/src/client.ts", css, shareImage: shareImagePath });
       const file = [pathname.slice(1), `${pathname.slice(1) || "index"}.html`].find(
         (name) => name in files,
       );
@@ -70,9 +75,19 @@ export default defineConfig({
       const outDir = browser.config.build.outDir;
       const cssFile = path.join(outDir, "assets/stylex.css");
       const css = await readFile(cssFile, "utf8");
-      const { render } = (await import(path.resolve(ssrOutDir, "render.mjs"))) as Render;
+      const { render, ogImage, shareImagePath, stamp } = (await import(
+        path.resolve(ssrOutDir, "render.mjs")
+      )) as Render;
+      // The share image first: the pages link it by a URL stamped with its bytes.
+      const shareImage = await ogImage(css);
+      await writeFile(path.join(outDir, shareImagePath), shareImage);
+      const assets = {
+        script: `/${entry.fileName}`,
+        css,
+        shareImage: stamp(shareImagePath, shareImage),
+      };
       await Promise.all(
-        Object.entries(render({ script: `/${entry.fileName}`, css })).map(async ([file, body]) => {
+        Object.entries(render(assets)).map(async ([file, body]) => {
           await mkdir(path.dirname(path.join(outDir, file)), { recursive: true });
           await writeFile(path.join(outDir, file), body);
         }),
