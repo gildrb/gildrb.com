@@ -12,7 +12,7 @@ import {
 } from "../layout.tsx";
 import { Row } from "../row.tsx";
 import { type Case, cases, origin, pages, person, projects } from "../site.ts";
-import { colors, media, space } from "../tokens.stylex.ts";
+import { media, space } from "../tokens.stylex.ts";
 import { versioned } from "../versioned.ts";
 
 const monoBlocks = (markdown: string) =>
@@ -189,7 +189,6 @@ export function CasePage({
         {...stylex.props(styles.column, styles.phoneItem, styles.next)}
         aria-label="All projects"
       >
-        <h2 {...stylex.props(styles.nextHeading)}>View next</h2>
         <div {...stylex.props(styles.nextList)}>
           {projects
             .filter((project) => !project.external && project.href !== `/${item.slug}`)
@@ -273,13 +272,6 @@ const styles = stylex.create({
       default: null,
       "@media (min-width: 769px)": `calc(${space.toggleSize} / 2 - 12px)`,
     },
-  },
-  nextHeading: {
-    margin: "0 0 8px",
-    color: colors.tertiary,
-    fontSize: "16px",
-    fontWeight: 400,
-    lineHeight: "24px",
   },
   nextList: {
     display: "grid",

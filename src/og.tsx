@@ -360,7 +360,8 @@ function defaultInstance(font: Uint8Array): Buffer {
 }
 
 export async function ogImage(css: string): Promise<Uint8Array> {
-  const font = defaultInstance(await decompress(readFileSync("public/fonts/inter.woff2")));
+  // Inter with the page's case forms built in (scripts/inter.py), since satori cannot turn them on.
+  const font = defaultInstance(await decompress(readFileSync("src/fonts/inter-share.woff2")));
   const token = tokens(css);
   // The page's own width: the layout plus its inset on both sides; the height follows the frame.
   const width =
