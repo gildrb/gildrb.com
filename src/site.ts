@@ -50,6 +50,17 @@ type External = Row & { href: string };
 
 export const cases: readonly Case[] = [
   {
+    slug: "local-studio",
+    date: "2026-08-26",
+    title: "Local Studio",
+    name: "Local Studio",
+    scope: "Brand Design/Design Engineering",
+    description:
+      "The brand and website Gil Rodrigues designed and built for Local Studio, private AI that runs on your Mac.",
+    ogDescription: "Brand and website for Local Studio, private AI that runs on your Mac.",
+    ogImage: "gil-rodrigues-local-studio-tour-960.webp",
+  },
+  {
     slug: "t3",
     date: "2026-07-25",
     title: "T3",
@@ -66,10 +77,11 @@ export const cases: readonly Case[] = [
     date: "2026-07-07",
     title: "Ben Davis",
     name: "Ben Davis",
-    scope: "Logo",
-    description: "A personal db monogram redesign Gil Rodrigues drew for developer Ben Davis.",
+    scope: "Design Engineering/Logo",
+    description:
+      "A db monogram Gil Rodrigues drew for developer Ben Davis, and the davis7.sh site designed and built around it.",
     ogDescription:
-      "An unsolicited db monogram redesign for developer Ben Davis, built from mirrored letterforms and one central diagonal.",
+      "A db monogram built from mirrored letterforms and one central diagonal, and the davis7.sh site around it.",
     ogImage: "gil-rodrigues-ben-davis-construction-1280.webp",
   },
   {
@@ -131,20 +143,8 @@ export const cases: readonly Case[] = [
   },
 ];
 
-const externals: readonly External[] = [
-  {
-    href: "https://davis7-518d7u135-heph.vercel.app/",
-    date: "2026-09-08",
-    title: "davis7.sh",
-    scope: "Design Engineering",
-  },
-  {
-    href: "https://site-localstudio-co0dvice9-heph.vercel.app/",
-    date: "2026-08-26",
-    title: "localstudio.ai",
-    scope: "Design Engineering",
-  },
-];
+/** Projects that live elsewhere: their rows link out instead of to a case study. */
+const externals: readonly External[] = [];
 
 export type Project = Row & { href: string; external: boolean };
 

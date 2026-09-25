@@ -122,6 +122,30 @@ function Image({ id, grid, eager }: { id: string; grid: boolean; eager: boolean 
   );
 }
 
+/**
+ * A recording: a still poster until `video.ts` plays it, silently and on a loop, while it is on
+ * screen and motion is allowed. Not enlargeable; it already spans its column.
+ */
+function Video({ id }: { id: string }) {
+  const item = media[id];
+  if (!item) throw new Error(`Unknown media id: ${id}`);
+  return (
+    <video
+      {...stylex.props(styles.image)}
+      width={item.width}
+      height={item.height}
+      poster={sources(id).src}
+      src={versioned(`/videos/gil-rodrigues-${id}.mp4`)}
+      muted
+      loop
+      playsInline
+      preload="none"
+      aria-label={item.alt}
+      data-autoplay
+    />
+  );
+}
+
 export const singleSizes =
   "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
 const gridSizes =
@@ -152,6 +176,8 @@ function Figures({ items, eager }: { items: { id: string; caption: string }[]; e
         <figure {...stylex.props(styles.figure)}>
           {id === "heph-demo" ? (
             <Island name="heph" component={Terminal} props={{}} />
+          ) : media[id]?.video ? (
+            <Video id={id} />
           ) : (
             <Image id={id} grid={grid} eager={eager && index === 0} />
           )}

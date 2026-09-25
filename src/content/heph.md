@@ -8,6 +8,8 @@ Ask your own files a question. Heph answers and shows the passages it used, so y
 
 One folder per subject. Every answer points back to the page it came from.
 
+![](media:heph-session)
+
 ![](media:heph-interface)
 
 ### Typeface
