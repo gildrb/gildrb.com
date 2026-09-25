@@ -6,11 +6,12 @@ import { AllPage, CasePage, DocPage } from "./pages/case.tsx";
 import { Home } from "./pages/home.tsx";
 import { cases, origin, pages } from "./site.ts";
 
-// For the build (`vite.config.ts`), which renders the share image before the pages that link it.
+// For the build (`vite.config.ts`): the share image comes first, since the pages link it, and the
+// stamped copies of `public/` files last, once rendering has named them all.
 export { ogImage } from "./og.tsx";
-export { stamp } from "./versioned.ts";
+export { stamp, versionedCopies } from "./versioned.ts";
 
-/** Where the rendered share image is served. */
+/** Where the rendered share image lives before stamping. */
 export const shareImagePath = "/images/og-image.png";
 
 const sources = import.meta.glob<string>("./content/*.md", {
