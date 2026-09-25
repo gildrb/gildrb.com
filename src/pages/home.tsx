@@ -89,12 +89,12 @@ export function Home({ assets }: { assets: Assets }) {
                 </a>
               ))}
               <a
-                {...stylex.props(ui.quiet, ui.focusRing, styles.reference)}
+                {...stylex.props(ui.quiet, ui.focusRing, styles.reference, ui.outbound)}
                 href="https://github.com/gildrb/web"
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                source
+                Source
               </a>
             </nav>
           </footer>

@@ -20,6 +20,13 @@ export const ui = stylex.create({
     fontWeight: 400,
     lineHeight: space.linkLineHeight,
   },
+  /** The one heading style: the site name, breadcrumb, and every case-study heading. */
+  heading: {
+    fontSize: "19px",
+    fontWeight: 400,
+    letterSpacing: "-0.02em",
+    color: colors.primary,
+  },
   reset: {
     appearance: "none",
     padding: 0,
@@ -54,5 +61,13 @@ export const ui = stylex.create({
     },
     textDecoration: "none",
     width: "fit-content",
+  },
+  /** Marks a link that leaves the site; the arrow keeps Inter's drawing in monospace pages. */
+  outbound: {
+    "::after": {
+      content: '" ↗"',
+      fontFamily:
+        'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    },
   },
 });

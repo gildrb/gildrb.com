@@ -82,9 +82,9 @@ export const cases: readonly Case[] = [
     name: "Heph",
     scope: "Product/Design Engineering",
     description:
-      "How Heph organizes local files into armories and keeps the evidence behind each answer inspectable.",
+      "Heph answers questions from your own files and shows where each answer came from.",
     ogTitle: "Heph local document agent by Gil Rodrigues",
-    ogDescription: "A local document agent built around bounded context and inspectable evidence.",
+    ogDescription: "Ask your own files a question and see the passages behind the answer.",
   },
   {
     slug: "filen",

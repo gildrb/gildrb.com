@@ -1,56 +1,44 @@
-# A self-initiated brand system for Filen
+# Filen
 
-I have used [Filen](https://filen.io/) for years. The product worked well for me, but its logo never did. I often redesign things I use, so I gave myself a full identity brief: a mark, wordmark, app icon, pattern language, and campaign copy. Filen did not commission the work.
+Self-initiated identity for the storage app I use, 2026. [Posted on X](https://x.com/gilrdb/status/2021242178727452998)
 
-### Trying ideas
+![](media:filen-wordmark)
 
-The first rounds were broad. I tried a disappearing block that could also read as an F, but the letter depended too much on explanation.
+### Ideation
 
-Next came a folder drawn in perspective, its open edge doing the work of an F.
+![](media:filen-exploration-board)
 
-I also drew a heavier, architectural symbol based on stairs. Closing the staircase made it feel stable, but added too much detail for a small app icon. Another version used stacked blocks with the upper layer hidden. Neither survived the scale tests.
+![](media:filen-pangolin-exploration)
 
-![Logo sketches and shields](media:filen-exploration-board)
+### Pattern
 
-I then tried a pangolin mascot. Its overlapping scales made sense as a metaphor for protection, and all eight pangolin species are threatened with extinction. The animal also offered a pattern language. The problem was the face: every attempt to make it distinctive made the mark harder to read.
+The pangolin went. Its scales stayed.
 
-![Pangolin moodboard and logos](media:filen-pangolin-exploration)
+![](media:filen-pattern-exploration)
 
-### The patterns stayed
+### Mark
 
-The mascot went, but the repeated scales were worth developing.
+A folder first, an F second.
 
-![Protective scale pattern studies](media:filen-pattern-exploration)
+![](media:filen-logo-scale)
+![](media:filen-app-icon)
 
-I stopped drawing the scales literally and kept the repetition. Vertical panels could hide or reveal parts of the mark as light crossed them. That gave the identity a visual link to privacy without forcing a lock or shield into the logo.
+### Light
 
-For the mark itself, the angled folder remained the clearest option. It reads as storage first and reveals the F on a second look.
+![](media:filen-light-study)
 
-### Making it work
+### Color
 
-After choosing the mark, I reduced it at several sizes and built an app icon in Icon Composer.
+Red read as a warning. Dropped.
 
-![Brandmark scale tests](media:filen-logo-scale)
-![Filen app icon](media:filen-app-icon)
+![](media:filen-identity-system-overview)
 
-The light studies turned the repeated panels into a usable image system.
+### Campaign
 
-![Monochrome light study](media:filen-light-study)
+![](media:filen-zero-knowledge-campaign)
+![](media:filen-storage-message)
 
-I also tested a red colorway. In the campaign layouts, red shifted the message from protection toward warning and danger. The monochrome version kept the emphasis on privacy and control, so I dropped the red.
+![](media:filen-logo-texture)
+![](media:filen-light-lockup)
 
-![Red identity exploration](media:filen-identity-system-overview)
-
-The final lockup pairs the folder mark with a plain wordmark. The campaign copy states the privacy benefit directly, while the panel imagery carries the ideas of concealment and controlled access.
-
-![Final Filen lockup](media:filen-wordmark)
-
-![Zero-knowledge campaign](media:filen-zero-knowledge-campaign)
-![Private storage campaign](media:filen-storage-message)
-
-![Brandmark light texture](media:filen-logo-texture)
-![Light-driven Filen lockup](media:filen-light-lockup)
-
-![Monochrome brand system](media:filen-brand-system-board)
-
-I [posted the concept](https://x.com/gilrdb/status/2021242178727452998) and shared it with the Filen community in February 2026. Forms only surface when the light crosses them.
+![](media:filen-brand-system-board)

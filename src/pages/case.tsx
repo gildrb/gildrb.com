@@ -172,7 +172,7 @@ export function CasePage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager />
+        <Article markdown={markdown} eager showTitle={false} />
       </article>
       <nav
         {...stylex.props(styles.column, styles.phoneItem, styles.next)}
@@ -236,7 +236,7 @@ export function AllPage({
             data-title={item.title}
             data-scope={item.scope}
           >
-            <Article markdown={markdown[item.slug] ?? ""} eager={index === 0} />
+            <Article markdown={markdown[item.slug] ?? ""} eager={index === 0} showTitle />
           </article>
         ))}
       </div>
@@ -316,7 +316,7 @@ export function DocPage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager />
+        <Article markdown={markdown} eager showTitle={false} />
       </article>
     </Frame>
   );
