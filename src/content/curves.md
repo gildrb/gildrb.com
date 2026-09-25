@@ -1,33 +1,17 @@
-# CURVES, a free display typeface
+# CURVES
 
-In January 2019 I was drawing logos out of geometric shapes and wanted to know whether I could carry one construction rule across a whole character set instead of a single word. I gave myself a narrow brief: one weight, one case, and letters built from the same parts.
+Free display typeface, 2019. 96 unicase glyphs. On [DaFont](https://www.dafont.com/curves.font) and [Behance](https://www.behance.net/gallery/75409663/CURVES-Free-Font).
 
-![CURVES display letterforms](media:curves-letterforms)
+![](media:curves-letterforms)
 
-### One rule for every letter
+![](media:curves-wordmark)
 
-Each glyph is assembled from flat stems and quarter turns drawn at a single radius. Where the rule leaves a gap, the gap stays. That is why the R breaks at the shoulder and the Q keeps an open corner instead of a tail. I drew the outlines in Illustrator and compiled the font with Fontself.
+### Glyphs
 
-![CURVES wordmark](media:curves-wordmark)
+![](media:curves-uppercase)
 
-### Unicase by design
+![](media:curves-numerals)
 
-The alphabet is unicase. Uppercase and lowercase both call the same drawing, so a headline holds one texture regardless of how it was typed. Whoever sets the type does not get to break the texture.
+![](media:curves-punctuation)
 
-![Unicase alphabet](media:curves-uppercase)
-
-The numerals were the harder half. Digits carry more diagonal and more open counters than this alphabet wanted, so the 2 and the 7 use a diagonal the letters avoid, and the zero takes a slash to keep it apart from the O.
-
-![Numerals](media:curves-numerals)
-
-Punctuation, math signs, currency, and accented Latin bring the font to 96 glyphs, which is enough to set languages beyond English.
-
-![Punctuation and symbols](media:curves-punctuation)
-
-### Release
-
-I released CURVES in early 2019 on [DaFont](https://www.dafont.com/curves.font), free for personal and commercial use, and posted the specimen on [Behance](https://www.behance.net/gallery/75409663/CURVES-Free-Font).
-
-![Specimen setting](media:curves-specimen)
-
-The rule that holds a headline together closes the counters too far at text sizes. It is a display face and it is used as one.
+![](media:curves-specimen)

@@ -6,6 +6,7 @@ import { Portfolio } from "./islands/portfolio.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { cases, compareRows, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
+import "./zoom.ts";
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
   theme: () => ThemeToggle,

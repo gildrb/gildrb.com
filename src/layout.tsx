@@ -171,7 +171,7 @@ export function Main({ home = false, children }: { home?: boolean; children: Com
 /** Site name, or on inner pages a breadcrumb back to it. */
 export function Name({ current }: { current?: string }) {
   return current ? (
-    <p {...stylex.props(styles.name, styles.caseName)}>
+    <p {...stylex.props(ui.heading, styles.name, styles.caseName)}>
       <a {...stylex.props(ui.focusRing, styles.home)} href="/">
         Gil Rodrigues
       </a>
@@ -183,7 +183,7 @@ export function Name({ current }: { current?: string }) {
       </a>
     </p>
   ) : (
-    <h1 {...stylex.props(styles.name, styles.homeName)} id="site-title" itemprop="name">
+    <h1 {...stylex.props(ui.heading, styles.name, styles.homeName)} id="site-title" itemprop="name">
       <span data-nosnippet>Gil Rodrigues</span>
     </h1>
   );
@@ -211,7 +211,7 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
   const link = (item: Link, index: number, placement: Style, me: boolean) => {
     return (
       <a
-        {...stylex.props(ui.quiet, ui.focusRing, styles.link, placement, rise)}
+        {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, placement, rise)}
         style={home ? stagger(index) : undefined}
         href={item.href}
         target="_blank"
@@ -388,11 +388,7 @@ const styles = stylex.create({
     },
   },
   name: {
-    fontSize: "19px",
-    fontWeight: 400,
     lineHeight: space.linkLineHeight,
-    letterSpacing: "-0.02em",
-    color: colors.primary,
     // JavaScript measures the homepage intro and publishes its height, so the sidebar
     // lines up with the content column on every page.
     minHeight: { default: `calc(${space.linkLineHeight} * 2)`, [media.mobile]: 0 },
@@ -483,11 +479,6 @@ const styles = stylex.create({
   link: {
     paddingBlock: `calc(${space.sectionContentGap} / 2)`,
     marginBlock: `calc(${space.sectionContentGap} / -2)`,
-    "::after": {
-      content: '" ↗"',
-      fontFamily:
-        'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    },
   },
   profile: {
     gridColumn: { default: null, [media.mobile]: 1 },

@@ -7,13 +7,15 @@ import { media, rootMarker } from "./tokens.stylex.ts";
  * Only opacity and transform animate, so the motion stays on the compositor.
  */
 
-// A critically damped spring (no overshoot), sampled for CSS `linear()`.
-const spring =
+// A critically damped spring (no overshoot), sampled for CSS `linear()`. `zoom.ts` moves images
+// on the same curve, so everything on the site shares one motion.
+export const spring =
   "linear(0, 0.078, 0.235, 0.401, 0.549, 0.669, 0.762, 0.831, 0.882, 0.918, 0.944, 0.962, 0.974, 0.982, 0.988, 0.992, 0.995, 0.996, 0.998, 0.998, 1)";
 
 const duration = "550ms";
 // Items go solid over the first 60% of the rise, then settle: they never look ghostly in motion.
-const fadeDuration = "330ms";
+// Also the length of an image's enlargement, which travels far and so must not linger.
+export const fadeDuration = 330;
 
 /** Delays in milliseconds; the phone layout stacks the links below the table, so they wait longer. */
 export const timing = {
@@ -78,7 +80,7 @@ export const entry = stylex.create({
         [stylex.when.ancestor("[data-entered]", rootMarker)]: "none",
       },
     },
-    animationDuration: `${fadeDuration}, ${duration}`,
+    animationDuration: `${fadeDuration}ms, ${duration}`,
     animationTimingFunction: spring,
     animationFillMode: "both",
     animationPlayState: "var(--entry-state, running)",

@@ -94,20 +94,30 @@ function Image({ id, grid, eager }: { id: string; grid: boolean; eager: boolean 
   if (!item) throw new Error(`Unknown media id: ${id}`);
   const { src, srcset } = sources(id);
   return (
-    <img
+    <button
+      type="button"
       {...stylex.props(
-        styles.image,
+        ui.reset,
+        ui.focusRing,
+        styles.zoom,
         item.mark && styles.mark,
         item.mark === "center" && styles.centered,
       )}
-      alt={item.alt}
-      width={item.width}
-      height={item.height}
-      decoding="async"
-      {...(eager ? { fetchpriority: "high" } : { loading: "lazy" })}
-      src={src}
-      {...(srcset && { srcset, sizes: grid ? gridSizes : singleSizes })}
-    />
+      aria-label={`Enlarge: ${item.alt}`}
+      aria-expanded="false"
+      data-zoom
+    >
+      <img
+        {...stylex.props(styles.image, item.mark && styles.markImage)}
+        alt={item.alt}
+        width={item.width}
+        height={item.height}
+        decoding="async"
+        {...(eager ? { fetchpriority: "high" } : { loading: "lazy" })}
+        src={src}
+        {...(srcset && { srcset, sizes: grid ? gridSizes : singleSizes })}
+      />
+    </button>
   );
 }
 
@@ -265,11 +275,11 @@ function Prose({
     <div {...stylex.props(styles.column, spacing)}>
       {blocks.map((block, index) =>
         block.type === "h2" ? (
-          <h2 {...stylex.props(styles.h2)}>
+          <h2 {...stylex.props(ui.heading, styles.h2)}>
             <Inline text={block.text} />
           </h2>
         ) : block.type === "h3" ? (
-          <Subheading {...stylex.props(styles.h3)}>
+          <Subheading {...stylex.props(ui.heading, styles.h3)}>
             <Inline text={block.text} />
           </Subheading>
         ) : block.type === "list" ? (
@@ -297,8 +307,19 @@ function Prose({
   );
 }
 
-/** Renders a case study; `eager` gives its first image high fetch priority. */
-export function Article({ markdown, eager }: { markdown: string; eager: boolean }) {
+/**
+ * Renders a case study; `eager` gives its first image high fetch priority. `showTitle` is false
+ * where the breadcrumb already names the page: the heading stays for screen readers only.
+ */
+export function Article({
+  markdown,
+  eager,
+  showTitle,
+}: {
+  markdown: string;
+  eager: boolean;
+  showTitle: boolean;
+}) {
   const { title, blocks } = parse(markdown);
   const firstMedia = blocks.find((block) => block.type === "media");
   // Each ## opens a section with a chapter-sized gap; content before the first ## is not wrapped.
@@ -321,7 +342,7 @@ export function Article({ markdown, eager }: { markdown: string; eager: boolean 
   return (
     <>
       <header {...stylex.props(styles.column)}>
-        <h1 {...stylex.props(styles.title)}>
+        <h1 {...stylex.props(ui.heading, showTitle ? styles.title : ui.srOnly)}>
           <Inline text={title} />
         </h1>
       </header>
@@ -338,13 +359,11 @@ export const styles = stylex.create({
   title: {
     maxWidth: space.contentColumn,
     margin: `0 0 ${space.caseTitleTextGap}`,
-    fontSize: "19px",
-    fontWeight: 500,
     lineHeight: "28px",
   },
   section: { marginTop: "80px" },
-  h2: { marginBottom: "24px", fontSize: "24px", fontWeight: 500, lineHeight: "32px" },
-  h3: { margin: "48px 0 12px", fontSize: "19px", fontWeight: 500, lineHeight: "28px" },
+  h2: { marginBottom: "24px", lineHeight: "28px" },
+  h3: { margin: "48px 0 12px", lineHeight: "28px" },
   prose: { color: colors.article, fontWeight: colors.proseWeight },
   nextParagraph: { marginTop: "32px" },
   list: { margin: "20px 0 0 20px" },
@@ -386,7 +405,16 @@ export const styles = stylex.create({
     userSelect: "none",
     WebkitUserDrag: "none",
   },
-  mark: { width: "88%", borderRadius: 0, filter: colors.artworkFilter },
+  /** The button around each image; `zoom.ts` enlarges it on click where there is room. */
+  zoom: {
+    display: "block",
+    width: "100%",
+    borderRadius: space.mediaRadius,
+    cursor: { default: "auto", "@media (min-width: 768px)": "zoom-in" },
+    WebkitTapHighlightColor: "transparent",
+  },
+  mark: { width: "88%", borderRadius: 0 },
+  markImage: { borderRadius: 0, filter: colors.artworkFilter },
   centered: { marginInline: "auto" },
   caption: { maxWidth: space.contentColumn, marginTop: "12px" },
   afterMedia: { marginTop: "48px" },
