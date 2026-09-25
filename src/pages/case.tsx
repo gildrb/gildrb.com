@@ -11,7 +11,7 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { Row } from "../row.tsx";
-import { type Case, cases, origin, pages, person, projects } from "../site.ts";
+import { type Case, cases, origin, pages, person, type Project, projects } from "../site.ts";
 import { media, space } from "../tokens.stylex.ts";
 import { versioned } from "../versioned.ts";
 
@@ -34,6 +34,7 @@ function Frame({
   shareDescription = description,
   image = assets.shareImage,
   current,
+  table,
   head,
   mono,
   children,
@@ -46,6 +47,8 @@ function Frame({
   /** A stamped site path, see `versioned`. */
   image?: string;
   current: string;
+  /** The project list the page shows, if any; the phone links align to its columns. */
+  table?: readonly Project[];
   head: preact.ComponentChildren;
   mono: boolean;
   children: preact.ComponentChildren;
@@ -87,7 +90,7 @@ function Frame({
           <PageLinks phone={false} />
         </Sidebar>
         <Main>{children}</Main>
-        <PageLinks phone />
+        <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
   );
@@ -147,6 +150,10 @@ export function CasePage({
 }) {
   const url = `${origin}/${item.slug}`;
   const image = item.ogImage && versioned(`/images/optimized/${item.ogImage}`);
+  // The other case studies, without this one and without the external projects.
+  const others = projects.filter(
+    (project) => !project.external && project.href !== `/${item.slug}`,
+  );
   return (
     <Frame
       assets={assets}
@@ -156,6 +163,7 @@ export function CasePage({
       shareDescription={item.ogDescription}
       {...(image && { image })}
       current={item.name}
+      table={others}
       mono={monoBlocks(markdown)}
       head={
         <>
@@ -190,11 +198,9 @@ export function CasePage({
         aria-label="All projects"
       >
         <div {...stylex.props(styles.nextList)}>
-          {projects
-            .filter((project) => !project.external && project.href !== `/${item.slug}`)
-            .map((project, index) => (
-              <Row project={project} first={index === 0} home={false} />
-            ))}
+          {others.map((project, index) => (
+            <Row project={project} first={index === 0} home={false} />
+          ))}
         </div>
       </nav>
     </Frame>
