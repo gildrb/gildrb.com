@@ -9,6 +9,11 @@ export type Media = {
   height: number;
   /** Monochrome logo artwork: inset, square-cornered, inverted in light mode. */
   mark?: "center" | "start";
+  /**
+   * A silent looping recording, `public/videos/gil-rodrigues-<id>.mp4`; the image files of the
+   * same id are its poster frame. It plays only while on screen (see `video.ts`).
+   */
+  video?: true;
 };
 
 export const media: Readonly<Record<string, Media>> = {
@@ -17,6 +22,44 @@ export const media: Readonly<Record<string, Media>> = {
     width: 2000,
     height: 1112,
     mark: "center",
+  },
+  "ben-davis-site-ai": {
+    alt: "davis7.sh State of AI page in dark mode, an editorial list of models and tools",
+    width: 2560,
+    height: 1600,
+  },
+  "ben-davis-site-home-server": {
+    alt: "davis7.sh Home Server page in dark mode, a rack build beside its parts and cost",
+    width: 2560,
+    height: 1600,
+  },
+  "ben-davis-site-macos": {
+    alt: "davis7.sh macOS setup page in light mode, notes with inline keyboard shortcuts",
+    width: 2560,
+    height: 1600,
+  },
+  "ben-davis-site-sponsors": {
+    alt: "davis7.sh Sponsors page in light mode, sponsor cards on soft color fields",
+    width: 2560,
+    height: 1600,
+  },
+  "ben-davis-site-tour": {
+    alt: "Screen recording of davis7.sh: the db mark turning into the wordmark, hovering links, the Sponsors page and switching to light mode",
+    width: 1080,
+    height: 1036,
+    video: true,
+  },
+  "heph-session": {
+    alt: "Screen recording of Heph in the terminal answering questions about a folder of lecture notes, citing the files behind each answer",
+    width: 1080,
+    height: 614,
+    video: true,
+  },
+  "local-studio-tour": {
+    alt: "Screen recording of the Local Studio website: the hero, the app interface, the setup prompt for coding models and the phone screens",
+    width: 1080,
+    height: 1014,
+    video: true,
   },
   "ben-davis-construction": {
     alt: "Ben Davis db monogram shown with construction points and the finished mark",
