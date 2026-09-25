@@ -285,7 +285,7 @@ function Prose({
         ) : block.type === "list" ? (
           <ul {...stylex.props(styles.list)}>
             {block.items.map((item, itemIndex) => (
-              <li {...stylex.props(styles.prose, itemIndex > 0 && styles.nextItem)}>
+              <li {...stylex.props(ui.prose, styles.prose, itemIndex > 0 && styles.nextItem)}>
                 <Inline text={item} />
               </li>
             ))}
@@ -294,6 +294,7 @@ function Prose({
           block.type === "p" && (
             <p
               {...stylex.props(
+                ui.prose,
                 styles.prose,
                 ["p", "list"].includes(blocks[index - 1]?.type ?? "") && styles.nextParagraph,
               )}
@@ -411,7 +412,6 @@ export const styles = stylex.create({
     width: "100%",
     borderRadius: space.mediaRadius,
     cursor: { default: "auto", "@media (min-width: 768px)": "zoom-in" },
-    WebkitTapHighlightColor: "transparent",
   },
   mark: { width: "88%", borderRadius: 0 },
   markImage: { borderRadius: 0, filter: colors.artworkFilter },

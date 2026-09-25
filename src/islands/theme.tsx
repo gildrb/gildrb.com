@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
-import { type Theme, themeClass } from "../theme.ts";
+import { setThemeColor, type Theme, themeClass } from "../theme.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { type Style, ui } from "../ui.tsx";
 
@@ -40,6 +40,7 @@ export function ThemeToggle({ style }: { style?: Style }) {
         ...`${themeClass.dark} ${themeClass.light}`.split(" "),
       );
       document.documentElement.classList.add(...themeClass[next].split(" "));
+      setThemeColor(next);
       try {
         localStorage.setItem("theme", next);
       } catch {
@@ -144,7 +145,7 @@ const styles = stylex.create({
       [media.desktop]: "auto",
       // The top padding above the name, less the toggle's overhang around its first line.
       [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: `calc(48px + (${space.linkLineHeight} - ${space.toggleSize}) / 2)`,
+        [media.desktop]: `calc(${space.pageInset} + (${space.linkLineHeight} - ${space.toggleSize}) / 2)`,
       },
     },
     right: {
@@ -153,7 +154,7 @@ const styles = stylex.create({
     },
     bottom: {
       default: null,
-      [media.desktop]: space.footerInset,
+      [media.desktop]: space.pageInset,
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto" },
     },
     gridColumn: { default: null, [media.mobile]: 2 },
@@ -189,8 +190,12 @@ const styles = stylex.create({
     "::before": {
       content: { default: null, [media.mobile]: '""' },
       position: { default: null, [media.mobile]: "absolute" },
-      // Stops at the page's side padding on the right, where the toggle now overhangs the column.
-      inset: { default: null, [media.mobile]: "6px -4px 6px -6px" },
+      // One touch target, 44 × 44. Right: it stops at the page's side padding, where the toggle
+      // overhangs the column by 8px of the 12px; the rest of the width goes on the left.
+      inset: {
+        default: null,
+        [media.mobile]: `calc((100% - ${space.touchTarget}) / 2) -4px calc((100% - ${space.touchTarget}) / 2) calc(${space.toggleSize} + 4px - ${space.touchTarget})`,
+      },
     },
   },
   hoverable: { color: { default: colors.tertiary, ":hover": { [media.hover]: colors.primary } } },

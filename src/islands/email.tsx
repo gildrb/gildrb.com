@@ -50,8 +50,8 @@ export function Email({ style, vars }: { style?: Style; vars?: Record<string, st
 const styles = stylex.create({
   email: {
     lineHeight: space.linkLineHeight,
-    paddingBlock: `calc(${space.sectionContentGap} / 2)`,
-    marginBlock: `calc(${space.sectionContentGap} / -2)`,
+    paddingBlock: `calc(${space.linkGap} / 2)`,
+    marginBlock: `calc(${space.linkGap} / -2)`,
   },
   failed: { color: colors.secondary },
 });

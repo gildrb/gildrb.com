@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { Project } from "./site.ts";
 import { colors, media, rowMarker, space } from "./tokens.stylex.ts";
-import { type Style, ui } from "./ui.tsx";
+import { Figures, type Style, ui, untranslated } from "./ui.tsx";
 
 /**
  * One project in a four-column subgrid (date, title, scope, arrow). The parent grid owns
@@ -35,15 +35,17 @@ export function Row({
       style={delay && { "--entry-delay": delay }}
     >
       <time {...stylex.props(ui.text, styles.cell, styles.date)} dateTime={project.date}>
-        <span {...stylex.props(home ? styles.fullHome : styles.fullNext)}>{project.date}</span>
+        <span {...stylex.props(home ? styles.fullHome : styles.fullNext)}>
+          <Figures text={project.date} />
+        </span>
         <span {...stylex.props(home ? styles.yearHome : styles.yearNext)}>
-          {project.date.slice(0, 7)}
+          <Figures text={project.date.slice(0, 7)} />
         </span>
       </time>
-      <Title {...stylex.props(ui.text, styles.cell, styles.title)}>{project.title}</Title>
-      <span {...stylex.props(ui.text, styles.scope)} data-scope-column={!home || undefined}>
-        {project.scope}
-      </span>
+      <Title {...stylex.props(ui.text, styles.cell, styles.title)} {...untranslated}>
+        {project.title}
+      </Title>
+      <span {...stylex.props(ui.text, styles.scope)}>{project.scope}</span>
       <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
         <span {...stylex.props(styles.view, home ? styles.viewHome : styles.viewNext)}>
           {project.external ? "Visit" : "View"}
@@ -63,27 +65,22 @@ const styles = stylex.create({
     gridTemplateColumns: "subgrid",
     alignItems: "baseline",
     width: "100%",
-    paddingBlock: {
-      default: "8px",
-      [media.mobile]: "7px",
-      [media.desktop]: space.portfolioRowPadding,
-    },
+    // Phones: one touch target per row. Desktop: 2.5rem, the pitch the sidebar is aligned to.
+    paddingBlock: { default: space.touchInset, [media.desktop]: space.portfolioRowPadding },
+    // A press raises the row like hover does (the grey tap flash is off, see `layout.tsx`).
     color: {
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
       ":focus-visible": colors.primary,
+      ":active": colors.primary,
     },
     textDecoration: "none",
     touchAction: "manipulation",
     userSelect: "none",
     outline: { default: null, ":focus-visible": `1px solid ${colors.primary}` },
   },
-  divided: {
-    borderTopWidth: { default: "1px", [media.desktop]: 0 },
-    borderTopStyle: "solid",
-    borderTopColor: colors.hairline,
-    boxShadow: { default: null, [media.desktop]: `inset 0 1px ${colors.hairline}` },
-  },
+  // A hairline drawn inside the row, so it never adds to the row's height.
+  divided: { boxShadow: `inset 0 1px ${colors.hairline}` },
   home: {
     borderRadius: { default: "4px", [media.desktop]: 0, ":focus-visible": "2px" },
     outlineOffset: "6px",
@@ -116,6 +113,7 @@ const styles = stylex.create({
       default: colors.tertiary,
       [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
       [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
+      [stylex.when.ancestor(":active", rowMarker)]: colors.primary,
     },
   },
   arrow: {

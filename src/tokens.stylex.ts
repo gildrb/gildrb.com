@@ -10,10 +10,17 @@ export const media = stylex.defineConsts({
 });
 
 export const colors = stylex.defineVars({
+  /** Tells the browser which way the page is lit, for scrollbars and other built-in controls. */
+  scheme: { default: "dark", [light]: "light" },
   bg: { default: "oklch(0% 0 0)", [light]: "oklch(100% 0 0)" },
   primary: { default: "oklch(100% 0 0)", [light]: "oklch(0% 0 0)" },
   secondary: { default: "oklch(76.68% 0 0)", [light]: "oklch(42.02% 0 0)" },
-  tertiary: "oklch(56.58% 0 0)",
+  /**
+   * One more step down the text ladder. Dark: article → secondary is 11.85 points of lightness,
+   * and tertiary takes the same step again (APCA Lc 42 on black, up from 30). Light keeps its
+   * value (Lc 72 on white).
+   */
+  tertiary: { default: "oklch(64.83% 0 0)", [light]: "oklch(56.58% 0 0)" },
   article: { default: "oklch(88.53% 0 0)", [light]: "oklch(27.07% 0 0)" },
   hairline: { default: "oklch(100% 0 0 / 0.12)", [light]: "oklch(0% 0 0 / 0.12)" },
   codeBg: { default: "oklch(20.44% 0 0)", [light]: "oklch(93.12% 0 0)" },
@@ -29,9 +36,11 @@ export const colors = stylex.defineVars({
 });
 
 export const dark = stylex.createTheme(colors, {
+  scheme: "dark",
   bg: "oklch(0% 0 0)",
   primary: "oklch(100% 0 0)",
   secondary: "oklch(76.68% 0 0)",
+  tertiary: "oklch(64.83% 0 0)",
   article: "oklch(88.53% 0 0)",
   hairline: "oklch(100% 0 0 / 0.12)",
   codeBg: "oklch(20.44% 0 0)",
@@ -46,9 +55,11 @@ export const dark = stylex.createTheme(colors, {
 });
 
 export const lightTheme = stylex.createTheme(colors, {
+  scheme: "light",
   bg: "oklch(100% 0 0)",
   primary: "oklch(0% 0 0)",
   secondary: "oklch(42.02% 0 0)",
+  tertiary: "oklch(56.58% 0 0)",
   article: "oklch(27.07% 0 0)",
   hairline: "oklch(0% 0 0 / 0.12)",
   codeBg: "oklch(93.12% 0 0)",
@@ -69,12 +80,26 @@ export const space = stylex.defineVars({
   caseTitleTextGap: "24px",
   linkLineHeight: { default: "24px", "@media (min-width: 768px)": "1.5rem" },
   sidebarBaselinePitch: "2rem",
+  /**
+   * The smallest thing a finger should have to hit. On phones every table row and the table
+   * header is exactly this tall.
+   */
+  touchTarget: "44px",
+  /** Pads a phone line (24px) out to a touch target. */
+  touchInset: "calc((44px - 24px) / 2)",
+  /**
+   * Between two lines of a link list: the sidebar pitch less a line on desktop; on phones the
+   * compact list's own gap (the section content gap), which keeps the whole table on screen.
+   * Links pad into half of it, so their hit areas meet with no dead space between them.
+   */
+  linkGap: { default: "calc(2rem - 1.5rem)", "@media (max-width: 767px)": "6px" },
   portfolioRowPadding: "calc((2.5rem - 1.5rem) / 2)",
   toggleSize: "32px",
   /** The box each row's arrow is centered in, so ↗ and → share one axis with the theme toggle. */
   arrowWidth: "16px",
   toggleOpticalOffset: "2px",
-  footerInset: "48px",
+  /** The page's inset from the viewport edge on desktop: top of the sidebar and content, bottom of the footer. */
+  pageInset: "48px",
   sidebarColumn: "240px",
   contentColumn: "540px",
   layoutGap: "48px",

@@ -121,6 +121,9 @@ function enlarge(button: HTMLButtonElement) {
   document.body.append(backdrop, copy);
   image.style.visibility = "hidden";
   button.setAttribute("aria-expanded", "true");
+  // Focus stays on the image's own button (Safari does not focus buttons on click), so keys act
+  // on the enlargement and Tab carries on from where the reader is.
+  button.focus({ preventScroll: true });
   const state: Zoomed = { button, image, copy, backdrop, frame, radius, scrollY, closing: false };
   zoomed = state;
   copy.addEventListener("transitionend", (event) => {
@@ -176,8 +179,9 @@ document.addEventListener("click", (event) => {
   enlarge(button);
 });
 
+// Escape sends the image back; so does Tab, as focus leaves for content the backdrop covers.
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") shrink();
+  if (event.key === "Escape" || event.key === "Tab") shrink();
 });
 
 addEventListener(
