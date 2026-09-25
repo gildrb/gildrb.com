@@ -6,6 +6,7 @@ import { type Assets, Document, JsonLd, Links, Main, Name, Shell, Sidebar } from
 import { developers, origin, person, profiles } from "../site.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
+import { versioned } from "../versioned.ts";
 
 const title = person.name;
 
@@ -43,7 +44,7 @@ function Head() {
       <meta property="og:title" content={title} />
       <meta property="og:description" content={person.summary} />
       <meta property="og:site_name" content={person.name} />
-      <meta property="og:image" content={`${origin}/images/og-image.png`} />
+      <meta property="og:image" content={`${origin}${versioned("/images/og-image.png")}`} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={title} />
