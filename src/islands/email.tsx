@@ -3,7 +3,7 @@ import type { TargetedMouseEvent } from "preact";
 import { useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { email } from "../site.ts";
-import { colors, space } from "../tokens.stylex.ts";
+import { colors, fontFeatures, space } from "../tokens.stylex.ts";
 import { type Style, ui } from "../ui.tsx";
 
 export function Email({ style, vars }: { style?: Style; vars?: Record<string, string> }) {
@@ -52,6 +52,8 @@ const styles = stylex.create({
     lineHeight: space.linkLineHeight,
     paddingBlock: `calc(${space.linkGap} / 2)`,
     marginBlock: `calc(${space.linkGap} / -2)`,
+    // An address is lowercase: its @ keeps the default form, not the capitals' one.
+    fontFeatureSettings: fontFeatures.prose,
   },
   failed: { color: colors.secondary },
 });

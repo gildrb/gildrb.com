@@ -25,6 +25,17 @@ export const figureUnits = stylex.defineConsts({
   afterHyphen: "-88.2",
 });
 
+/**
+ * Inter's OpenType features. Interface text takes case forms (`case`): arrows, hyphens and @
+ * centred on capitals and figures, which is what they stand beside in names, dates, headers and
+ * links. Running prose and the email address keep the default forms, which sit among lowercase
+ * letters. The grotesque G (Inter's cv10) is not listed: it is built into the font file itself.
+ */
+export const fontFeatures = stylex.defineConsts({
+  interface: '"liga" 1, "calt" 1, "case" 1',
+  prose: '"liga" 1, "calt" 1',
+});
+
 export const colors = stylex.defineVars({
   /** Tells the browser which way the page is lit, for scrollbars and other built-in controls. */
   scheme: { default: "dark", [light]: "light" },
