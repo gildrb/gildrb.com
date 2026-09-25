@@ -1,7 +1,12 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-const hashes = new Map<string, string>();
+const urls = new Map<string, string>();
+
+/** `path` stamped with a hash of `bytes`: the URL changes exactly when the content does. */
+export function stamp(path: `/${string}`, bytes: Uint8Array): string {
+  return `${path}?v=${createHash("sha256").update(bytes).digest("base64url").slice(0, 10)}`;
+}
 
 /**
  * The URL of a file in `public/`, stamped with a hash of its bytes. Fonts and images are served
@@ -10,13 +15,10 @@ const hashes = new Map<string, string>();
  * Build-time only: pages are prerendered in Node.
  */
 export function versioned(path: `/${string}`): string {
-  let hash = hashes.get(path);
-  if (hash === undefined) {
-    hash = createHash("sha256")
-      .update(readFileSync(`public${path}`))
-      .digest("base64url")
-      .slice(0, 10);
-    hashes.set(path, hash);
+  let url = urls.get(path);
+  if (url === undefined) {
+    url = stamp(path, readFileSync(`public${path}`));
+    urls.set(path, url);
   }
-  return `${path}?v=${hash}`;
+  return url;
 }

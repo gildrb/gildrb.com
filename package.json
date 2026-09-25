@@ -13,11 +13,14 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260923.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@stylexjs/unplugin": "^0.19.1",
     "@types/node": "^26.6.2",
     "preact-render-to-string": "^6.7.0",
+    "satori": "^0.33.5",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
-    "vite-plus": "0.3.3"
+    "vite-plus": "0.3.3",
+    "wawoff2": "^2.0.1"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"

@@ -6,7 +6,7 @@ import { type Assets, Document, JsonLd, Links, Main, Name, Shell, Sidebar } from
 import { developers, origin, person, profiles } from "../site.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
-import { versioned } from "../versioned.ts";
+import { shareFrame } from "../og.tsx";
 
 const title = person.name;
 
@@ -22,7 +22,7 @@ const alternates: [rel: string, type: string, path: string, title: string][] = [
   ["service-doc", "text/html", `/${developers.slug}`, developers.description],
 ];
 
-function Head() {
+function Head({ shareImage }: { shareImage: string }) {
   return (
     <>
       <meta name="description" content={person.summary} />
@@ -43,9 +43,9 @@ function Head() {
       <meta property="og:title" content={title} />
       <meta property="og:description" content={person.summary} />
       <meta property="og:site_name" content={person.name} />
-      <meta property="og:image" content={`${origin}${versioned("/images/og-image.png")}`} />
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image" content={`${origin}${shareImage}`} />
+      <meta property="og:image:width" content={String(shareFrame.width)} />
+      <meta property="og:image:height" content={String(shareFrame.height)} />
       <meta property="og:image:alt" content={title} />
       <meta property="profile:first_name" content={person.givenName} />
       <meta property="profile:last_name" content={person.familyName} />
@@ -58,7 +58,13 @@ function Head() {
 
 export function Home({ assets }: { assets: Assets }) {
   return (
-    <Document assets={assets} title={title} head={<Head />} mono={false} home>
+    <Document
+      assets={assets}
+      title={title}
+      head={<Head shareImage={assets.shareImage} />}
+      mono={false}
+      home
+    >
       <Shell home>
         <Sidebar home label={{ "aria-labelledby": "site-title" }}>
           <Name />

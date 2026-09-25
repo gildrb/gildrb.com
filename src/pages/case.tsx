@@ -22,26 +22,40 @@ const monoBlocks = (markdown: string) =>
       (block.type === "media" && block.items.some(({ id }) => id === "heph-demo")),
   );
 
-/** Every inner page's tab reads like its breadcrumb: "Gil Rodrigues → T3". */
+/**
+ * Every inner page. Its tab and its link preview read like its breadcrumb ("Gil Rodrigues → T3");
+ * the preview shows the page's own image, or else the homepage as rendered at build time.
+ */
 function Frame({
   assets,
+  path,
+  type,
   description,
+  shareDescription = description,
+  image = assets.shareImage,
   current,
   head,
   mono,
   children,
 }: {
   assets: Assets;
+  path: `/${string}`;
+  type: "article" | "website";
   description: string;
+  shareDescription?: string;
+  /** A stamped site path, see `versioned`. */
+  image?: string;
   current: string;
   head: preact.ComponentChildren;
   mono: boolean;
   children: preact.ComponentChildren;
 }) {
+  const url = `${origin}${path}`;
+  const title = `${person.name} → ${current}`;
   return (
     <Document
       assets={assets}
-      title={`${person.name} → ${current}`}
+      title={title}
       mono={mono}
       head={
         <>
@@ -49,6 +63,16 @@ function Frame({
           <meta name="author" content={person.name} />
           <meta name="creator" content={person.name} />
           <meta name="robots" content="index, follow, max-image-preview:large" />
+          <link rel="canonical" href={url} />
+          <meta property="og:type" content={type} />
+          <meta property="og:url" content={url} />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={shareDescription} />
+          <meta property="og:image" content={`${origin}${image}`} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={title} />
+          <meta name="twitter:description" content={shareDescription} />
+          <meta name="twitter:image" content={`${origin}${image}`} />
           {head}
         </>
       }
@@ -122,26 +146,20 @@ export function CasePage({
   markdown: string;
 }) {
   const url = `${origin}/${item.slug}`;
-  const image = item.ogImage && `${origin}${versioned(`/images/optimized/${item.ogImage}`)}`;
+  const image = item.ogImage && versioned(`/images/optimized/${item.ogImage}`);
   return (
     <Frame
       assets={assets}
+      path={`/${item.slug}`}
+      type="article"
       description={item.description}
+      shareDescription={item.ogDescription}
+      {...(image && { image })}
       current={item.name}
       mono={monoBlocks(markdown)}
       head={
         <>
-          <link rel="canonical" href={url} />
           <Alternates slug={item.slug} name={item.name} />
-          <meta property="og:type" content="article" />
-          <meta property="og:url" content={url} />
-          <meta property="og:title" content={`${person.name} → ${item.name}`} />
-          <meta property="og:description" content={item.ogDescription} />
-          {image && <meta property="og:image" content={image} />}
-          <meta name="twitter:card" content={image ? "summary_large_image" : "summary"} />
-          <meta name="twitter:title" content={`${person.name} → ${item.name}`} />
-          <meta name="twitter:description" content={item.ogDescription} />
-          {image && <meta name="twitter:image" content={image} />}
           <JsonLd
             value={{
               "@context": "https://schema.org",
@@ -196,21 +214,15 @@ export function AllPage({
   return (
     <Frame
       assets={assets}
+      path="/all"
+      type="website"
       description={description}
       current="All"
       mono
       head={
         <>
-          <link rel="canonical" href={`${origin}/all`} />
           <Alternates />
           <HeroPreload markdown={markdown[cases[0]?.slug ?? ""] ?? ""} />
-          <meta property="og:type" content="website" />
-          <meta property="og:url" content={`${origin}/all`} />
-          <meta property="og:title" content={`${person.name} → All`} />
-          <meta property="og:description" content={description} />
-          <meta name="twitter:card" content="summary" />
-          <meta name="twitter:title" content={`${person.name} → All`} />
-          <meta name="twitter:description" content={description} />
         </>
       }
     >
@@ -286,23 +298,17 @@ export function DocPage({
   page: (typeof pages)[number];
   markdown: string;
 }) {
-  const url = `${origin}/${page.slug}`;
-  const title = `${person.name} → ${page.name}`;
   return (
     <Frame
       assets={assets}
+      path={`/${page.slug}`}
+      type="website"
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}
       head={
         <>
-          <link rel="canonical" href={url} />
           <Alternates slug={page.slug} name={page.name} />
-          <meta property="og:type" content="website" />
-          <meta property="og:url" content={url} />
-          <meta property="og:title" content={title} />
-          <meta property="og:description" content={page.description} />
-          <meta name="twitter:card" content="summary" />
         </>
       }
     >

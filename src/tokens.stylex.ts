@@ -9,6 +9,22 @@ export const media = stylex.defineConsts({
   motion: "@media screen and (prefers-reduced-motion: no-preference)",
 });
 
+/**
+ * How dates are spaced, in Inter's font units (see `ui.figures`). The page sets them as CSS; the
+ * share image (`og.tsx`) draws its dates from the same numbers.
+ */
+export const figureUnits = stylex.defineConsts({
+  unitsPerEm: "2048",
+  /** Every tabular digit's advance. */
+  tabular: "1328",
+  /** Digit to digit. */
+  digit: "-95.1",
+  /** Digit to hyphen, after the digit's own tracking. */
+  beforeHyphen: "17",
+  /** Hyphen to digit. */
+  afterHyphen: "-88.2",
+});
+
 export const colors = stylex.defineVars({
   /** Tells the browser which way the page is lit, for scrollbars and other built-in controls. */
   scheme: { default: "dark", [light]: "light" },
