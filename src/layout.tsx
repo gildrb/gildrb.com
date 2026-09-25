@@ -5,7 +5,7 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
-import { contacts, type Link, person, profiles, projects } from "./site.ts";
+import { contacts, type Link, person, type Project, profiles, projects } from "./site.ts";
 import { themeColor, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
 import { Figures, type Style, ui, untranslated } from "./ui.tsx";
@@ -204,21 +204,39 @@ export function Name({ current }: { current?: string }) {
   );
 }
 
-/** On inner pages the links sit in the sidebar on desktop and below the content on phones. */
-export function PageLinks({ phone }: { phone: boolean }) {
+/**
+ * On inner pages the links sit in the sidebar on desktop and below the content on phones.
+ * `table` is the project list the page shows, which the phone links align to (see `Links`).
+ */
+export function PageLinks({
+  phone,
+  table = projects,
+}: {
+  phone: boolean;
+  table?: readonly Project[];
+}) {
   return (
     <div {...stylex.props(phone ? styles.phoneOnly : styles.desktopOnly)}>
-      <Links phone={phone} />
+      <Links phone={phone} table={table} />
     </div>
   );
 }
 
 /**
- * Profile and contact links. On phones they share the homepage table's columns: hidden ruler
- * cells carry every project's date and title, so the contact column starts exactly where the
- * table's scope column does, on every page, whether or not a table is shown.
+ * Profile and contact links. On phones they share the columns of the page's project table:
+ * hidden ruler cells carry the date and title of every project in `table`, so the contact
+ * column starts exactly where that table's scope column does. A case study passes its own list,
+ * which leaves out itself and the external projects; pages without a table use the homepage's.
  */
-export function Links({ home = false, phone = false }: { home?: boolean; phone?: boolean }) {
+export function Links({
+  home = false,
+  phone = false,
+  table = projects,
+}: {
+  home?: boolean;
+  phone?: boolean;
+  table?: readonly Project[];
+}) {
   const rise = home && entry.rise;
   const stagger = (index: number) => ({
     "--entry-delay": `${timing.link.desktop[index]}ms`,
@@ -259,7 +277,7 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
       data-mobile-links={phone || home || undefined}
     >
       {(phone || home) &&
-        projects.flatMap((project) => [
+        table.flatMap((project) => [
           <span
             {...stylex.props(ui.text, styles.ruler, styles.rulerDate)}
             aria-hidden="true"
