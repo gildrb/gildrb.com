@@ -46,8 +46,8 @@ function Frame({
       head={
         <>
           <meta name="description" content={description} />
-          <meta name="author" content="Gil Rodrigues" />
-          <meta name="creator" content="Gil Rodrigues" />
+          <meta name="author" content={person.name} />
+          <meta name="creator" content={person.name} />
           <meta name="robots" content="index, follow, max-image-preview:large" />
           {head}
         </>
@@ -92,13 +92,13 @@ function Alternates({ slug, name }: { slug?: string; name?: string }) {
         rel="alternate"
         type="text/markdown"
         href={`${origin}/llms.txt`}
-        title="LLM reference for Gil Rodrigues"
+        title={`LLM reference for ${person.name}`}
       />
       <link
         rel="alternate"
         type="text/markdown"
         href={`${origin}/llms-full.txt`}
-        title="Full public website text for Gil Rodrigues"
+        title={`Full public website text for ${person.name}`}
       />
       {slug && (
         <link
@@ -108,12 +108,6 @@ function Alternates({ slug, name }: { slug?: string; name?: string }) {
           title={`Markdown source for ${name}`}
         />
       )}
-      <link
-        rel="describedby"
-        type="application/ld+json"
-        href={`${origin}/profile.json`}
-        title="Structured profile for Gil Rodrigues"
-      />
     </>
   );
 }
@@ -160,7 +154,7 @@ export function CasePage({
               author: {
                 "@type": "Person",
                 "@id": `${origin}/#person`,
-                name: "Gil Rodrigues",
+                name: person.name,
                 url: `${origin}/`,
               },
               inLanguage: "en",
@@ -198,7 +192,7 @@ export function AllPage({
   assets: Assets;
   markdown: Readonly<Record<string, string>>;
 }) {
-  const description = "All case studies by Gil Rodrigues.";
+  const description = `All case studies by ${person.name}.`;
   return (
     <Frame
       assets={assets}

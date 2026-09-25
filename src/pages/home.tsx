@@ -15,7 +15,6 @@ const alternates: [rel: string, type: string, path: string, title: string][] = [
   ["alternate", "text/markdown", "/index.html.md", "Markdown version"],
   ["alternate", "text/markdown", "/llms.txt", "LLM reference"],
   ["alternate", "text/markdown", "/llms-full.txt", "Full site text"],
-  ["describedby", "application/ld+json", "/profile.json", "Structured profile"],
   ["alternate", "application/rss+xml", "/feed.xml", "Feed"],
   ["author", "text/plain", "/humans.txt", "humans.txt"],
   ["sitemap", "application/xml", "/sitemap.xml", "Sitemap"],
