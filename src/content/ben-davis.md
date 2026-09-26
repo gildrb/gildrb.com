@@ -6,12 +6,10 @@ A db monogram for [Ben Davis](https://x.com/davis7), then [the site](https://dav
 
 ![](media:ben-davis-brandmark)
 
-### Before
+### What he had before.
 
 ![](media:ben-davis-original)
 
-### Construction
-
-One path, one diagonal.
+### One path, one diagonal.
 
 ![](media:ben-davis-construction)

@@ -312,11 +312,11 @@ function Prose({
     <div {...stylex.props(styles.column, spacing)}>
       {blocks.map((block, index) =>
         block.type === "h2" ? (
-          <h2 {...stylex.props(ui.heading, styles.h2)}>
+          <h2 {...stylex.props(ui.prose, styles.prose, styles.heading, styles.h2)}>
             <Inline text={block.text} />
           </h2>
         ) : block.type === "h3" ? (
-          <Subheading {...stylex.props(ui.heading, styles.h3)}>
+          <Subheading {...stylex.props(ui.prose, styles.prose, styles.heading, styles.h3)}>
             <Inline text={block.text} />
           </Subheading>
         ) : block.type === "list" ? (
@@ -348,6 +348,7 @@ function Prose({
 /**
  * Renders a case study; `eager` gives its first image high fetch priority. `showTitle` is false
  * where the breadcrumb already names the page: the heading stays for screen readers only.
+ * Headings keep the document outline but read as body text; only the site name is set larger.
  */
 export function Article({
   markdown,
@@ -380,7 +381,14 @@ export function Article({
   return (
     <>
       <header {...stylex.props(styles.column)}>
-        <h1 {...stylex.props(ui.heading, showTitle ? styles.title : ui.srOnly)}>
+        <h1
+          {...stylex.props(
+            ui.prose,
+            styles.prose,
+            styles.heading,
+            showTitle ? styles.title : ui.srOnly,
+          )}
+        >
           <Inline text={title} />
         </h1>
       </header>
@@ -394,14 +402,12 @@ export function Article({
 
 export const styles = stylex.create({
   column: { width: `min(100%, ${space.contentColumn})`, marginInline: "auto" },
-  title: {
-    maxWidth: space.contentColumn,
-    margin: `0 0 ${space.caseTitleTextGap}`,
-    lineHeight: "28px",
-  },
+  /** Resets the browser's heading size and weight to the running text's. */
+  heading: { fontSize: "inherit", lineHeight: "inherit" },
+  title: { maxWidth: space.contentColumn, margin: `0 0 ${space.caseTitleTextGap}` },
   section: { marginTop: "80px" },
-  h2: { marginBottom: "24px", lineHeight: "28px" },
-  h3: { margin: "48px 0 12px", lineHeight: "28px" },
+  h2: { marginBottom: "24px" },
+  h3: { margin: "48px 0 12px" },
   prose: { color: colors.article, fontWeight: colors.proseWeight },
   nextParagraph: { marginTop: "32px" },
   list: { margin: "20px 0 0 20px" },

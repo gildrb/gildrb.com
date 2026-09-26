@@ -6,18 +6,16 @@ Ask your own files a question. Heph answers and shows the passages it used, so y
 
 ![](media:heph-demo)
 
-### Drop in files, ask, check
-
-One folder per subject. Every answer points back to the page it came from.
+### One folder per subject. Every answer shows where it came from.
 
 ![](media:heph-interface)
 
-### Typeface
+### I drew the typeface too.
 
 ![](media:heph-typeface-early)
 
 ![](media:heph-typeface-refinement)
 
-### Lockup
+### With the symbol.
 
 ![](media:heph-lockup)
