@@ -211,6 +211,29 @@ export function Converter() {
   const [dragging, setDragging] = useState(false);
   const worker = useRef<Worker | null>(null);
   const picker = useRef<HTMLInputElement>(null);
+  const sizeRow = useRef<HTMLDivElement>(null);
+  const [sizeEdges, setSizeEdges] = useState({ start: false, end: false });
+
+  // Phones keep the sizes on one row that scrolls sideways between edge fades, like the project
+  // table. Browsers with scroll-driven animations tie the fades to the scroll position in CSS;
+  // this fallback only serves the others.
+  useEffect(() => {
+    const element = sizeRow.current;
+    if (!element || CSS.supports("animation-timeline: scroll()")) return;
+    const update = () =>
+      setSizeEdges({
+        start: element.scrollLeft > 1,
+        end: element.scrollWidth - element.clientWidth - element.scrollLeft > 1,
+      });
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    element.addEventListener("scroll", update, { passive: true });
+    return () => {
+      observer.disconnect();
+      element.removeEventListener("scroll", update);
+    };
+  }, []);
 
   // Stop the engine and free the ZIP when the page goes away.
   useEffect(() => () => worker.current?.terminate(), []);
@@ -483,6 +506,8 @@ export function Converter() {
   // Like selecting in Photos: press one toggle and drag across the others in its row to give
   // them all the state the first one took.
   const painting = useRef<{ group: Key["group"]; on: boolean } | null>(null);
+  // A finger on a row that scrolls may be dragging it, so it picks on release (click) instead.
+  const tapping = useRef(false);
   useEffect(() => {
     const move = (event: PointerEvent) => {
       const stroke = painting.current;
@@ -511,13 +536,21 @@ export function Converter() {
         aria-pressed={on}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
+          const row = event.currentTarget.parentElement;
+          tapping.current =
+            event.pointerType !== "mouse" && row !== null && row.scrollWidth - row.clientWidth > 1;
+          if (tapping.current) return;
           // No focus or text selection from a pointer; the press itself picks.
           event.preventDefault();
           painting.current = { group: key.group, on: !on };
           paint(key, !on);
         }}
-        // Keyboard only: a pointer already picked on press.
-        onClick={(event) => event.detail === 0 && paint(key, !on)}
+        // Keyboard, or a tap on a row that scrolls: any other pointer already picked on press.
+        onClick={(event) => {
+          if (event.detail !== 0 && !tapping.current) return;
+          tapping.current = false;
+          paint(key, !on);
+        }}
       >
         {label}
       </button>
@@ -583,10 +616,18 @@ export function Converter() {
           <span {...stylex.props(styles.label)} id="archetypon-sizes">
             Sizes
           </span>
-          <div {...stylex.props(styles.toggles)}>
-            {sizeOptions.map((size) =>
-              toggle({ group: "size", value: size }, String(size), sizes.has(size)),
+          <div
+            {...stylex.props(
+              styles.sizes,
+              sizeEdges.start && styles.fadeStart,
+              sizeEdges.end && styles.fadeEnd,
             )}
+          >
+            <div ref={sizeRow} {...stylex.props(styles.toggles, styles.sizeRow)}>
+              {sizeOptions.map((size) =>
+                toggle({ group: "size", value: size }, String(size), sizes.has(size)),
+              )}
+            </div>
           </div>
         </div>
         <div {...stylex.props(styles.option)}>
@@ -716,6 +757,13 @@ export function Converter() {
   );
 }
 
+const scrollDriven = "@supports (animation-timeline: scroll())";
+
+// Scroll-linked, as on the project table: the start fade appears once the sizes scroll, the end
+// one leaves at the end.
+const revealStart = stylex.keyframes({ "0%": { opacity: 0 }, "4%, 100%": { opacity: 1 } });
+const hideEnd = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opacity: 0 } });
+
 const styles = stylex.create({
   tool: { display: "flex", flexDirection: "column", gap: space.sectionGap },
   prose: { margin: 0, color: colors.article, fontWeight: colors.proseWeight },
@@ -762,6 +810,55 @@ const styles = stylex.create({
     columnGap: { default: "12px", [media.mobile]: "8px" },
     // A finger dragging across the toggles picks them instead of scrolling the page.
     touchAction: "none",
+  },
+  /** Phones: the sizes stay on one row and scroll sideways, between fades at the edges. */
+  sizes: {
+    minWidth: 0,
+    position: { default: null, [media.mobile]: "relative" },
+    timelineScope: "--sizes",
+    "::before": {
+      content: { default: null, [media.mobile]: '""' },
+      left: 0,
+      backgroundImage: `linear-gradient(to right, ${colors.bg}, transparent)`,
+      opacity: 0,
+      animationName: { default: null, [scrollDriven]: revealStart },
+      position: "absolute",
+      insetBlock: 0,
+      zIndex: 1,
+      width: "48px",
+      pointerEvents: "none",
+      animationTimeline: "--sizes",
+      animationTimingFunction: "linear",
+      animationFillMode: "both",
+    },
+    "::after": {
+      content: { default: null, [media.mobile]: '""' },
+      right: 0,
+      backgroundImage: `linear-gradient(to left, ${colors.bg}, transparent)`,
+      opacity: 0,
+      animationName: { default: null, [scrollDriven]: hideEnd },
+      position: "absolute",
+      insetBlock: 0,
+      zIndex: 1,
+      width: "48px",
+      pointerEvents: "none",
+      animationTimeline: "--sizes",
+      animationTimingFunction: "linear",
+      animationFillMode: "both",
+    },
+  },
+  fadeStart: { "::before": { opacity: 1 } },
+  fadeEnd: { "::after": { opacity: 1 } },
+  sizeRow: {
+    flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
+    overflowX: { default: null, [media.mobile]: "auto" },
+    // A finger drags the row sideways; on desktop it wraps and paints like the formats.
+    touchAction: { default: "none", [media.mobile]: "pan-x" },
+    scrollbarWidth: "none",
+    // Reaching the row's end must not drag the page.
+    overscrollBehaviorX: "contain",
+    scrollTimeline: "--sizes x",
+    "::-webkit-scrollbar": { display: "none" },
   },
   // White is picked, dark grey is not. Nothing else changes color, hover included, so the
   // color always means one thing.
