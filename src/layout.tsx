@@ -38,7 +38,7 @@ const globalCss = [
   '@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans");size-adjust:107.35%;ascent-override:90.24%;descent-override:22.47%;line-gap-override:0%}',
   "@layer reset{*{margin:0;padding:0;box-sizing:border-box}}",
   `::selection{color:${colors.bg};background:${colors.primary}}`,
-  // Every control answers a press with its own `:active` state instead of the grey tap flash.
+  // A touch shows nothing: no grey tap flash, and no press state takes its place.
   "a,button{-webkit-tap-highlight-color:transparent}",
   // In-page links (skip to content, back to top) glide unless motion is reduced.
   "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
@@ -323,6 +323,58 @@ export function Links({
   );
 }
 
+/**
+ * humans.txt and llms.txt, and Source in the column where the project table's Scope starts:
+ * hidden ruler cells carry every project's date and title, sizing the first two columns exactly
+ * as the table's (see `Links`, which does the same on phones).
+ */
+export function Metadata({ style }: { style?: Style }) {
+  return (
+    <footer {...stylex.props(style)}>
+      <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Metadata">
+        {projects.flatMap((project) => [
+          <span
+            {...stylex.props(ui.text, styles.footRuler, styles.rulerDate)}
+            aria-hidden="true"
+            data-nosnippet
+          >
+            <Figures text={project.date} />
+          </span>,
+          <span
+            {...stylex.props(ui.text, styles.footRuler, styles.rulerTitle)}
+            aria-hidden="true"
+            data-nosnippet
+          >
+            {project.title}
+          </span>,
+        ])}
+        {[
+          { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
+          { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
+        ].map(({ href, label, rel, type }, index) => (
+          <a
+            {...stylex.props(ui.quiet, ui.focusRing, styles.link, styles.file)}
+            style={{ gridRow: String(index + 1) }}
+            href={href}
+            rel={rel}
+            type={type}
+          >
+            {label}
+          </a>
+        ))}
+        <a
+          {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, styles.source)}
+          href="https://github.com/gildrb/web"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Source
+        </a>
+      </nav>
+    </footer>
+  );
+}
+
 /** The phone page's side margin; the sticky name bar bleeds across it to the viewport edge. */
 const phoneGutter = "12px";
 
@@ -513,7 +565,6 @@ const styles = stylex.create({
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
       ":focus-visible": colors.primary,
-      ":active": colors.primary,
     },
     textDecoration: "none",
   },
@@ -559,6 +610,26 @@ const styles = stylex.create({
   },
   rulerDate: { gridColumn: 1 },
   rulerTitle: { gridColumn: 2 },
+  /** The project table's columns, so Source lines up with its Scope. */
+  metadata: {
+    display: "grid",
+    gridTemplateColumns: space.tableColumns,
+    columnGap: space.tableGap,
+    rowGap: space.linkGap,
+    alignItems: "baseline",
+    // Centers the last line on the theme toggle beside it.
+    paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
+  },
+  /** A desktop `ruler`: the table's own columns, with no height or voice. */
+  footRuler: {
+    gridRow: 1,
+    height: 0,
+    overflow: "hidden",
+    visibility: "hidden",
+    whiteSpace: "nowrap",
+  },
+  file: { gridColumn: "1 / 3", justifySelf: "start" },
+  source: { gridColumn: 3, gridRow: 2, justifySelf: "start" },
   /** Compact (a dense homepage too short for the whole sidebar, see `align.ts`): contact stays. */
   profileGroup: {
     display: {

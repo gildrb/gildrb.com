@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { FunctionComponent } from "preact";
+import type { Converter } from "./islands/archetypon.tsx";
 import type { Email } from "./islands/email.tsx";
 import type { Terminal } from "./islands/heph.tsx";
 import type { Portfolio } from "./islands/portfolio.tsx";
@@ -11,6 +12,7 @@ export type Islands = {
   email: typeof Email;
   portfolio: typeof Portfolio;
   heph: typeof Terminal;
+  archetypon: typeof Converter;
 };
 
 const styles = stylex.create({ island: { display: "contents" } });

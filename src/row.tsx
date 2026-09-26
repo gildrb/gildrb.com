@@ -67,12 +67,12 @@ const styles = stylex.create({
     width: "100%",
     // Phones: one touch target per row. Desktop: 2.5rem, the pitch the sidebar is aligned to.
     paddingBlock: { default: space.touchInset, [media.desktop]: space.portfolioRowPadding },
-    // A press raises the row like hover does (the grey tap flash is off, see `layout.tsx`).
+    // Only hover (where there is hover) and keyboard focus raise the row; a finger's press
+    // does not (the grey tap flash is off too, see `layout.tsx`).
     color: {
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
       ":focus-visible": colors.primary,
-      ":active": colors.primary,
     },
     textDecoration: "none",
     touchAction: "manipulation",
@@ -113,7 +113,6 @@ const styles = stylex.create({
       default: colors.tertiary,
       [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
       [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
-      [stylex.when.ancestor(":active", rowMarker)]: colors.primary,
     },
   },
   arrow: {

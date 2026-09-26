@@ -83,15 +83,14 @@ export const ui = stylex.create({
     borderWidth: 0,
   },
   /**
-   * Secondary links. Hover (where there is hover), keyboard focus and a finger's press all raise
-   * them to full contrast, in place of the browser's grey tap flash.
+   * Secondary links. Hover (where there is hover) and keyboard focus raise them to full
+   * contrast; a finger's press shows nothing.
    */
   quiet: {
     color: {
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
       ":focus-visible": colors.primary,
-      ":active": colors.primary,
     },
     textDecoration: "none",
     width: "fit-content",

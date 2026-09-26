@@ -15,6 +15,8 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   portfolio: () => Portfolio,
   // Only the Heph case study and /all show the terminal; keep it out of the homepage bundle.
   heph: () => import("./islands/heph.tsx").then((module) => module.Terminal),
+  // Only /archetypon runs the converter; its engine loads once files arrive.
+  archetypon: () => import("./islands/archetypon.tsx").then((module) => module.Converter),
 };
 
 // The islands are already server-rendered: let the first frame paint, then hydrate each one in
