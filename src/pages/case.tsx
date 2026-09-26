@@ -1,4 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
+import { Island } from "../island.tsx";
+import { Converter } from "../islands/archetypon.tsx";
 import { Article, parse, singleSizes, sources } from "../markdown.tsx";
 import {
   type Assets,
@@ -11,7 +13,16 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { Row } from "../row.tsx";
-import { type Case, cases, origin, pages, person, type Project, projects } from "../site.ts";
+import {
+  type Case,
+  cases,
+  origin,
+  pages,
+  person,
+  type Project,
+  projects,
+  type Tool,
+} from "../site.ts";
 import { media, space } from "../tokens.stylex.ts";
 import { versioned } from "../versioned.ts";
 
@@ -150,10 +161,7 @@ export function CasePage({
 }) {
   const url = `${origin}/${item.slug}`;
   const image = item.ogImage && versioned(`/images/optimized/${item.ogImage}`);
-  // The other case studies, without this one and without the external projects.
-  const others = projects.filter(
-    (project) => !project.external && project.href !== `/${item.slug}`,
-  );
+  const others = next(`/${item.slug}`);
   return (
     <Frame
       assets={assets}
@@ -193,17 +201,32 @@ export function CasePage({
       <article {...stylex.props(styles.column, styles.phoneItem)}>
         <Article markdown={markdown} eager showTitle={false} />
       </article>
-      <nav
-        {...stylex.props(styles.column, styles.phoneItem, styles.next)}
-        aria-label="All projects"
-      >
-        <div {...stylex.props(styles.nextList)}>
-          {others.map((project, index) => (
-            <Row project={project} first={index === 0} home={false} />
-          ))}
-        </div>
-      </nav>
+      <Next projects={others} />
     </Frame>
+  );
+}
+
+/**
+ * The three projects after this one in the homepage's order, wrapping round to the newest;
+ * external projects are left out, since they have no page here.
+ */
+function next(href: string): Project[] {
+  const own = projects.filter((project) => !project.external);
+  const at = own.findIndex((project) => project.href === href);
+  return [1, 2, 3]
+    .map((step) => own[(at + step) % own.length])
+    .filter((project): project is Project => project !== undefined && project.href !== href);
+}
+
+function Next({ projects: list }: { projects: readonly Project[] }) {
+  return (
+    <nav {...stylex.props(styles.column, styles.phoneItem, styles.next)} aria-label="More projects">
+      <div {...stylex.props(styles.nextList)}>
+        {list.map((project, index) => (
+          <Row project={project} first={index === 0} home={false} />
+        ))}
+      </div>
+    </nav>
   );
 }
 
@@ -313,6 +336,49 @@ export function DocPage({
       <article {...stylex.props(styles.column, styles.phoneItem)}>
         <Article markdown={markdown} eager showTitle={false} />
       </article>
+    </Frame>
+  );
+}
+
+/** A tool that runs on the page. */
+export function ToolPage({ assets, item }: { assets: Assets; item: Tool }) {
+  const url = `${origin}/${item.slug}`;
+  const others = next(`/${item.slug}`);
+  return (
+    <Frame
+      assets={assets}
+      path={`/${item.slug}`}
+      type="website"
+      description={item.description}
+      current={item.name}
+      table={others}
+      mono={false}
+      head={
+        <>
+          <Alternates />
+          <JsonLd
+            value={{
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "@id": `${url}#tool`,
+              url,
+              name: item.name,
+              description: item.description,
+              applicationCategory: "DesignApplication",
+              operatingSystem: "Any",
+              browserRequirements: "Requires WebAssembly",
+              isAccessibleForFree: true,
+              author: { "@type": "Person", "@id": `${origin}/#person`, name: person.name },
+              inLanguage: "en",
+            }}
+          />
+        </>
+      }
+    >
+      <div {...stylex.props(styles.column, styles.phoneItem)}>
+        <Island name="archetypon" component={Converter} props={{}} />
+      </div>
+      <Next projects={others} />
     </Frame>
   );
 }

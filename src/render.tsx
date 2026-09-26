@@ -2,9 +2,9 @@ import type { VNode } from "preact";
 import { renderToString } from "preact-render-to-string";
 import { files } from "./files.ts";
 import type { Assets } from "./layout.tsx";
-import { AllPage, CasePage, DocPage } from "./pages/case.tsx";
+import { AllPage, CasePage, DocPage, ToolPage } from "./pages/case.tsx";
 import { Home } from "./pages/home.tsx";
-import { cases, origin, pages } from "./site.ts";
+import { cases, origin, pages, tools } from "./site.ts";
 
 // For the build (`vite.config.ts`): the share image comes first, since the pages link it, and the
 // stamped copies of `public/` files last, once rendering has named them all.
@@ -52,6 +52,9 @@ export function render(assets: Assets): Record<string, string> {
         `${page.slug}.html`,
         html(<DocPage assets={assets} page={page} markdown={text(page.slug)} />),
       ]),
+    ),
+    ...Object.fromEntries(
+      tools.map((item) => [`${item.slug}.html`, html(<ToolPage assets={assets} item={item} />)]),
     ),
     ...Object.fromEntries(
       Object.entries(markdown).map(([slug, body]) => [`content/${slug}.md`, body]),

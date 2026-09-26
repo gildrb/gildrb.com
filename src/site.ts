@@ -143,6 +143,21 @@ export const cases: readonly Case[] = [
   },
 ];
 
+/** Tools that run on the site itself: their rows open the tool, not a case study. */
+export type Tool = Row & { slug: string; name: string; description: string };
+
+export const tools: readonly Tool[] = [
+  {
+    slug: "archetypon",
+    date: "2026-09-26",
+    title: "Archetypon",
+    name: "Archetypon",
+    scope: "Tool",
+    description:
+      "Turn SVG files into optimized SVG, PDF, PNG, WebP, JPEG and ICO assets, in your browser.",
+  },
+];
+
 /** Projects that live elsewhere: their rows link out instead of to a case study. */
 const externals: readonly External[] = [];
 
@@ -151,6 +166,7 @@ export type Project = Row & { href: string; external: boolean };
 /** Homepage rows, newest first. */
 export const projects: readonly Project[] = [
   ...cases.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
+  ...tools.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
   ...externals.map((item) => ({ ...item, external: true })),
 ].sort((left, right) => right.date.localeCompare(left.date));
 

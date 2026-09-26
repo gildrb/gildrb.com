@@ -1,4 +1,4 @@
-import { cases, email, origin, pages, person, profiles, projects } from "./site.ts";
+import { cases, email, origin, pages, person, profiles, projects, tools } from "./site.ts";
 import { versioned } from "./versioned.ts";
 
 /**
@@ -9,7 +9,7 @@ import { versioned } from "./versioned.ts";
 const url = (path: string) => `${origin}${path}`;
 
 const work = projects.map(({ href, title, scope, date, external }) => {
-  const item = cases.find((entry) => `/${entry.slug}` === href);
+  const item = [...cases, ...tools].find((entry) => `/${entry.slug}` === href);
   const link = external ? href : url(href);
   return `- [${title}](${link}) (${scope}, ${date.slice(0, 7)})${item ? `: ${item.description}` : ""}`;
 });
@@ -211,6 +211,7 @@ const sitemapPaths = [
   "/",
   "/all",
   ...[...cases, ...pages].flatMap(({ slug }) => [`/${slug}`, `/content/${slug}.md`]),
+  ...tools.map(({ slug }) => `/${slug}`),
   "/llms.txt",
   "/llms-full.txt",
   "/index.html.md",

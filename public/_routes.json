@@ -6,6 +6,7 @@
 		"/content/*",
 		"/fonts/*",
 		"/images/*",
+		"/tools/*",
 		"/videos/*",
 		"/api-docs",
 		"/docs",

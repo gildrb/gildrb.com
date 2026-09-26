@@ -2,7 +2,17 @@ import * as stylex from "@stylexjs/stylex";
 import { profile } from "../files.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
-import { type Assets, Document, JsonLd, Links, Main, Name, Shell, Sidebar } from "../layout.tsx";
+import {
+  type Assets,
+  Document,
+  JsonLd,
+  Links,
+  Main,
+  Metadata,
+  Name,
+  Shell,
+  Sidebar,
+} from "../layout.tsx";
 import { developers, origin, person, profiles } from "../site.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
@@ -78,31 +88,7 @@ export function Home({ assets }: { assets: Assets }) {
             <p {...stylex.props(ui.text)}>{person.summary}</p>
           </section>
           <Island name="portfolio" component={Portfolio} props={{}} />
-          <footer {...stylex.props(styles.footer)}>
-            <nav {...stylex.props(ui.text, styles.references)} aria-label="Metadata">
-              {[
-                { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
-                { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
-              ].map(({ href, label, rel, type }) => (
-                <a
-                  {...stylex.props(ui.quiet, ui.focusRing, styles.reference)}
-                  href={href}
-                  rel={rel}
-                  type={type}
-                >
-                  {label}
-                </a>
-              ))}
-              <a
-                {...stylex.props(ui.quiet, ui.focusRing, styles.reference, ui.outbound)}
-                href="https://github.com/gildrb/web"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Source
-              </a>
-            </nav>
-          </footer>
+          <Metadata style={styles.footer} />
         </Main>
       </Shell>
     </Document>
@@ -131,16 +117,5 @@ const styles = stylex.create({
     position: { default: null, [media.desktop]: "sticky" },
     bottom: { default: null, [media.desktop]: space.pageInset },
     minHeight: { default: null, [media.desktop]: space.toggleSize },
-  },
-  references: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    rowGap: space.linkGap,
-    paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
-  },
-  reference: {
-    paddingBlock: `calc(${space.linkGap} / 2)`,
-    marginBlock: `calc(${space.linkGap} / -2)`,
   },
 });
