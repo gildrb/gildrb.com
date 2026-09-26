@@ -4,16 +4,14 @@ Wordmark commissioned by [Jordan “n0thing” Gilbert](https://www.n0thing.gg/)
 
 ![](media:n0thing-wordmark-animation)
 
-### Exploration
-
-Typewriter direction. Off-balance, dropped.
+### I tried a typewriter look first. Off-balance, so I dropped it.
 
 ![](media:n0thing-typewriter-direction)
 
-### Pixel
+### Pixels worked.
 
 ![](media:n0thing-pixel-variations)
 
-### Delivery
+### Handed over as AI, PSD and PNG.
 
 ![](media:n0thing-export-folder)

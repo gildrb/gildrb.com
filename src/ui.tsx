@@ -27,7 +27,7 @@ export const ui = stylex.create({
     fontWeight: 400,
     lineHeight: space.linkLineHeight,
   },
-  /** The one heading style: the site name, breadcrumb, and every case-study heading. */
+  /** The one larger style: the site name and the breadcrumb that stands in for it. */
   heading: {
     fontSize: "19px",
     fontWeight: 400,

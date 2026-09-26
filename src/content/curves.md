@@ -6,7 +6,7 @@ Free display typeface, 2019. 96 unicase glyphs. On [DaFont](https://www.dafont.c
 
 ![](media:curves-wordmark)
 
-### Glyphs
+### All 96 glyphs.
 
 ![](media:curves-uppercase)
 

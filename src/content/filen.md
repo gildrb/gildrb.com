@@ -4,36 +4,30 @@ Self-initiated identity for the storage app I use, 2026. [Posted on X](https://x
 
 ![](media:filen-wordmark)
 
-### Ideation
+### I started wide: symbols, wordmarks, a pangolin.
 
 ![](media:filen-exploration-board)
 
 ![](media:filen-pangolin-exploration)
 
-### Pattern
-
-The pangolin went. Its scales stayed.
+### The pangolin went. Its scales stayed.
 
 ![](media:filen-pattern-exploration)
 
-### Mark
-
-A folder first, an F second.
+### A folder first, an F second.
 
 ![](media:filen-logo-scale)
 ![](media:filen-app-icon)
 
-### Light
+### I tried it with light.
 
 ![](media:filen-light-study)
 
-### Color
-
-Red read as a warning. Dropped.
+### Red read like a warning, so it went.
 
 ![](media:filen-identity-system-overview)
 
-### Campaign
+### I made campaign graphics with it.
 
 ![](media:filen-zero-knowledge-campaign)
 ![](media:filen-storage-message)
