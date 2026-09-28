@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["fonttools[woff]==4.60.1", "certifi"]
+# dependencies = ["fonttools[woff]==4.60.2", "certifi"]
 # ///
 """Builds the site's two Inter files from the official Inter release.
 

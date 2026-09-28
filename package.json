@@ -23,6 +23,7 @@
     "wawoff2": "^2.0.1"
   },
   "overrides": {
+    "fflate": "0.7.5",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"
   },
   "browserslist": [
