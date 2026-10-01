@@ -195,10 +195,13 @@ export function Name({ current }: { current?: string }) {
       </a>
     </p>
   ) : (
-    <h1 {...stylex.props(ui.heading, styles.name, styles.homeName)} id="site-title" itemprop="name">
-      <span data-nosnippet {...untranslated}>
-        Gil Rodrigues
-      </span>
+    <h1
+      {...stylex.props(ui.heading, styles.name, styles.homeName)}
+      id="site-title"
+      itemprop="name"
+      {...untranslated}
+    >
+      Gil Rodrigues
     </h1>
   );
 }
@@ -223,9 +226,10 @@ export function PageLinks({
 
 /**
  * Profile and contact links. On phones they share the columns of the page's project table:
- * hidden ruler cells carry the date and title of every project in `table`, so the contact
- * column starts exactly where that table's scope column does. A case study passes its own list,
- * which leaves out itself and the external projects; pages without a table use the homepage's.
+ * two hidden ruler cells, one month (every row's is as wide: tabular digits) and every title in
+ * `table` drawn from an attribute, so the contact column starts exactly where that table's scope
+ * column does. A case study passes its own list, which leaves out itself and the external
+ * projects; pages without a table use the homepage's.
  */
 export function Links({
   home = false,
@@ -252,29 +256,29 @@ export function Links({
       </a>
     );
   };
+  const [first] = table;
   return (
     <nav
       {...stylex.props(ui.text, styles.links, home ? styles.homeLinks : styles.caseLinks)}
       aria-label="Public profiles and contact"
       data-mobile-links={phone || home || undefined}
     >
-      {(phone || home) &&
-        table.flatMap((project) => [
+      {(phone || home) && first !== undefined && (
+        <>
           <span
             {...stylex.props(ui.text, styles.ruler, styles.rulerDate)}
             aria-hidden="true"
             data-nosnippet
           >
-            <Figures text={project.date.slice(0, 7)} />
-          </span>,
+            <Figures text={first.date.slice(0, 7)} />
+          </span>
           <span
             {...stylex.props(ui.text, styles.ruler, styles.rulerTitle)}
             aria-hidden="true"
-            data-nosnippet
-          >
-            {project.title}
-          </span>,
-        ])}
+            data-titles={table.map((project) => project.title).join("\n")}
+          />
+        </>
+      )}
       <p {...stylex.props(styles.label, styles.contact, styles.contactLabel)}>
         <span data-nosnippet>Contact</span>
       </p>
@@ -561,7 +565,11 @@ const styles = stylex.create({
     paddingInlineEnd: space.mobileCellEndSpace,
   },
   rulerDate: { gridColumn: 1 },
-  rulerTitle: { gridColumn: 2 },
+  /** One title per line, as generated content: the widest sets the column, none is page text. */
+  rulerTitle: {
+    gridColumn: 2,
+    "::before": { content: "attr(data-titles)", whiteSpace: "pre" },
+  },
   /** The project table's columns, so Source lines up with its Scope. */
   metadata: {
     display: "grid",
