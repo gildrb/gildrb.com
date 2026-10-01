@@ -12,18 +12,11 @@ export const themeClass: Record<Theme, string> = {
 /** The browser chrome's color: each theme's page background, `colors.bg`. */
 export const themeColor: Record<Theme, string> = { dark: "#000000", light: "#ffffff" };
 
-/**
- * Shows `theme` and repaints everything outside the page that follows it. A class swap alone
- * leaves iOS Safari's overscroll canvas and toolbar on the old color, so the canvas color and
- * `color-scheme` are also set inline on `<html>` and `<body>`, and `theme-color` is retargeted.
- */
+/** Shows `theme` and points the `theme-color` tag at it. */
 export function applyTheme(theme: Theme) {
   const root = document.documentElement;
   root.classList.remove(...`${themeClass.dark} ${themeClass.light}`.split(" "));
   root.classList.add(...themeClass[theme].split(" "));
-  root.style.colorScheme = theme;
-  root.style.backgroundColor = themeColor[theme];
-  document.body.style.backgroundColor = themeColor[theme];
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (meta) meta.content = themeColor[theme];
 }
