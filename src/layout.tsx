@@ -324,30 +324,13 @@ export function Links({
 }
 
 /**
- * humans.txt and llms.txt, and Source in the column where the project table's Scope starts:
- * hidden ruler cells carry every project's date and title, sizing the first two columns exactly
- * as the table's (see `Links`, which does the same on phones).
+ * humans.txt and llms.txt, and Source in the column where the project table's Scope starts: the
+ * footer is desktop-only, where the table's columns are fixed (see `space.tableColumns`).
  */
 export function Metadata({ style }: { style?: Style }) {
   return (
     <footer {...stylex.props(style)}>
       <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Metadata">
-        {projects.flatMap((project) => [
-          <span
-            {...stylex.props(ui.text, styles.footRuler, styles.rulerDate)}
-            aria-hidden="true"
-            data-nosnippet
-          >
-            <Figures text={project.date} />
-          </span>,
-          <span
-            {...stylex.props(ui.text, styles.footRuler, styles.rulerTitle)}
-            aria-hidden="true"
-            data-nosnippet
-          >
-            {project.title}
-          </span>,
-        ])}
         {[
           { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
           { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
@@ -619,14 +602,6 @@ const styles = stylex.create({
     alignItems: "baseline",
     // Centers the last line on the theme toggle beside it.
     paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
-  },
-  /** A desktop `ruler`: the table's own columns, with no height or voice. */
-  footRuler: {
-    gridRow: 1,
-    height: 0,
-    overflow: "hidden",
-    visibility: "hidden",
-    whiteSpace: "nowrap",
   },
   file: { gridColumn: "1 / 3", justifySelf: "start" },
   source: { gridColumn: 3, gridRow: 2, justifySelf: "start" },

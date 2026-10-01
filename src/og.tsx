@@ -155,16 +155,17 @@ function Page({ css }: { css: string }) {
   const link = (label: string) => (
     <span style={{ ...text, color: color(colors.tertiary) }}>{`${label} ↗`}</span>
   );
-  // One column per table column, so each takes its widest cell as on the page. The scope column
-  // takes the remaining width; the arrow column sets its cells flush right.
+  // One column per table column, at the page's widths: date, project and arrow are fixed, scope
+  // takes the rest. The arrow column sets its cells flush right.
   const column = (
     head: preact.ComponentChildren,
     cells: preact.ComponentChildren[],
-    fit: "content" | "grow" | "end",
+    width: number | "grow",
+    end = false,
   ) => {
     const cell = {
       display: "flex",
-      ...(fit === "end" && { justifyContent: "flex-end" }),
+      ...(end && { justifyContent: "flex-end" }),
       ...text,
     };
     return (
@@ -172,7 +173,7 @@ function Page({ css }: { css: string }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          ...(fit === "grow" ? { flexGrow: 1, minWidth: 0 } : { flexShrink: 0 }),
+          ...(width === "grow" ? { flexGrow: 1, minWidth: 0 } : { width, flexShrink: 0 }),
         }}
       >
         <div style={{ ...cell, height: header, color: color(colors.secondary) }}>{head}</div>
@@ -276,26 +277,17 @@ function Page({ css }: { css: string }) {
                 <IsoDate text={date} />
               </span>
             )),
-            "content",
+            length(space.dateColumn),
           )}
           {column(
             "Project",
             projects.map(({ title }) => <span>{title}</span>),
-            "content",
+            length(space.titleColumn),
           )}
           {column(
             "Scope",
             projects.map(({ scope }) => (
-              <span
-                style={{
-                  color: color(colors.tertiary),
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {scope}
-              </span>
+              <span style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>{scope}</span>
             )),
             "grow",
           )}
@@ -313,7 +305,8 @@ function Page({ css }: { css: string }) {
                 {external ? "↗" : "→"}
               </span>
             )),
-            "end",
+            length(space.arrowColumn),
+            true,
           )}
         </div>
       </div>

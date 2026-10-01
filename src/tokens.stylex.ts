@@ -2,6 +2,15 @@ import * as stylex from "@stylexjs/stylex";
 
 const light = "@media (prefers-color-scheme: light)";
 
+/**
+ * The layout's one unit, in px: every desktop width and gap is a whole multiple of it, and a
+ * line (24px) is three. The scope column is the remainder, 30 units at full width.
+ */
+const unit = 8;
+const dateColumn = `${12 * unit}px`;
+const titleColumn = `${12 * unit}px`;
+const arrowColumn = `${8 * unit}px`;
+
 export const media = stylex.defineConsts({
   mobile: "@media (max-width: 767px)",
   desktop: "@media (min-width: 768px)",
@@ -127,14 +136,22 @@ export const space = stylex.defineVars({
   toggleOpticalOffset: "2px",
   /** The page's inset from the viewport edge on desktop: top of the sidebar and content, bottom of the footer. */
   pageInset: "48px",
-  sidebarColumn: "240px",
-  contentColumn: "540px",
-  layoutGap: "48px",
+  sidebarColumn: `${30 * unit}px`,
+  contentColumn: `${68 * unit}px`,
+  layoutGap: `${6 * unit}px`,
   mediaRadius: "22px",
-  tableGap: "16px",
+  tableGap: `${2 * unit}px`,
   mobileTableGap: "clamp(8px, 3vw, 16px)",
   mobileCellEndSpace: "10px",
-  tableColumns: "max-content max-content minmax(0, 1fr) minmax(19px, max-content)",
+  dateColumn,
+  titleColumn,
+  arrowColumn,
+  /** Desktop: unit multiples. Phones: each column takes its widest cell. */
+  tableColumns: {
+    default: `${dateColumn} ${titleColumn} minmax(max-content, 1fr) ${arrowColumn}`,
+    "@media (max-width: 767px)":
+      "max-content max-content minmax(max-content, 1fr) minmax(19px, max-content)",
+  },
 });
 
 /** Put on a table row so its cells can react to the row's hover and focus. */
