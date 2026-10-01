@@ -479,19 +479,22 @@ const styles = stylex.create({
     position: { default: null, [media.mobile]: "sticky" },
     top: { default: null, [media.mobile]: 0 },
     zIndex: { default: null, [media.mobile]: 100 },
-    // Bleeds across both gutters and the toggle column, and pads back to the text column.
-    width: {
-      default: null,
-      [media.mobile]: `calc(100% + ${phoneGutter} * 2 + ${space.toggleSize})`,
-    },
-    marginLeft: { default: null, [media.mobile]: `calc(${phoneGutter} * -1)` },
-    padding: {
-      default: null,
-      [media.mobile]: `${space.sectionGap} calc(${space.toggleSize} + ${phoneGutter}) 8px ${phoneGutter}`,
-    },
-    backgroundImage: {
-      default: null,
-      [media.mobile]: `linear-gradient(to bottom, ${colors.bg} 60%, transparent)`,
+    // iOS Safari tints its top bar from a fixed or sticky element at least 90% of the viewport
+    // wide, then keeps that color after any tap, so the bar would hold the old theme until a
+    // reload. The bar is therefore only as wide as its text; the full-bleed fade is `::before`,
+    // which Safari does not sample, and the top bar follows the page background instead.
+    width: { default: null, [media.mobile]: "fit-content" },
+    maxWidth: { default: null, [media.mobile]: "100%" },
+    padding: { default: null, [media.mobile]: `${space.sectionGap} 0 8px` },
+    "::before": {
+      content: { default: null, [media.mobile]: '""' },
+      position: "absolute",
+      zIndex: -1,
+      top: 0,
+      bottom: 0,
+      left: `calc(${phoneGutter} * -1)`,
+      width: "100vw",
+      backgroundImage: `linear-gradient(to bottom, ${colors.bg} 60%, transparent)`,
     },
   },
   homeName: {
