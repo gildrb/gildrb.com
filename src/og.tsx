@@ -292,7 +292,7 @@ function Page({ css }: { css: string }) {
             "grow",
           )}
           {column(
-            "All",
+            "Archive",
             projects.map(({ external }) => (
               <span
                 style={{

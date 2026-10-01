@@ -245,7 +245,7 @@ export function AllPage({
       path="/all"
       type="website"
       description={description}
-      current="All"
+      current="Archive"
       mono
       head={
         <>

@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { useId } from "preact/hooks";
 import type { Project } from "./site.ts";
 import { colors, media, rowMarker, space } from "./tokens.stylex.ts";
 import { Figures, type Style, ui, untranslated } from "./ui.tsx";
@@ -6,6 +7,8 @@ import { Figures, type Style, ui, untranslated } from "./ui.tsx";
 /**
  * One project in a four-column subgrid (date, title, scope, arrow). The parent grid owns
  * the columns; `home` rows live in the homepage table, the others in "View next" lists.
+ * The link is named by the project and described by its date and scope; the short date and the
+ * "View →" cue are visual only.
  */
 export function Row({
   project,
@@ -22,6 +25,7 @@ export function Row({
   delay?: string;
 }) {
   const Title = home ? "h3" : "span";
+  const id = useId();
   return (
     <a
       {...stylex.props(
@@ -32,20 +36,36 @@ export function Row({
         style,
       )}
       href={project.href}
+      aria-labelledby={`${id}-title`}
+      aria-describedby={`${id}-date ${id}-scope`}
       style={delay && { "--entry-delay": delay }}
     >
-      <time {...stylex.props(ui.text, styles.cell, styles.date)} dateTime={project.date}>
+      <time
+        {...stylex.props(ui.text, styles.cell, styles.date)}
+        id={`${id}-date`}
+        dateTime={project.date}
+      >
         <span {...stylex.props(home ? styles.fullHome : styles.fullNext)}>
           <Figures text={project.date} />
         </span>
-        <span {...stylex.props(home ? styles.yearHome : styles.yearNext)}>
+        <span
+          {...stylex.props(home ? styles.shortHome : styles.shortNext)}
+          aria-hidden="true"
+          data-nosnippet
+        >
           <Figures text={project.date.slice(0, 7)} />
         </span>
       </time>
-      <Title {...stylex.props(ui.text, styles.cell, styles.title)} {...untranslated}>
+      <Title
+        {...stylex.props(ui.text, styles.cell, styles.title)}
+        id={`${id}-title`}
+        {...untranslated}
+      >
         {project.title}
       </Title>
-      <span {...stylex.props(ui.text, styles.scope)}>{project.scope}</span>
+      <span {...stylex.props(ui.text, styles.scope)} id={`${id}-scope`}>
+        {project.scope}
+      </span>
       <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
         <span {...stylex.props(styles.view, home ? styles.viewHome : styles.viewNext)}>
           {project.external ? "Visit" : "View"}
@@ -57,6 +77,7 @@ export function Row({
 }
 
 const narrowTable = "@container (max-width: 25rem)";
+const phoneNext = "@media (max-width: 768px)";
 
 const styles = stylex.create({
   row: {
@@ -94,17 +115,35 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     paddingInlineEnd: { default: null, [media.mobile]: space.mobileCellEndSpace },
   },
-  date: { gridColumn: 1, display: "block", color: "inherit" },
-  fullHome: { display: { default: null, [media.mobile]: "none", [narrowTable]: "none" } },
-  yearHome: {
+  date: { gridColumn: 1, position: "relative", display: "block", color: "inherit" },
+  /** The full date stays readable to assistive tech where the short one shows instead. */
+  fullHome: {
+    position: { default: null, [media.mobile]: "absolute", [narrowTable]: "absolute" },
+    width: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
+    height: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
+    overflow: { default: null, [media.mobile]: "hidden", [narrowTable]: "hidden" },
+    clipPath: { default: null, [media.mobile]: "inset(50%)", [narrowTable]: "inset(50%)" },
+  },
+  shortHome: {
     display: { default: "none", [media.mobile]: "inline", [narrowTable]: "inline" },
   },
-  fullNext: { display: { default: null, "@media (max-width: 768px)": "none" } },
-  yearNext: { display: { default: "none", "@media (max-width: 768px)": "inline" } },
+  fullNext: {
+    position: { default: null, [phoneNext]: "absolute" },
+    width: { default: null, [phoneNext]: "1px" },
+    height: { default: null, [phoneNext]: "1px" },
+    overflow: { default: null, [phoneNext]: "hidden" },
+    clipPath: { default: null, [phoneNext]: "inset(50%)" },
+  },
+  shortNext: { display: { default: "none", [phoneNext]: "inline" } },
   title: { gridColumn: 2, margin: 0, color: colors.primary },
   scope: {
     gridColumn: 3,
     gridRow: 1,
+    // Phones are too narrow for the longest pair beside a full row; it ellipsizes there.
+    minWidth: { default: null, [media.mobile]: 0 },
+    overflow: { default: null, [media.mobile]: "hidden" },
+    whiteSpace: { default: null, [media.mobile]: "nowrap" },
+    textOverflow: { default: null, [media.mobile]: "ellipsis" },
     color: {
       default: colors.tertiary,
       [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },

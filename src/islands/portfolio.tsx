@@ -72,39 +72,57 @@ export function Portfolio() {
       <div
         {...stylex.props(ui.text, ui.sans, styles.header, entry.rise)}
         style={{ "--entry-delay": `${timing.header}ms` }}
+        role="table"
         aria-label="Project columns"
       >
-        {columns.map(({ key, label }) => {
-          const active = sort.key === key;
-          return (
-            <button
-              {...stylex.props(ui.target, ui.reset, ui.focusRing, styles.sort, styles[key])}
-              type="button"
-              aria-pressed={active}
-              aria-label={`Sort projects by ${key}${active ? `, currently ${describe(key, sort.direction)}` : ""}`}
-              onClick={(event) => select(key, event)}
-            >
-              <span>{label}&nbsp;</span>
-              <span
-                {...stylex.props(
-                  ui.sans,
-                  styles.indicator,
-                  styles[`${key}Indicator`],
-                  active && styles.visible,
-                )}
-                aria-hidden="true"
+        {/* ARIA roles only: the wrappers take no box, so the buttons stay on the subgrid. */}
+        <div {...stylex.props(styles.contents)} role="row">
+          {columns.map(({ key, label }) => {
+            const active = sort.key === key;
+            return (
+              <div
+                {...stylex.props(styles.contents)}
+                role="columnheader"
+                aria-sort={active ? sort.direction : undefined}
               >
-                {active && sort.direction === "ascending" ? "↑" : "↓"}
-              </span>
-            </button>
-          );
-        })}
-        <a
-          {...stylex.props(ui.target, ui.focusRing, styles.all)}
-          href={`/all?sort=${sort.key}&direction=${sort.direction}`}
-        >
-          All
-        </a>
+                <button
+                  {...stylex.props(
+                    stylex.defaultMarker(),
+                    ui.target,
+                    ui.reset,
+                    ui.focusRing,
+                    styles.sort,
+                    styles[key],
+                  )}
+                  type="button"
+                  aria-label={`Sort projects by ${key}`}
+                  onClick={(event) => select(key, event)}
+                >
+                  <span>{label}&nbsp;</span>
+                  <span
+                    {...stylex.props(
+                      ui.sans,
+                      styles.indicator,
+                      styles[`${key}Indicator`],
+                      active && styles.visible,
+                    )}
+                    aria-hidden="true"
+                  >
+                    {active && sort.direction === "ascending" ? "↑" : "↓"}
+                  </span>
+                </button>
+              </div>
+            );
+          })}
+          <div {...stylex.props(styles.contents)} role="cell">
+            <a
+              {...stylex.props(ui.target, ui.focusRing, styles.archive)}
+              href={`/all?sort=${sort.key}&direction=${sort.direction}`}
+            >
+              Archive
+            </a>
+          </div>
+        </div>
       </div>
       <section
         data-scroll-list
@@ -244,6 +262,7 @@ const styles = stylex.create({
     boxShadow: `inset 0 -1px ${colors.hairline}`,
   },
   sort: {
+    gridRow: 1,
     display: "inline-grid",
     gridTemplateColumns: "auto 1ch",
     alignItems: "baseline",
@@ -252,12 +271,29 @@ const styles = stylex.create({
   date: { gridColumn: 1 },
   title: { gridColumn: 2 },
   scope: { gridColumn: 3 },
-  indicator: { visibility: "hidden", textAlign: "center" },
+  /** The arrow shows on the sorted column, and on hover; it takes its label's color. */
+  indicator: {
+    visibility: {
+      default: "hidden",
+      [stylex.when.ancestor(":hover")]: { [media.hover]: "visible" },
+    },
+    textAlign: "center",
+  },
   dateIndicator: {},
   titleIndicator: { transform: "translateX(2.3px)" },
   scopeIndicator: { transform: "translateX(1.3px)" },
   visible: { visibility: "visible" },
-  all: { gridColumn: 4, color: "inherit", textAlign: "right", textDecoration: "none" },
+  contents: { display: "contents" },
+  // Spans the scope column too, flush right: on phones the arrow column stays as narrow as its
+  // arrows instead of taking the label's width, which would push the table off screen.
+  archive: {
+    gridRow: 1,
+    gridColumn: "3 / -1",
+    justifySelf: "end",
+    color: "inherit",
+    textAlign: "right",
+    textDecoration: "none",
+  },
   section: {
     display: {
       default: "grid",

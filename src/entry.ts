@@ -22,10 +22,10 @@ export const timing = {
   header: 70,
   row: (index: number) => 100 + index * 27,
   links: { desktop: 50, phone: 290 },
-  /** Profile links then contact links, in DOM order; desktop reveals contacts first. */
+  /** Contact links then profile links, in DOM order. */
   link: {
-    desktop: [190, 220, 250, 280, 310, 340, 70, 100, 130, 160],
-    phone: [315, 340, 370, 395, 425, 450, 315, 340, 370, 395],
+    desktop: [70, 100, 130, 160, 190, 220, 250, 280, 310, 340],
+    phone: [315, 340, 370, 395, 315, 340, 370, 395, 425, 450],
   },
 } as const;
 
