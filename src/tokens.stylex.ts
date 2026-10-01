@@ -46,8 +46,11 @@ export const fontFeatures = stylex.defineConsts({
 });
 
 export const colors = stylex.defineVars({
-  /** Tells the browser which way the page is lit, for scrollbars and other built-in controls. */
-  scheme: { default: "dark", [light]: "light" },
+  /**
+   * Tells the browser which way the page is lit, for scrollbars, overscroll and other built-in
+   * controls: either, following the system, unless the toggle forces one (`dark`, `lightTheme`).
+   */
+  scheme: "light dark",
   bg: { default: "oklch(0% 0 0)", [light]: "oklch(100% 0 0)" },
   primary: { default: "oklch(100% 0 0)", [light]: "oklch(0% 0 0)" },
   secondary: { default: "oklch(76.68% 0 0)", [light]: "oklch(42.02% 0 0)" },
@@ -146,11 +149,10 @@ export const space = stylex.defineVars({
   dateColumn,
   titleColumn,
   arrowColumn,
-  /** Desktop: unit multiples. Phones: each column takes its widest cell. */
+  /** Desktop: unit multiples. Phones: content-sized, the scope column taking what is left. */
   tableColumns: {
     default: `${dateColumn} ${titleColumn} minmax(max-content, 1fr) ${arrowColumn}`,
-    "@media (max-width: 767px)":
-      "max-content max-content minmax(max-content, 1fr) minmax(19px, max-content)",
+    "@media (max-width: 767px)": "max-content max-content minmax(0, 1fr) minmax(19px, max-content)",
   },
 });
 

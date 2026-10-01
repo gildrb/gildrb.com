@@ -81,9 +81,8 @@ export function Document({
             in pieces or shifts. Preact's typings lack `blocking` on <link>, hence the spread. */}
         <link rel="expect" href="#aligned" {...{ blocking: "render" }} />
         {head}
-        {/* The browser chrome takes the page color; a saved theme retargets both (`themeScript`). */}
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content={themeColor.dark} />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content={themeColor.light} />
+        {/* The browser chrome takes the page color; `themeScript` sets it to the shown theme. */}
+        <meta name="theme-color" content={themeColor.dark} />
         <title>{title}</title>
         <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
@@ -294,17 +293,8 @@ export function Links({
           </span>,
         ])}
       <p
-        {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup, rise)}
-        style={home ? stagger(0) : undefined}
-      >
-        <span data-nosnippet>Links</span>
-      </p>
-      {profiles.map((item, index) =>
-        link(item, index + 1, [styles.profile, styles.profileGroup], true, index + 2),
-      )}
-      <p
         {...stylex.props(styles.label, styles.contact, styles.contactLabel, rise)}
-        style={home ? stagger(6) : undefined}
+        style={home ? stagger(0) : undefined}
       >
         <span data-nosnippet>Contact</span>
       </p>
@@ -313,11 +303,20 @@ export function Links({
         component={Email}
         props={{
           style: [styles.contact, styles.emailRow, rise],
-          ...(home && { vars: stagger(7) }),
+          ...(home && { vars: stagger(1) }),
         }}
       />
       {contacts.map((item, index) =>
-        link(item, index + 8, [styles.contact, index ? styles.fourthRow : styles.thirdRow], false),
+        link(item, index + 2, [styles.contact, index ? styles.fourthRow : styles.thirdRow], false),
+      )}
+      <p
+        {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup, rise)}
+        style={home ? stagger(4) : undefined}
+      >
+        <span data-nosnippet>Links</span>
+      </p>
+      {profiles.map((item, index) =>
+        link(item, index + 5, [styles.profile, styles.profileGroup], true, index + 2),
       )}
     </nav>
   );
@@ -622,7 +621,7 @@ const styles = stylex.create({
     width: { default: "fit-content", [media.mobile]: "max-content" },
   },
   contact: {
-    order: { default: null, [media.desktop]: -1 },
+    // Phones: Contact takes the third column, beside Links.
     gridColumn: { default: null, [media.mobile]: "3 / -1" },
     justifySelf: "start",
   },
