@@ -162,34 +162,37 @@ function restore(state: Zoomed) {
   if (zoomed === state) zoomed = undefined;
 }
 
-document.addEventListener("click", (event) => {
-  if (zoomed && !zoomed.closing) {
-    event.preventDefault();
-    shrink();
-    return;
-  }
-  const button = event.target instanceof Element ? event.target.closest("[data-zoom]") : null;
-  if (!(button instanceof HTMLButtonElement)) return;
-  if (zoomed?.button === button) {
-    reopen(zoomed);
-    return;
-  }
-  // Another image cuts the previous one's return short.
-  if (zoomed) restore(zoomed);
-  enlarge(button);
-});
+/** Listens for image clicks and for everything that sends an enlarged image back. */
+export function enableZoom() {
+  document.addEventListener("click", (event) => {
+    if (zoomed && !zoomed.closing) {
+      event.preventDefault();
+      shrink();
+      return;
+    }
+    const button = event.target instanceof Element ? event.target.closest("[data-zoom]") : null;
+    if (!(button instanceof HTMLButtonElement)) return;
+    if (zoomed?.button === button) {
+      reopen(zoomed);
+      return;
+    }
+    // Another image cuts the previous one's return short.
+    if (zoomed) restore(zoomed);
+    enlarge(button);
+  });
 
-// Escape sends the image back; so does Tab, as focus leaves for content the backdrop covers.
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" || event.key === "Tab") shrink();
-});
+  // Escape sends the image back; so does Tab, as focus leaves for content the backdrop covers.
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" || event.key === "Tab") shrink();
+  });
 
-addEventListener(
-  "scroll",
-  () => {
-    if (zoomed && Math.abs(scrollY - zoomed.scrollY) > scrollTolerance) shrink();
-  },
-  { passive: true },
-);
+  addEventListener(
+    "scroll",
+    () => {
+      if (zoomed && Math.abs(scrollY - zoomed.scrollY) > scrollTolerance) shrink();
+    },
+    { passive: true },
+  );
 
-addEventListener("resize", shrink);
+  addEventListener("resize", shrink);
+}

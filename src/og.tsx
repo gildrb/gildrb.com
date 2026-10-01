@@ -68,6 +68,13 @@ function px(length: string): number {
   return value;
 }
 
+/** A linear-light sRGB channel, clamped, gamma-encoded and scaled to 0–255. */
+function srgbChannel(linear: number): number {
+  const clamped = Math.min(1, Math.max(0, linear));
+  const encoded = clamped <= 0.0031308 ? 12.92 * clamped : 1.055 * clamped ** (1 / 2.4) - 0.055;
+  return Math.round(encoded * 255);
+}
+
 /**
  * `oklch(L C H / alpha)` in sRGB, which the rasterizer understands. The matrices are OKLab's
  * (Björn Ottosson, 2020), from OKLCH through linear LMS and linear sRGB.
@@ -86,14 +93,9 @@ function srgb(color: string): string {
   const long = (l + 0.3963377774 * a + 0.2158037573 * b) ** 3;
   const medium = (l - 0.1055613458 * a - 0.0638541728 * b) ** 3;
   const short = (l - 0.0894841775 * a - 1.291485548 * b) ** 3;
-  const channel = (linear: number) => {
-    const clamped = Math.min(1, Math.max(0, linear));
-    const encoded = clamped <= 0.0031308 ? 12.92 * clamped : 1.055 * clamped ** (1 / 2.4) - 0.055;
-    return Math.round(encoded * 255);
-  };
-  const red = channel(4.0767416621 * long - 3.3077115913 * medium + 0.2309699292 * short);
-  const green = channel(-1.2684380046 * long + 2.6097574011 * medium - 0.3413193965 * short);
-  const blue = channel(-0.0041960863 * long - 0.7034186147 * medium + 1.707614701 * short);
+  const red = srgbChannel(4.0767416621 * long - 3.3077115913 * medium + 0.2309699292 * short);
+  const green = srgbChannel(-1.2684380046 * long + 2.6097574011 * medium - 0.3413193965 * short);
+  const blue = srgbChannel(-0.0041960863 * long - 0.7034186147 * medium + 1.707614701 * short);
   const opacity = alpha === undefined ? 1 : Number(alpha) / (alphaPercent ? 100 : 1);
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 }
@@ -104,9 +106,13 @@ function units(value: string): number {
   return number;
 }
 
+/** Font units of the figures' font as `em`. */
+function figureEm(value: string): string {
+  return `${units(value) / units(figureUnits.unitsPerEm)}em`;
+}
+
 /** A date spaced as `Figures` spaces it on the page: tabular cells, tracked; hyphens adjusted. */
 function IsoDate({ text }: { text: string }) {
-  const em = (value: string) => `${units(value) / units(figureUnits.unitsPerEm)}em`;
   const characters = text.match(/[\d-]/g) ?? [];
   if (characters.join("") !== text) throw new Error(`Not an ISO date: ${text}`);
   return (
@@ -115,8 +121,8 @@ function IsoDate({ text }: { text: string }) {
         character === "-" ? (
           <span
             style={{
-              marginLeft: em(figureUnits.beforeHyphen),
-              marginRight: em(figureUnits.afterHyphen),
+              marginLeft: figureEm(figureUnits.beforeHyphen),
+              marginRight: figureEm(figureUnits.afterHyphen),
             }}
           >
             -
@@ -126,8 +132,8 @@ function IsoDate({ text }: { text: string }) {
             style={{
               display: "flex",
               justifyContent: "center",
-              width: em(figureUnits.tabular),
-              marginRight: em(figureUnits.digit),
+              width: figureEm(figureUnits.tabular),
+              marginRight: figureEm(figureUnits.digit),
             }}
           >
             {character}

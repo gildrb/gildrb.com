@@ -3,7 +3,6 @@
 // of view only costs battery.
 
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-const videos = [...document.querySelectorAll<HTMLVideoElement>("video[data-autoplay]")];
 const onScreen = new Set<HTMLVideoElement>();
 
 function update(video: HTMLVideoElement) {
@@ -15,18 +14,21 @@ function update(video: HTMLVideoElement) {
   }
 }
 
-const observer = new IntersectionObserver(
-  (entries) => {
-    for (const { target, isIntersecting } of entries) {
-      if (!(target instanceof HTMLVideoElement)) continue;
-      if (isIntersecting) onScreen.add(target);
-      else onScreen.delete(target);
-      update(target);
-    }
-  },
-  { threshold: 0.5 },
-);
-for (const video of videos) observer.observe(video);
-reducedMotion.addEventListener("change", () => {
-  for (const video of videos) update(video);
-});
+export function autoplayVideos() {
+  const videos = [...document.querySelectorAll<HTMLVideoElement>("video[data-autoplay]")];
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const { target, isIntersecting } of entries) {
+        if (!(target instanceof HTMLVideoElement)) continue;
+        if (isIntersecting) onScreen.add(target);
+        else onScreen.delete(target);
+        update(target);
+      }
+    },
+    { threshold: 0.5 },
+  );
+  for (const video of videos) observer.observe(video);
+  reducedMotion.addEventListener("change", () => {
+    for (const video of videos) update(video);
+  });
+}

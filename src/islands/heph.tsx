@@ -34,8 +34,8 @@ const initial: Line[] = [
   },
 ];
 
-function label(material: Material): string {
-  return `${material.id} @${material.file}`;
+function label(item: Material): string {
+  return `${item.id} @${item.file}`;
 }
 
 function material(id: EvidenceId): Material {
@@ -94,7 +94,7 @@ function answer(prompt: string): { retrieved: Material[]; reply: Part[][] } {
   const topic = materials.find((item) => item.keywords.some((keyword) => lower.includes(keyword)));
   const shuffled = materials
     .map((item) => ({ item, order: Math.random() }))
-    .sort((left, right) => left.order - right.order)
+    .toSorted((left, right) => left.order - right.order)
     .map(({ item }) => item);
   if (wantsSources(prompt)) {
     return {
