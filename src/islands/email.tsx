@@ -6,7 +6,7 @@ import { email } from "../site.ts";
 import { colors, fontFeatures, space } from "../tokens.stylex.ts";
 import { type Style, ui } from "../ui.tsx";
 
-export function Email({ style, vars }: { style?: Style; vars?: Record<string, string> }) {
+export function Email({ style }: { style?: Style }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef(0);
   async function copy(event: TargetedMouseEvent<HTMLButtonElement>) {
@@ -31,7 +31,6 @@ export function Email({ style, vars }: { style?: Style; vars?: Record<string, st
         state === "failed" && styles.failed,
         style,
       )}
-      style={vars}
       type="button"
       aria-label={`Copy ${email}`}
       onClick={copy}
