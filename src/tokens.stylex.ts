@@ -161,7 +161,6 @@ export const rowMarker = stylex.defineMarker();
 
 /**
  * Put on <html>, which carries page-wide state: `data-dense` and `data-compact` when a desktop
- * viewport is too short for the full layout (see `align.ts`), and `data-entered` once the homepage
- * entrance has played (see `client.ts`).
+ * viewport is too short for the full layout (see `align.ts`).
  */
 export const rootMarker = stylex.defineMarker();

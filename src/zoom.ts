@@ -56,7 +56,7 @@ function poseAt(rect: Rect, frame: Rect, radius: number): Pose {
   };
 }
 
-/** Moves to the given pose on the homepage entrance's spring; returns once nothing is moving. */
+/** Moves to the given pose on the site's spring; returns once nothing is moving. */
 function settle(state: Zoomed, pose: Pose, opacity: string) {
   const duration = reducedMotion.matches ? 0 : fadeDuration;
   state.copy.style.transition = `transform ${duration}ms ${spring}, border-radius ${duration}ms ${spring}`;

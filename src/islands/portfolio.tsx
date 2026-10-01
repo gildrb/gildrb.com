@@ -6,7 +6,6 @@ import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
-import { entry, timing } from "../entry.ts";
 
 const columns = [
   { key: "date", label: "Date" },
@@ -25,8 +24,6 @@ export function Portfolio() {
     key: "date",
     direction: "descending",
   });
-  // Rows stagger in on load; once re-sorted they stay put instead of re-entering.
-  const [sorted, setSorted] = useState(false);
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const section = useRef<HTMLElement>(null);
 
@@ -54,7 +51,6 @@ export function Portfolio() {
     const direction =
       sort.key === key && sort.direction === "descending" ? "ascending" : "descending";
     setSort({ key, direction });
-    setSorted(true);
     announce(`Projects sorted by ${key}, ${describe(key, direction)}.`);
     if (event.detail !== 0) event.currentTarget.blur();
   }
@@ -64,14 +60,12 @@ export function Portfolio() {
     <div
       {...stylex.props(
         styles.frame,
-        entry.fade,
         edges.top && styles.fadeTop,
         edges.bottom && styles.fadeBottom,
       )}
     >
       <div
-        {...stylex.props(ui.text, ui.sans, styles.header, entry.rise)}
-        style={{ "--entry-delay": `${timing.header}ms` }}
+        {...stylex.props(ui.text, ui.sans, styles.header)}
         role="table"
         aria-label="Project columns"
       >
@@ -137,14 +131,7 @@ export function Portfolio() {
         </h2>
         <div {...stylex.props(styles.list)}>
           {rows.map((project, index) => (
-            <Row
-              key={project.href}
-              project={project}
-              first={index === 0}
-              home
-              style={!sorted && entry.rise}
-              delay={`${timing.row(index)}ms`}
-            />
+            <Row key={project.href} project={project} first={index === 0} home />
           ))}
         </div>
       </section>

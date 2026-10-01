@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useId } from "preact/hooks";
 import type { Project } from "./site.ts";
 import { colors, media, rowMarker, space } from "./tokens.stylex.ts";
-import { Figures, type Style, ui, untranslated } from "./ui.tsx";
+import { Figures, ui, untranslated } from "./ui.tsx";
 
 /**
  * One project in a four-column subgrid (date, title, scope, arrow). The parent grid owns
@@ -10,20 +10,7 @@ import { Figures, type Style, ui, untranslated } from "./ui.tsx";
  * The link is named by the project and described by its date and scope; the short date and the
  * "View →" cue are visual only.
  */
-export function Row({
-  project,
-  first,
-  home,
-  style,
-  delay,
-}: {
-  project: Project;
-  first: boolean;
-  home: boolean;
-  style?: Style;
-  /** Entry-animation delay, see `entry.ts`. */
-  delay?: string;
-}) {
+export function Row({ project, first, home }: { project: Project; first: boolean; home: boolean }) {
   const Title = home ? "h3" : "span";
   const id = useId();
   return (
@@ -33,12 +20,10 @@ export function Row({
         styles.row,
         !first && styles.divided,
         home ? styles.home : styles.next,
-        style,
       )}
       href={project.href}
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-date ${id}-scope`}
-      style={delay && { "--entry-delay": delay }}
     >
       <time
         {...stylex.props(ui.text, styles.cell, styles.date)}

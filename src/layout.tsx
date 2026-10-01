@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
-import { entry, fontGate, timing } from "./entry.ts";
+import { fontGate } from "./entry.ts";
 import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
@@ -236,17 +236,12 @@ export function Links({
   phone?: boolean;
   table?: readonly Project[];
 }) {
-  const rise = home && entry.rise;
-  const stagger = (index: number) => ({
-    "--entry-delay": `${timing.link.desktop[index]}ms`,
-    "--entry-delay-mobile": `${timing.link.phone[index]}ms`,
-  });
-  const link = (item: Link, index: number, placement: Style, me: boolean, row?: number) => {
+  const link = (item: Link, placement: Style, me: boolean, row?: number) => {
     return (
       <a
-        {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, placement, rise)}
+        {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, placement)}
         // Phones place each profile link on its own grid row; flex ignores it on desktop.
-        style={{ ...(home && stagger(index)), ...(row !== undefined && { gridRow: String(row) }) }}
+        style={row === undefined ? undefined : { gridRow: String(row) }}
         href={item.href}
         target="_blank"
         rel={me ? "me noopener noreferrer" : "noopener noreferrer"}
@@ -259,19 +254,7 @@ export function Links({
   };
   return (
     <nav
-      {...stylex.props(
-        ui.text,
-        styles.links,
-        home ? [styles.homeLinks, entry.fade] : styles.caseLinks,
-      )}
-      style={
-        home
-          ? {
-              "--entry-delay": `${timing.links.desktop}ms`,
-              "--entry-delay-mobile": `${timing.links.phone}ms`,
-            }
-          : undefined
-      }
+      {...stylex.props(ui.text, styles.links, home ? styles.homeLinks : styles.caseLinks)}
       aria-label="Public profiles and contact"
       data-mobile-links={phone || home || undefined}
     >
@@ -292,31 +275,18 @@ export function Links({
             {project.title}
           </span>,
         ])}
-      <p
-        {...stylex.props(styles.label, styles.contact, styles.contactLabel, rise)}
-        style={home ? stagger(0) : undefined}
-      >
+      <p {...stylex.props(styles.label, styles.contact, styles.contactLabel)}>
         <span data-nosnippet>Contact</span>
       </p>
-      <Island
-        name="email"
-        component={Email}
-        props={{
-          style: [styles.contact, styles.emailRow, rise],
-          ...(home && { vars: stagger(1) }),
-        }}
-      />
+      <Island name="email" component={Email} props={{ style: [styles.contact, styles.emailRow] }} />
       {contacts.map((item, index) =>
-        link(item, index + 2, [styles.contact, index ? styles.fourthRow : styles.thirdRow], false),
+        link(item, [styles.contact, index ? styles.fourthRow : styles.thirdRow], false),
       )}
-      <p
-        {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup, rise)}
-        style={home ? stagger(4) : undefined}
-      >
+      <p {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup)}>
         <span data-nosnippet>Links</span>
       </p>
       {profiles.map((item, index) =>
-        link(item, index + 5, [styles.profile, styles.profileGroup], true, index + 2),
+        link(item, [styles.profile, styles.profileGroup], true, index + 2),
       )}
     </nav>
   );
