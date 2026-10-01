@@ -34,7 +34,10 @@ export const contacts: readonly Link[] = [
   { label: "X", href: "https://x.com/gildrb_" },
 ];
 
-type Row = { date: string; title: string; scope: string };
+/** Controlled scope vocabulary; a project takes one term or two. */
+export type Scope = "Brand" | "Logo" | "Type" | "Product" | "Engineering" | "Tool";
+
+type Row = { date: string; title: string; scope: Scope | `${Scope}, ${Scope}` };
 
 export type Case = Row & {
   slug: string;
@@ -54,7 +57,7 @@ export const cases: readonly Case[] = [
     date: "2026-08-26",
     title: "Local Studio",
     name: "Local Studio",
-    scope: "Brand Design/Design Engineering",
+    scope: "Brand, Engineering",
     description:
       "The brand and website Gil Rodrigues designed and built for Local Studio, private AI that runs on your Mac.",
     ogDescription: "Brand and website for Local Studio, private AI that runs on your Mac.",
@@ -77,7 +80,7 @@ export const cases: readonly Case[] = [
     date: "2026-07-07",
     title: "Ben Davis",
     name: "Ben Davis",
-    scope: "Design Engineering/Logo",
+    scope: "Engineering, Logo",
     description:
       "A db monogram Gil Rodrigues drew for developer Ben Davis, and the davis7.sh site designed and built around it.",
     ogDescription:
@@ -89,7 +92,7 @@ export const cases: readonly Case[] = [
     date: "2026-04-21",
     title: "Heph-Agent",
     name: "Heph",
-    scope: "Product/Design Engineering",
+    scope: "Product, Engineering",
     description:
       "Heph answers questions from your own files and shows where each answer came from.",
     ogDescription: "Ask your own files a question and see the passages behind the answer.",
@@ -99,7 +102,7 @@ export const cases: readonly Case[] = [
     date: "2026-01-14",
     title: "Filen",
     name: "Filen",
-    scope: "Brand Design",
+    scope: "Brand",
     description:
       "How Gil Rodrigues developed a self-initiated identity concept for Filen, from rejected marks to an app icon and campaign system.",
     ogDescription:
@@ -123,7 +126,7 @@ export const cases: readonly Case[] = [
     date: "2019-01-25",
     title: "CURVES",
     name: "CURVES",
-    scope: "Typeface",
+    scope: "Type",
     description:
       "CURVES is a free display typeface Gil Rodrigues designed in 2019, built from geometric forms and released as a 96-glyph unicase font.",
     ogDescription:
@@ -199,7 +202,7 @@ const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" })
 /** Dates sort chronologically; text sorts A–Z when "descending", matching the header arrow. */
 export function compareRows(key: SortKey, direction: SortDirection) {
   const factor = (key === "date") === (direction === "descending") ? -1 : 1;
-  return (left: Row, right: Row): number =>
+  return (left: Record<SortKey, string>, right: Record<SortKey, string>): number =>
     factor *
     (key === "date"
       ? left.date.localeCompare(right.date)

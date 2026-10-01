@@ -105,10 +105,6 @@ const styles = stylex.create({
   scope: {
     gridColumn: 3,
     gridRow: 1,
-    minWidth: 0,
-    overflow: "hidden",
-    whiteSpace: "nowrap",
-    textOverflow: "ellipsis",
     color: {
       default: colors.tertiary,
       [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
