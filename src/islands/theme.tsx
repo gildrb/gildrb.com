@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
-import { setThemeColor, type Theme, themeClass } from "../theme.ts";
+import { applyTheme, type Theme, themeClass } from "../theme.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { type Style, ui } from "../ui.tsx";
 
@@ -36,11 +36,7 @@ export function ThemeToggle({ style }: { style?: Style }) {
       event.clientY <= rect.bottom + touchSlop;
     const toggle = () => {
       const next = current() === "dark" ? "light" : "dark";
-      document.documentElement.classList.remove(
-        ...`${themeClass.dark} ${themeClass.light}`.split(" "),
-      );
-      document.documentElement.classList.add(...themeClass[next].split(" "));
-      setThemeColor(next);
+      applyTheme(next);
       try {
         localStorage.setItem("theme", next);
       } catch {

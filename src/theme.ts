@@ -12,8 +12,18 @@ export const themeClass: Record<Theme, string> = {
 /** The browser chrome's color: each theme's page background, `colors.bg`. */
 export const themeColor: Record<Theme, string> = { dark: "#000000", light: "#ffffff" };
 
-/** Points the `theme-color` tag at the chosen theme. */
-export function setThemeColor(theme: Theme) {
+/**
+ * Shows `theme` and repaints everything outside the page that follows it. A class swap alone
+ * leaves iOS Safari's overscroll canvas and toolbar on the old color, so the canvas color and
+ * `color-scheme` are also set inline on `<html>` and `<body>`, and `theme-color` is retargeted.
+ */
+export function applyTheme(theme: Theme) {
+  const root = document.documentElement;
+  root.classList.remove(...`${themeClass.dark} ${themeClass.light}`.split(" "));
+  root.classList.add(...themeClass[theme].split(" "));
+  root.style.colorScheme = theme;
+  root.style.backgroundColor = themeColor[theme];
+  document.body.style.backgroundColor = themeColor[theme];
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (meta) meta.content = themeColor[theme];
 }
@@ -21,6 +31,6 @@ export function setThemeColor(theme: Theme) {
 /**
  * Runs in `<head>` before any CSS, so a saved theme never flashes, in the page or the chrome.
  * It points `theme-color` at the shown theme on load, and again whenever the system scheme
- * changes while no theme is forced; the toggle retargets it itself (`setThemeColor`).
+ * changes while no theme is forced; the toggle retargets it itself (`applyTheme`).
  */
 export const themeScript = `{const c=${JSON.stringify(themeClass)},h=${JSON.stringify(themeColor)},r=document.documentElement,q=matchMedia("(prefers-color-scheme: dark)");try{const t=localStorage.getItem("theme");if(t==="dark"||t==="light")r.classList.add(...c[t].split(" "))}catch{}const s=()=>{const m=document.querySelector('meta[name="theme-color"]');if(!m)return;const f=["dark","light"].find(t=>r.classList.contains(c[t].split(" ")[0]));m.content=h[f??(q.matches?"dark":"light")]};s();q.addEventListener("change",s)}if(location.hostname.endsWith(".pages.dev"))document.getElementById("favicon").href="/preview-favicon.svg"`;
