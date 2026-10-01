@@ -7,8 +7,8 @@ import { Figures, ui, untranslated } from "./ui.tsx";
 /**
  * One project in a four-column subgrid (date, title, scope, arrow). The parent grid owns
  * the columns; `home` rows live in the homepage table, the others in "View next" lists.
- * The link is named by the project and described by its date and scope; the short date and the
- * "View →" cue are visual only.
+ * The link is named by the project and described by its date, scope and description; the
+ * "View →" cue is visual only.
  */
 export function Row({ project, first, home }: { project: Project; first: boolean; home: boolean }) {
   const Title = home ? "h3" : "span";
@@ -23,22 +23,16 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       )}
       href={project.href}
       aria-labelledby={`${id}-title`}
-      aria-describedby={`${id}-date ${id}-scope`}
+      aria-describedby={`${id}-date ${id}-scope ${id}-description`}
     >
       <time
         {...stylex.props(ui.text, styles.cell, styles.date)}
         id={`${id}-date`}
         dateTime={project.date}
       >
-        <span {...stylex.props(home ? styles.fullHome : styles.fullNext)}>
-          <Figures text={project.date} />
-        </span>
-        <span
-          {...stylex.props(home ? styles.shortHome : styles.shortNext)}
-          aria-hidden="true"
-          data-nosnippet
-        >
-          <Figures text={project.date.slice(0, 7)} />
+        <Figures text={project.date.slice(0, 7)} />
+        <span {...stylex.props(home ? styles.dayHome : styles.dayNext)}>
+          <Figures text={project.date.slice(7)} />
         </span>
       </time>
       <Title
@@ -50,6 +44,9 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       </Title>
       <span {...stylex.props(ui.text, styles.scope)} id={`${id}-scope`}>
         {project.scope}
+      </span>
+      <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
+        {project.description}
       </span>
       <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
         <span {...stylex.props(styles.view, home ? styles.viewHome : styles.viewNext)}>
@@ -101,25 +98,21 @@ const styles = stylex.create({
     paddingInlineEnd: { default: null, [media.mobile]: space.mobileCellEndSpace },
   },
   date: { gridColumn: 1, position: "relative", display: "block", color: "inherit" },
-  /** The full date stays readable to assistive tech where the short one shows instead. */
-  fullHome: {
+  /** Narrow rows show the month; the day stays readable to assistive tech. */
+  dayHome: {
     position: { default: null, [media.mobile]: "absolute", [narrowTable]: "absolute" },
     width: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
     height: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
     overflow: { default: null, [media.mobile]: "hidden", [narrowTable]: "hidden" },
     clipPath: { default: null, [media.mobile]: "inset(50%)", [narrowTable]: "inset(50%)" },
   },
-  shortHome: {
-    display: { default: "none", [media.mobile]: "inline", [narrowTable]: "inline" },
-  },
-  fullNext: {
+  dayNext: {
     position: { default: null, [phoneNext]: "absolute" },
     width: { default: null, [phoneNext]: "1px" },
     height: { default: null, [phoneNext]: "1px" },
     overflow: { default: null, [phoneNext]: "hidden" },
     clipPath: { default: null, [phoneNext]: "inset(50%)" },
   },
-  shortNext: { display: { default: "none", [phoneNext]: "inline" } },
   title: { gridColumn: 2, margin: 0, color: colors.primary },
   scope: {
     gridColumn: 3,

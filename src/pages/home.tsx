@@ -83,7 +83,7 @@ export function Home({ assets }: { assets: Assets }) {
         <Main home>
           <section {...stylex.props(styles.summary)} aria-labelledby="profile-summary-title">
             <h2 {...stylex.props(ui.text, styles.heading)} id="profile-summary-title">
-              <span data-nosnippet>About</span>
+              About
             </h2>
             <p {...stylex.props(ui.text)}>{person.summary}</p>
           </section>

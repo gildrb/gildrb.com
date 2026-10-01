@@ -37,13 +37,18 @@ export const contacts: readonly Link[] = [
 /** Controlled scope vocabulary; a project takes one term or two. */
 export type Scope = "Brand" | "Logo" | "Type" | "Product" | "Engineering" | "Tool";
 
-type Row = { date: string; title: string; scope: Scope | `${Scope}, ${Scope}` };
+type Row = {
+  date: string;
+  title: string;
+  scope: Scope | `${Scope}, ${Scope}`;
+  /** One sentence; homepage and "View next" rows carry it as the link's description. */
+  description: string;
+};
 
 export type Case = Row & {
   slug: string;
   /** Breadcrumb and document title. */
   name: string;
-  description: string;
   ogDescription: string;
   /** Social preview image, relative to `/images/optimized/`. */
   ogImage?: string;
@@ -147,7 +152,7 @@ export const cases: readonly Case[] = [
 ];
 
 /** Tools that run on the site itself: their rows open the tool, not a case study. */
-export type Tool = Row & { slug: string; name: string; description: string };
+export type Tool = Row & { slug: string; name: string };
 
 export const tools: readonly Tool[] = [
   {

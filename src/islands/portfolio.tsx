@@ -125,9 +125,7 @@ export function Portfolio() {
         aria-labelledby="portfolio-title"
       >
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
-          <span data-nosnippet>
-            Portfolio: case studies and projects by Gil Rodrigues, each linking to its full write-up
-          </span>
+          Projects
         </h2>
         <div {...stylex.props(styles.list)}>
           {rows.map((project, index) => (
