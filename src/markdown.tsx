@@ -165,7 +165,7 @@ export function sources(id: string): { src: string; srcset?: string } {
   const files = images
     .map((file) => ({ file, width: Number(file.match(pattern)?.[1]) }))
     .filter(({ file }) => pattern.test(file))
-    .sort((left, right) => left.width - right.width);
+    .toSorted((left, right) => left.width - right.width);
   const widest = files.findLast(({ width }) => width <= 960) ?? files[0];
   if (!widest) throw new Error(`No image files for media id: ${id}`);
   const src = versioned(`/images/optimized/${widest.file}`);

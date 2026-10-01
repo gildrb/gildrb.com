@@ -20,7 +20,10 @@ const sources = import.meta.glob<string>("./content/*.md", {
   eager: true,
 });
 const markdown = Object.fromEntries(
-  Object.entries(sources).map(([path, text]) => [path.replace(/^\.\/content\/|\.md$/g, ""), text]),
+  Object.entries(sources).map(([path, source]) => [
+    path.replace(/^\.\/content\/|\.md$/g, ""),
+    source,
+  ]),
 );
 
 function text(slug: string): string {

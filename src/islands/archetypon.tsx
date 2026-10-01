@@ -67,7 +67,7 @@ type Message =
 
 const isObject = (value: unknown): value is object => typeof value === "object" && value !== null;
 const isFormat = (value: unknown): value is Format =>
-  typeof value === "string" && (formats as readonly string[]).includes(value);
+  typeof value === "string" && formats.some((format) => format === value);
 const isIndex = (value: unknown): value is number =>
   typeof value === "number" && Number.isInteger(value) && value >= 0;
 const isOutput = (value: unknown): value is Output =>
@@ -137,15 +137,23 @@ function kind(name: string): "svg" | "font" | null {
 const stem = (name: string) => name.replace(/\.svgz?$/i, "");
 const count = (n: number, noun: string) => `${n} ${noun}${n === 1 ? "" : "s"}`;
 
+const sizeDigits = (value: number) => value.toFixed(value < 10 ? 1 : 0);
+
 function formatBytes(bytes: number): string {
   if (bytes < 1000) return `${bytes} B`;
-  const digits = (value: number) => value.toFixed(value < 10 ? 1 : 0);
   let value = bytes / 1000;
   for (const unit of ["kB", "MB"] as const) {
-    if (value < 1000) return `${digits(value)} ${unit}`;
+    if (value < 1000) return `${sizeDigits(value)} ${unit}`;
     value /= 1000;
   }
-  return `${digits(value)} GB`;
+  return `${sizeDigits(value)} GB`;
+}
+
+function mark(result: Result, format: Format, state: Step): Result {
+  return {
+    ...result,
+    steps: result.steps.map((step) => (step.format === format ? { format, state } : step)),
+  };
 }
 
 /** Replaces a file of the same name, so dropping an edited file again updates it. */
@@ -219,7 +227,7 @@ export function Converter() {
   // this fallback only serves the others.
   useEffect(() => {
     const element = sizeRow.current;
-    if (!element || CSS.supports("animation-timeline: scroll()")) return;
+    if (!element || CSS.supports("animation-timeline: scroll()")) return undefined;
     const update = () =>
       setSizeEdges({
         start: element.scrollLeft > 1,
@@ -278,12 +286,8 @@ export function Converter() {
     worker.current = current;
     const failures: string[] = [];
     const converted = new Set<number>();
-    const mark = (result: Result, format: Format, state: Step): Result => ({
-      ...result,
-      steps: result.steps.map((step) => (step.format === format ? { format, state } : step)),
-    });
 
-    current.onmessage = ({ data }: MessageEvent<unknown>) => {
+    current.addEventListener("message", ({ data }: MessageEvent<unknown>) => {
       if (worker.current !== current) return;
       const message = decode(data);
       if (!message) {
@@ -364,8 +368,8 @@ export function Converter() {
           setStatus({ text: `Conversion failed: ${message.message}`, error: true });
           return;
       }
-    };
-    current.onerror = (event) => {
+    });
+    current.addEventListener("error", (event) => {
       event.preventDefault();
       if (worker.current !== current) return;
       stop();
@@ -373,7 +377,7 @@ export function Converter() {
         text: `The converter could not start${event.message ? `: ${event.message}` : "."}`,
         error: true,
       });
-    };
+    });
 
     void Promise.all([
       Promise.all(
@@ -483,9 +487,9 @@ export function Converter() {
   useEffect(() => {
     if (!optionsChanged.current) {
       optionsChanged.current = true;
-      return;
+      return undefined;
     }
-    if (svgs.length === 0) return;
+    if (svgs.length === 0) return undefined;
     const timer = setTimeout(() => convertRef.current(svgs, fonts), 400);
     return () => clearTimeout(timer);
   }, [selected, sizes, filled, quality]);
@@ -557,7 +561,7 @@ export function Converter() {
     );
   }
 
-  function typeQuality(event: TargetedEvent<HTMLInputElement, Event>) {
+  function typeQuality(event: TargetedEvent<HTMLInputElement>) {
     const input = event.currentTarget;
     const value = cleanQuality(input.value);
     // Write a refused character straight back out, so it never shows.

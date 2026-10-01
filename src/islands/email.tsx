@@ -33,7 +33,7 @@ export function Email({ style }: { style?: Style }) {
       )}
       type="button"
       aria-label={`Copy ${email}`}
-      onClick={copy}
+      onClick={(event) => void copy(event)}
     >
       {state === "idle" ? (
         <span data-nosnippet>{email}</span>

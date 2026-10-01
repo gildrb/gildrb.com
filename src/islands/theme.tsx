@@ -22,7 +22,7 @@ export function ThemeToggle({ style }: { style?: Style }) {
 
   useEffect(() => {
     const element = button.current;
-    if (!element) return;
+    if (!element) return undefined;
     const preference = matchMedia("(prefers-color-scheme: dark)");
     let rect = element.getBoundingClientRect();
     let usedPointer = false;

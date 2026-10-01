@@ -31,7 +31,7 @@ export function Portfolio() {
   // they are right from the first frame; this fallback only serves the others.
   useEffect(() => {
     const element = section.current;
-    if (!element || CSS.supports("animation-timeline: scroll()")) return;
+    if (!element || CSS.supports("animation-timeline: scroll()")) return undefined;
     const update = () =>
       setEdges({
         top: element.scrollTop > 1,
@@ -55,7 +55,7 @@ export function Portfolio() {
     if (event.detail !== 0) event.currentTarget.blur();
   }
 
-  const rows = [...projects].sort(compareRows(sort.key, sort.direction));
+  const rows = projects.toSorted(compareRows(sort.key, sort.direction));
   return (
     <div
       {...stylex.props(

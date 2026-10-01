@@ -171,7 +171,7 @@ export const projects: readonly Project[] = [
   ...cases.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
   ...tools.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
   ...externals.map((item) => ({ ...item, external: true })),
-].sort((left, right) => right.date.localeCompare(left.date));
+].toSorted((left, right) => right.date.localeCompare(left.date));
 
 export const slugs = cases.map((item) => item.slug);
 

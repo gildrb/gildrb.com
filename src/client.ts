@@ -4,10 +4,13 @@ import type { Islands } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { Portfolio } from "./islands/portfolio.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
-import { cases, compareRows, type SortDirection, type SortKey } from "./site.ts";
+import { compareRows, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
-import "./zoom.ts";
-import "./video.ts";
+import { autoplayVideos } from "./video.ts";
+import { enableZoom } from "./zoom.ts";
+
+enableZoom();
+autoplayVideos();
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
   theme: () => ThemeToggle,
@@ -19,14 +22,22 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   archetypon: () => import("./islands/archetypon.tsx").then((module) => module.Converter),
 };
 
+function isIslandName(value: string | undefined): value is keyof Islands {
+  return value !== undefined && Object.hasOwn(islands, value);
+}
+
 // The islands are already server-rendered: let the first frame paint, then hydrate each one in
 // its own task, and the Heph terminal only once it comes near the viewport.
 function hydrateIsland(element: HTMLElement) {
-  const name = element.dataset.island as keyof Islands;
-  const props: object = JSON.parse(element.dataset.props ?? "{}");
-  void Promise.resolve(islands[name]()).then((component) =>
-    hydrate(h(component as FunctionComponent, props), element),
-  );
+  const name = element.dataset.island;
+  if (!isIslandName(name)) throw new Error(`Unknown island: ${name}`);
+  void Promise.resolve(islands[name]()).then((component) => mount(component, element));
+}
+
+/** `Island` serialized these props from the same component's props on the server. */
+function mount<Props extends object>(component: FunctionComponent<Props>, element: HTMLElement) {
+  const props: Props = JSON.parse(element.dataset.props ?? "{}");
+  hydrate(h(component, props), element);
 }
 
 const nearViewport = new IntersectionObserver(
@@ -141,13 +152,16 @@ const sortKey = params.get("sort");
 const sortDirection = params.get("direction");
 if (allCases && isSortKey(sortKey) && isSortDirection(sortDirection)) {
   const compare = compareRows(sortKey, sortDirection);
-  const row = (element: HTMLElement) => ({
+  const articles = [...allCases.querySelectorAll<HTMLElement>(":scope > article")];
+  allCases.append(...articles.toSorted((left, right) => compare(sortRow(left), sortRow(right))));
+}
+
+function sortRow(element: HTMLElement) {
+  return {
     date: element.dataset.date ?? "",
     title: element.dataset.title ?? "",
     scope: element.dataset.scope ?? "",
-  });
-  const articles = [...allCases.querySelectorAll<HTMLElement>(":scope > article")];
-  allCases.append(...articles.sort((left, right) => compare(row(left), row(right))));
+  };
 }
 
 function isSortKey(value: string | null): value is SortKey {
@@ -156,62 +170,4 @@ function isSortKey(value: string | null): value is SortKey {
 
 function isSortDirection(value: string | null): value is SortDirection {
   return value === "ascending" || value === "descending";
-}
-
-// WebMCP: let in-browser agents list and open the case studies.
-type ModelContext = {
-  registerTool?: (tool: object, options: { signal: AbortSignal }) => Promise<unknown>;
-  provideContext?: (context: { tools: object[] }) => void;
-};
-// Current browsers expose navigator.modelContext; early builds used document.modelContext.
-const context =
-  (navigator as Navigator & { modelContext?: ModelContext }).modelContext ??
-  (document as Document & { modelContext?: ModelContext }).modelContext;
-const slugs = cases.map(({ slug }) => slug);
-const tools = [
-  {
-    name: "list_portfolio_pages",
-    title: "List portfolio pages",
-    description: "List Gil Rodrigues's public portfolio pages and Markdown sources.",
-    inputSchema: { type: "object", properties: {}, additionalProperties: false },
-    annotations: { readOnlyHint: true, untrustedContentHint: false },
-    execute: async () => ({
-      pages: slugs.map((slug) => ({
-        slug,
-        url: new URL(`/${slug}`, location.origin).href,
-        markdown: new URL(`/content/${slug}.md`, location.origin).href,
-      })),
-    }),
-  },
-  {
-    name: "open_portfolio_page",
-    title: "Open a portfolio page",
-    description: "Open a selected public portfolio case study in the current tab.",
-    inputSchema: {
-      type: "object",
-      properties: {
-        slug: { type: "string", enum: slugs, description: "The portfolio page to open." },
-      },
-      required: ["slug"],
-      additionalProperties: false,
-    },
-    annotations: { readOnlyHint: false, untrustedContentHint: false },
-    execute: async ({ slug }: { slug: string }) => {
-      if (!slugs.includes(slug)) throw new TypeError(`Unknown portfolio slug: ${slug}`);
-      const url = new URL(`/${slug}`, location.origin);
-      location.assign(url);
-      return { opened: url.href };
-    },
-  },
-];
-const register = context?.registerTool;
-if (register) {
-  const controller = new AbortController();
-  addEventListener("pagehide", () => controller.abort(), { once: true });
-  // WebMCP is experimental; the page works the same when registration fails.
-  void Promise.all(tools.map((tool) => register(tool, { signal: controller.signal }))).catch(
-    () => {},
-  );
-} else {
-  context?.provideContext?.({ tools });
 }
