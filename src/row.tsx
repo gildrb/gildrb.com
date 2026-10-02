@@ -49,9 +49,6 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         {project.description}
       </span>
       <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
-        <span {...stylex.props(styles.view, home ? styles.viewHome : styles.viewNext)}>
-          {project.external ? "Visit" : "View"}
-        </span>
         <span {...stylex.props(styles.glyph)}>{project.external ? "↗" : "→"}</span>
       </span>
     </a>
@@ -138,13 +135,4 @@ const styles = stylex.create({
     gap: "8px",
   },
   glyph: { flexShrink: 0, width: space.arrowWidth, textAlign: "center" },
-  view: {
-    visibility: {
-      default: "hidden",
-      [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: "visible" },
-      [stylex.when.ancestor(":focus-visible", rowMarker)]: "visible",
-    },
-  },
-  viewHome: { display: { default: null, [media.mobile]: "none", [narrowTable]: "none" } },
-  viewNext: { display: { default: null, "@media (max-width: 768px)": "none" } },
 });
