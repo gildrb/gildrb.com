@@ -114,6 +114,10 @@ export function Portfolio() {
               href={`/all?sort=${sort.key}&direction=${sort.direction}`}
             >
               Archive
+              <span {...stylex.props(ui.sans)} aria-hidden="true">
+                {" "}
+                →
+              </span>
             </a>
           </div>
         </div>
@@ -275,7 +279,11 @@ const styles = stylex.create({
     gridRow: 1,
     gridColumn: "3 / -1",
     justifySelf: "end",
-    color: "inherit",
+    color: {
+      default: colors.tertiary,
+      ":hover": { [media.hover]: colors.primary },
+      ":focus-visible": colors.primary,
+    },
     textAlign: "right",
     textDecoration: "none",
   },

@@ -97,7 +97,7 @@ export const cases: readonly Case[] = [
     date: "2026-04-21",
     title: "Heph-Agent",
     name: "Heph",
-    scope: "Product, Engineering",
+    scope: "Engineering, Product",
     description:
       "Heph answers questions from your own files and shows where each answer came from.",
     ogDescription: "Ask your own files a question and see the passages behind the answer.",
