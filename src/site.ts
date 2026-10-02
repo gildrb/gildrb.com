@@ -19,7 +19,7 @@ export const person = {
 export type Link = { label: string; href: string };
 
 export const profiles: readonly Link[] = [
-  { label: "Bēhance", href: "https://behance.net/gildrb" },
+  { label: "Are.na", href: "https://www.are.na/gil-rodrigues-tat8yjcamq4" },
   { label: "GitHub", href: "https://github.com/gildrb" },
   { label: "Letterboxd", href: "https://letterboxd.com/gildrb/" },
   { label: "Literal", href: "https://literal.club/gildrb" },
