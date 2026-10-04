@@ -52,8 +52,9 @@ export function align(gapProperty: string): void {
   delete root.dataset.compact;
   if (matchMedia("(min-width: 768px)").matches && sidebarLinks && toggle) {
     const dense = home
-      ? // Homepage: the page fits the viewport exactly until the content pushes it taller.
-        root.scrollHeight > root.clientHeight
+      ? // Homepage: <body> is the viewport's height (it holds the scrollbar gutter, see
+        // `layout.tsx`), so the content fits until it overflows <body>.
+        body.scrollHeight > body.clientHeight
       : // Inner pages: the sidebar is sticky, so its links and the toggle hold still on screen;
         // keep a toggle's height of clearance between them.
         sidebarLinks.getBoundingClientRect().bottom + toggle.offsetHeight >
