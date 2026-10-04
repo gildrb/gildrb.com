@@ -56,10 +56,10 @@ export const colors = stylex.defineVars({
   secondary: { default: "oklch(76.68% 0 0)", [light]: "oklch(42.02% 0 0)" },
   /**
    * One more step down the text ladder. Dark: article → secondary is 11.85 points of lightness,
-   * and tertiary takes the same step again (APCA Lc 42 on black, up from 30). Light keeps its
-   * value (Lc 72 on white).
+   * and tertiary takes the same step again (APCA Lc 42 on black, up from 30). Light matches dark's
+   * ratio to article: tertiary has half of article's contrast (Lc 51 on white, article Lc 102).
    */
-  tertiary: { default: "oklch(64.83% 0 0)", [light]: "oklch(56.58% 0 0)" },
+  tertiary: { default: "oklch(64.83% 0 0)", [light]: "oklch(70.5% 0 0)" },
   article: { default: "oklch(88.53% 0 0)", [light]: "oklch(27.07% 0 0)" },
   hairline: { default: "oklch(100% 0 0 / 0.12)", [light]: "oklch(0% 0 0 / 0.12)" },
   codeBg: { default: "oklch(20.44% 0 0)", [light]: "oklch(93.12% 0 0)" },
@@ -98,7 +98,7 @@ export const lightTheme = stylex.createTheme(colors, {
   bg: "oklch(100% 0 0)",
   primary: "oklch(0% 0 0)",
   secondary: "oklch(42.02% 0 0)",
-  tertiary: "oklch(56.58% 0 0)",
+  tertiary: "oklch(70.5% 0 0)",
   article: "oklch(27.07% 0 0)",
   hairline: "oklch(0% 0 0 / 0.12)",
   codeBg: "oklch(93.12% 0 0)",
