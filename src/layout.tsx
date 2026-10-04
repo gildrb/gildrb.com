@@ -73,7 +73,10 @@ export function Document({
   children: ComponentChildren;
 }) {
   return (
-    <html lang="en" {...stylex.props(rootMarker, styles.html, home && styles.fixedViewport)}>
+    <html
+      lang="en"
+      {...stylex.props(rootMarker, styles.html, home && [styles.fixedViewport, styles.homeRoot])}
+    >
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -342,19 +345,18 @@ const styles = stylex.create({
     colorScheme: colors.scheme,
   },
   /**
-   * The phone homepage fits the viewport; only the project list scrolls. So does the dense desktop
-   * one, by design; clipping covers heights too short for even its compact sidebar, so a
-   * scrollbar never appears.
+   * The homepage fits the viewport; only the project list scrolls. On phones it always does; on
+   * desktop the content fits until `data-dense` (see `align.ts`) holds it to the viewport.
+   * Clipping covers heights too short for even its compact sidebar, so a scrollbar never appears.
    */
-  fixedViewport: {
-    height: { default: null, [media.mobile]: "100dvh" },
-    minHeight: { default: null, [media.mobile]: "100dvh" },
-    overflow: {
-      default: null,
-      [media.mobile]: "hidden",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "hidden" },
-    },
-  },
+  fixedViewport: { height: "100dvh", overflow: "hidden" },
+  /**
+   * The homepage never scrolls, so the gutter that keeps it as wide as the scrolling pages is on
+   * <body>, under its own background, not on the root. The browser paints an empty root gutter
+   * apart from the page, and it can lag a theme change: a black or white strip flickers at the
+   * window's edge.
+   */
+  homeRoot: { scrollbarGutter: "auto" },
   body: {
     // Held hidden by the font gate until Inter is ready; see `fontGate`.
     visibility: "var(--first-paint, visible)",
@@ -372,7 +374,10 @@ const styles = stylex.create({
     WebkitTextSizeAdjust: "100%",
     textRendering: "optimizeLegibility",
   },
-  homeBody: { minHeight: "100dvh" },
+  homeBody: {
+    minHeight: "100dvh",
+    scrollbarGutter: { default: null, [media.desktop]: "stable" },
+  },
   caseBody: { minHeight: "100vh" },
   wrapper: {
     maxWidth: "1900px",
