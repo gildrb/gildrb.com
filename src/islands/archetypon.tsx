@@ -914,14 +914,14 @@ const styles = stylex.create({
   },
   status: { margin: 0, color: colors.secondary, minHeight: "26px" },
   problem: { color: colors.primary },
-  /** Set like the article links (`markdown.tsx`): hover turns the underline white. */
+  /** Set like the article links (`markdown.tsx`): hover turns the underline the text color. */
   download: {
     width: "fit-content",
     color: { default: colors.article, ":focus-visible": colors.primary },
     textDecorationLine: "underline",
     textDecorationColor: {
       default: colors.tertiary,
-      ":hover": { [media.hover]: colors.primary },
+      ":hover": { [media.hover]: colors.article },
     },
   },
   list: { margin: 0, padding: 0, listStyle: "none" },

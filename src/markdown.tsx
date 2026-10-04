@@ -417,7 +417,7 @@ export const styles = stylex.create({
     textDecorationLine: "underline",
     textDecorationColor: {
       default: colors.tertiary,
-      ":hover": { "@media (hover: hover)": colors.primary },
+      ":hover": { "@media (hover: hover)": colors.article },
     },
   },
   code: {
