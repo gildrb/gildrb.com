@@ -12,8 +12,8 @@ export const person = {
   familyName: "Rodrigues Barbosa",
   handle: "gildrb",
   alternateNames: ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
-  role: "Designer",
-  summary: "Designer based in Germany.",
+  role: "Founding Designer",
+  summary: "Founding Designer based in Germany.",
 } as const;
 
 export type Link = { label: string; href: string };
@@ -192,7 +192,7 @@ export const pages = [
   {
     slug: "about",
     name: "About",
-    description: "About Gil Rodrigues (gildrb), a designer based in Germany.",
+    description: "About Gil Rodrigues (gildrb), a Founding Designer based in Germany.",
   },
   { slug: "contact", name: "Contact", description: "How to contact Gil Rodrigues (gildrb)." },
   { slug: "privacy", name: "Privacy", description: "Privacy statement for gildrb.com." },
