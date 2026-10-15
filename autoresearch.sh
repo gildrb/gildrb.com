@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-# Segment 2: PageSpeed on the live site, which deploys from `main` (Cloudflare Pages, ~1 min).
-# Lighthouse (the engine PageSpeed Insights runs, with its mobile and desktop presets), run
-# locally because the keyless PSI API quota is shared and often exhausted. Three page types:
-# the homepage, a case study and the archive. The metric is the mean of every category score;
-# the minimum is reported too, so one weak page cannot hide in the mean.
-# Gates first, so nothing broken is measured: React Doctor stays 100, check and build pass,
-# and the live site serves the commit being measured.
+# Segment 3: agent readiness of the live site, scored by isitagentready.com's own API with its
+# default "All Checks" profile. The percentage is computed exactly as the site's page does:
+# passes over passes and failures, leaving out commerce, neutral (informational) checks and the
+# Personal Agent Protocol (its `Re()`, informational per its skill).
+# Gates: React Doctor stays 100, check and build pass, the live site serves this build.
 set -euo pipefail
 root="$(cd "$(dirname "$0")" && pwd)"
 cd "$root"
@@ -20,7 +18,6 @@ echo "METRIC react_doctor_score=$doctor"
 node_modules/.bin/vp check >/tmp/gildrb-check.log 2>&1 || { tail -n 30 /tmp/gildrb-check.log; exit 1; }
 node_modules/.bin/vp run build >/tmp/gildrb-build.log 2>&1 || { tail -n 30 /tmp/gildrb-build.log; exit 1; }
 
-# The live homepage must carry this build's script hash before it is worth measuring.
 # (A captured page, not `curl | grep -q`: grep quitting early would fail the pipe.)
 script=$(grep -o '/assets/client-[^"]*\.js' dist/index.html | sed -n 1p)
 live=""
@@ -31,25 +28,18 @@ for _ in $(seq 1 40); do
 done
 [[ "$live" == *"$script"* ]] || { echo "live site is not on this build ($script)"; exit 1; }
 
-scores=()
-for page in / /t3 /all; do
-  for strategy in mobile desktop; do
-    out="/tmp/gildrb-lh-${strategy}${page//\//_}.json"
-    preset=()
-    [ "$strategy" = desktop ] && preset=(--preset=desktop)
-    # Outside the repo, like React Doctor: its devEngines pin npm.
-    (cd /tmp && CHROME_PATH="$(command -v chromium)" npx --yes lighthouse@13 "https://gildrb.com$page" \
-      "${preset[@]}" --quiet --output=json --output-path="$out" \
-      --only-categories=performance,accessibility,best-practices,seo \
-      --chrome-flags="--headless=new --no-sandbox") >/tmp/gildrb-lh.log 2>&1 ||
-      { tail -n 20 /tmp/gildrb-lh.log; exit 1; }
-    line=$(jq -r '[.categories[] | "\(.id)=\(.score * 100 | round)"] | join(" ")' "$out")
-    echo "  $strategy $page $line"
-    jq -r --arg s "$strategy" --arg p "$page" '.audits | to_entries[]
-      | select(.value.score != null and .value.score < 0.9 and .value.scoreDisplayMode != "informative" and .value.scoreDisplayMode != "manual")
-      | "    \($s) \($p) \(.key) \(.value.score) \(.value.displayValue // "")"' "$out"
-    while read -r value; do scores+=("$value"); done < <(jq -r '.categories[].score * 100 | round' "$out")
-  done
-done
-printf '%s\n' "${scores[@]}" | awk '{ s += $1; if (min == "" || $1 < min) min = $1 } END {
-  printf "METRIC pagespeed_mean=%.2f\nMETRIC pagespeed_min=%d\n", s / NR, min }'
+# The scanner's default profile: every check but the A2A card and AP2.
+checks='["robotsTxt","sitemap","linkHeaders","dnsAid","markdownNegotiation","robotsTxtAiRules","contentSignals","webBotAuth","apiCatalog","oauthDiscovery","oauthProtectedResource","authMd","mcpServerCard","agentSkills","webMcp","ard","personalAgentProtocol","x402","mpp","ucp","acp"]'
+out=/tmp/gildrb-agent-ready.json
+curl -sf --max-time 120 -X POST https://isitagentready.com/api/scan \
+jq -r '[.checks | to_entries[] | select(.key != "commerce") | .value | to_entries[]
+    | select(.key != "personalAgentProtocol") | .value.status
+    | select(. == "pass" or . == "fail")] as $s
+jq -r '.checks | to_entries[] | .key as $c | .value | to_entries[] | "  \(.value.status) \($c).\(.key)"' "$out"
+jq -r '[.checks | to_entries[] | select(.key != "commerce") | .value[] | .status
+    | select(. == "pass" or . == "fail")] as $s
+  | ($s | map(select(. == "pass")) | length) as $p
+  | "METRIC agent_ready_pct=\(if ($s | length) > 0 then ($p * 100 / ($s | length) | round) else 0 end)",
+    "METRIC agent_checks_passed=\($p)",
+    "METRIC agent_checks_failed=\(($s | length) - $p)"' "$out"
+echo "METRIC agent_level=$(jq -r '.level' "$out")"
