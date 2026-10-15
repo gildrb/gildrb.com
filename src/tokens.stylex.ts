@@ -60,9 +60,10 @@ export const colors = stylex.defineVars({
    * One more step down the text ladder. Dark: article → secondary is 11.85 points of lightness,
    * and tertiary takes the same step again (APCA Lc 42 on black, up from 30). Light is not a
    * mirror: gray on white reads fainter than on black, the reason light prose is heavier
-   * (`proseWeight`). So tertiary sits at Lc 61 on white (article Lc 102).
+   * (`proseWeight`). Light tertiary is the darkest gray WCAG allows text to be lighter than:
+   * 4.54:1 on white (APCA Lc 72).
    */
-  tertiary: { default: "oklch(64.83% 0 0)", [light]: "oklch(64% 0 0)" },
+  tertiary: { default: "oklch(64.83% 0 0)", [light]: "oklch(56.58% 0 0)" },
   article: { default: "oklch(88.53% 0 0)", [light]: "oklch(27.07% 0 0)" },
   hairline: { default: "oklch(100% 0 0 / 0.12)", [light]: "oklch(0% 0 0 / 0.12)" },
   codeBg: { default: "oklch(20.44% 0 0)", [light]: "oklch(93.12% 0 0)" },
@@ -101,7 +102,7 @@ export const lightTheme = stylex.createTheme(colors, {
   bg: "oklch(100% 0 0)",
   primary: "oklch(0% 0 0)",
   secondary: "oklch(42.02% 0 0)",
-  tertiary: "oklch(64% 0 0)",
+  tertiary: "oklch(56.58% 0 0)",
   article: "oklch(27.07% 0 0)",
   hairline: "oklch(0% 0 0 / 0.12)",
   codeBg: "oklch(93.12% 0 0)",
