@@ -13,23 +13,31 @@ import { versioned } from "./versioned.ts";
 export type Work = { id: string; from: { $: "Case"; project: Case } | { $: "Archive" } };
 
 /**
- * The archive: every `archive` media item, newest case first and in its page's order, then the
- * items no case page shows, in `media.ts` order.
+ * The archive: every `archive` media item, newest case first, each case's in its page's order and
+ * then those tagged with its `project`; last the items that belong to no case, in `media.ts`
+ * order.
  */
 export function collect(markdown: Readonly<Record<string, string>>): Work[] {
+  const entries = Object.entries(artwork).filter(([, item]) => item.archive === true);
+  for (const [id, { project }] of entries) {
+    if (project !== undefined && !cases.some(({ slug }) => slug === project)) {
+      throw new Error(`Archive media ${id} names an unknown project: ${project}`);
+    }
+  }
   const work: Work[] = cases.flatMap((project) => {
     const body = markdown[project.slug];
     if (body === undefined) throw new Error(`Missing src/content/${project.slug}.md`);
     const ids = parse(body).blocks.flatMap((block) =>
       block.type === "media" ? block.items.map(({ id }) => id) : [],
     );
-    return ids
-      .filter((id, index) => artwork[id]?.archive === true && ids.indexOf(id) === index)
+    const tagged = entries.filter(([, item]) => item.project === project.slug).map(([id]) => id);
+    return [...ids, ...tagged]
+      .filter((id, index, all) => artwork[id]?.archive === true && all.indexOf(id) === index)
       .map((id) => ({ id, from: { $: "Case", project } }));
   });
   const shown = new Set(work.map(({ id }) => id));
-  const alone: Work[] = Object.entries(artwork)
-    .filter(([id, item]) => item.archive === true && !shown.has(id))
+  const alone: Work[] = entries
+    .filter(([id]) => !shown.has(id))
     .map(([id]) => ({ id, from: { $: "Archive" } }));
   return [...work, ...alone];
 }
@@ -166,9 +174,16 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
 }
 
 /**
- * The third column on wide screens: the archive beside the homepage table or a page's text.
- * It scrolls on its own, so the homepage still holds to the viewport and an inner page keeps it
- * in view while the text scrolls.
+ * Shuffles the tiles before them, as the parser reaches it, so a fresh order paints first.
+ * Fisher–Yates over the element's children; inline, since a module would run after paint.
+ */
+const shuffleScript =
+  "{const g=document.currentScript.previousElementSibling,t=[...g.children];for(let i=t.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[t[i],t[j]]=[t[j],t[i]]}g.append(...t)}";
+
+/**
+ * The third column on wide screens: the archive beside the homepage table or a page's text, in
+ * a new random order on every visit. It scrolls on its own, so the homepage still holds to the
+ * viewport and an inner page keeps it in view while the text scrolls.
  */
 export function SideArchive({ work, home }: { work: readonly Work[]; home: boolean }) {
   return (
@@ -183,6 +198,7 @@ export function SideArchive({ work, home }: { work: readonly Work[]; home: boole
           <Tile work={item} link eager={false} />
         ))}
       </div>
+      <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: shuffleScript }} />
     </section>
   );
 }
