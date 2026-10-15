@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import type { TargetedMouseEvent } from "preact";
+import type { ComponentChildren, InputHTMLAttributes, RefObject } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { colors, media } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
@@ -117,12 +117,58 @@ function answer(prompt: string): { retrieved: Material[]; reply: Part[][] } {
   return { retrieved: shuffled, reply: [pick(overview), pick(followUps)] };
 }
 
+type ComposerState = { empty: boolean; overflow: boolean };
+
+/** Scrolls the composer so the caret stays in view; reports whether text is clipped on the left. */
+function scrollComposer(element: HTMLInputElement): ComposerState {
+  const style = getComputedStyle(element);
+  const padding = Number.parseFloat(style.paddingLeft) || 0;
+  const characterWidth = padding || (Number.parseFloat(style.fontSize) || 1) * 0.6;
+  const visible = Math.max(
+    0,
+    element.clientWidth - padding - (Number.parseFloat(style.paddingRight) || 0),
+  );
+  const scroll = Math.max(
+    0,
+    (element.selectionStart ?? element.value.length) * characterWidth - visible,
+  );
+  element.scrollLeft = scroll;
+  return { empty: !element.value, overflow: scroll > 0 };
+}
+
+// Keep the newest output in view by translating the rail, snapping so that the top edge
+// never cuts through a line of text.
+function scrollRailToEnd(logElement: HTMLDivElement | null, railElement: HTMLDivElement | null) {
+  if (!logElement || !railElement) return;
+  const lineHeight = Number.parseFloat(getComputedStyle(railElement).lineHeight);
+  const raw = Math.max(0, railElement.scrollHeight - logElement.clientHeight);
+  let offset = raw;
+  if (lineHeight > 0) {
+    const top = railElement.getBoundingClientRect().top;
+    let clipped = raw;
+    for (const child of railElement.children) {
+      if (!(child instanceof HTMLElement) || child.offsetTop + child.offsetHeight < raw) continue;
+      if (child.offsetTop > raw + lineHeight) break;
+      const range = document.createRange();
+      range.selectNodeContents(child);
+      for (const rect of range.getClientRects()) {
+        if (rect.top - top < raw + 1 && rect.bottom - top > raw + 1)
+          clipped = Math.max(clipped, rect.bottom - top);
+      }
+    }
+    if (clipped > raw) offset = Math.min(raw + lineHeight, clipped);
+  }
+  logElement.scrollTop = 0;
+  railElement.style.setProperty("--offset", `${-offset}px`);
+}
+
 /** The Heph terminal, simulated: scripted retrieval with inspectable citations. */
 export function Terminal() {
   const [lines, setLines] = useState<Line[]>(initial);
-  const [active, setActive] = useState<EvidenceId>("E1");
   const [running, setRunning] = useState(false);
-  const [composer, setComposer] = useState({ empty: true, overflow: false });
+  const [composer, setComposer] = useState<ComposerState>({ empty: true, overflow: false });
+  /** The evidence a bare `/evidence` opens: the last one hovered, focused, opened, or retrieved. */
+  const active = useRef<EvidenceId>("E1");
   const input = useRef<HTMLInputElement>(null);
   const log = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLDivElement>(null);
@@ -131,21 +177,7 @@ export function Terminal() {
   const append = (...added: Line[]) => setLines((current) => [...current, ...added]);
 
   function syncComposer() {
-    const element = input.current;
-    if (!element) return;
-    const style = getComputedStyle(element);
-    const padding = Number.parseFloat(style.paddingLeft) || 0;
-    const characterWidth = padding || (Number.parseFloat(style.fontSize) || 1) * 0.6;
-    const visible = Math.max(
-      0,
-      element.clientWidth - padding - (Number.parseFloat(style.paddingRight) || 0),
-    );
-    const scroll = Math.max(
-      0,
-      (element.selectionStart ?? element.value.length) * characterWidth - visible,
-    );
-    element.scrollLeft = scroll;
-    setComposer({ empty: !element.value, overflow: scroll > 0 });
+    if (input.current) setComposer(scrollComposer(input.current));
   }
 
   function clearInput() {
@@ -165,7 +197,7 @@ export function Terminal() {
   }
 
   function openEvidence(id: EvidenceId, command = true) {
-    setActive(id);
+    active.current = id;
     const opened: Line[] = [
       { kind: "line", tone: "response", evidence: true, parts: [`OPEN @${material(id).file}`] },
       { kind: "line", tone: "response", evidence: true, parts: [material(id).detail] },
@@ -195,7 +227,10 @@ export function Terminal() {
     append({ kind: "prompt", text: prompt });
     if (/^\/evidence\b/i.test(prompt)) {
       const requested = prompt.match(/^\/evidence\s+(E[1-4])\b/i)?.[1]?.toUpperCase();
-      return openEvidence(materials.find((item) => item.id === requested)?.id ?? active, false);
+      return openEvidence(
+        materials.find((item) => item.id === requested)?.id ?? active.current,
+        false,
+      );
     }
     const { retrieved, reply } = answer(prompt);
     clearInput();
@@ -215,7 +250,7 @@ export function Terminal() {
     ];
     steps.forEach((step, index) =>
       at(id, 140 + index * 150, () => {
-        if (step.evidence) setActive(step.evidence);
+        if (step.evidence) active.current = step.evidence;
         append({ kind: "line", tone: "muted", parts: [step.text] });
       }),
     );
@@ -237,33 +272,7 @@ export function Terminal() {
     });
   }
 
-  // Keep the newest output in view by translating the rail, snapping so that the top edge
-  // never cuts through a line of text.
-  function scrollToEnd() {
-    const logElement = log.current;
-    const railElement = rail.current;
-    if (!logElement || !railElement) return;
-    const lineHeight = Number.parseFloat(getComputedStyle(railElement).lineHeight);
-    const raw = Math.max(0, railElement.scrollHeight - logElement.clientHeight);
-    let offset = raw;
-    if (lineHeight > 0) {
-      const top = railElement.getBoundingClientRect().top;
-      let clipped = raw;
-      for (const child of railElement.children) {
-        if (!(child instanceof HTMLElement) || child.offsetTop + child.offsetHeight < raw) continue;
-        if (child.offsetTop > raw + lineHeight) break;
-        const range = document.createRange();
-        range.selectNodeContents(child);
-        for (const rect of range.getClientRects()) {
-          if (rect.top - top < raw + 1 && rect.bottom - top > raw + 1)
-            clipped = Math.max(clipped, rect.bottom - top);
-        }
-      }
-      if (clipped > raw) offset = Math.min(raw + lineHeight, clipped);
-    }
-    logElement.scrollTop = 0;
-    railElement.style.setProperty("--offset", `${-offset}px`);
-  }
+  const scrollToEnd = () => scrollRailToEnd(log.current, rail.current);
 
   useLayoutEffect(scrollToEnd, [lines]);
 
@@ -286,184 +295,290 @@ export function Terminal() {
     };
   }, []);
 
-  const queueSync = () => requestAnimationFrame(syncComposer);
-  const evidenceHandlers = (id: EvidenceId) => ({
-    tabIndex: -1,
-    type: "button" as const,
-    onPointerEnter: () => setActive(id),
-    onFocus: () => setActive(id),
-    onClick: (event: TargetedMouseEvent<HTMLButtonElement>) => {
-      openEvidence(id);
-      if (event.detail > 0) event.currentTarget.blur();
-    },
-  });
-
   return (
     <div {...stylex.props(styles.demo)}>
       <div {...stylex.props(styles.frame)}>
         <a {...stylex.props(styles.close)} href="/" aria-label="Return to the portfolio" />
         <div {...stylex.props(ui.mono, styles.shell)} aria-hidden="true">
-          <div {...stylex.props(styles.titlebar)}>
-            <span {...stylex.props(styles.controls)}>
-              {(["red", "yellow", "green"] as const).map((control) => (
-                <span {...stylex.props(styles.control, styles[control])} />
-              ))}
-            </span>
-          </div>
+          <Titlebar />
           <div {...stylex.props(styles.terminal)}>
-            <div {...stylex.props(styles.status)}>
-              <strong {...stylex.props(styles.statusItem, styles.brand)}>Heph</strong>
-              <span {...stylex.props(styles.statusItem)}>
-                ARMORY <b {...stylex.props(styles.key)}>classics</b>
-              </span>
-              <span {...stylex.props(styles.statusItem)}>
-                MODEL <b {...stylex.props(styles.key)}>gpt-5.5</b>
-              </span>
-              <span {...stylex.props(styles.statusItem, styles.optional)}>
-                REASONING <b {...stylex.props(styles.key)}>low</b>
-              </span>
-            </div>
-            <div {...stylex.props(styles.transcript)}>
-              <div ref={log} {...stylex.props(styles.output)} aria-live="polite">
-                <div ref={rail} {...stylex.props(styles.rail)}>
-                  {lines.map((line, index) =>
-                    line.kind === "prompt" ? (
-                      <div
-                        {...stylex.props(
-                          styles.row,
-                          styles.prompt,
-                          lines[index - 1]?.kind === "line" && styles.afterLine,
-                        )}
-                      >
-                        {line.text}
-                      </div>
-                    ) : (
-                      <p {...stylex.props(styles.line, styles[line.tone])}>
-                        {line.command && (
-                          <>
-                            <span {...stylex.props(ui.sans)}>→</span>{" "}
-                          </>
-                        )}
-                        {line.parts.map((part) =>
-                          typeof part === "string" ? (
-                            part
-                          ) : (
-                            <button
-                              {...stylex.props(ui.reset, styles.citation)}
-                              {...evidenceHandlers(part.evidenceId)}
-                            >
-                              [{part.evidenceId}]
-                            </button>
-                          ),
-                        )}
-                      </p>
-                    ),
-                  )}
-                </div>
-              </div>
-            </div>
-            <aside
-              {...stylex.props(styles.evidence)}
-              aria-label="Demo scope and evidence materials"
-            >
-              <p {...stylex.props(styles.ellipsis, styles.evidenceOpen)}>
-                EVIDENCE <b {...stylex.props(styles.key)}>ctrl+g</b>
-              </p>
-              <p {...stylex.props(styles.ellipsis, styles.scope)}>
-                SCOPE <b {...stylex.props(styles.key)}>4/4</b>
-              </p>
-              <p {...stylex.props(styles.ellipsis, styles.meta)}>
-                EXCERPTS <b {...stylex.props(styles.key)}>4</b>
-              </p>
-              <div {...stylex.props(styles.evidenceList)}>
-                {materials.map((item) => (
-                  <button
-                    {...stylex.props(ui.reset, styles.ellipsis, styles.evidenceItem)}
-                    {...evidenceHandlers(item.id)}
-                  >
-                    @{item.file}
-                  </button>
-                ))}
-              </div>
-            </aside>
-            <form
-              {...stylex.props(styles.row, styles.composer)}
-              aria-label="Ask the simulated Heph demo"
+            <StatusBar />
+            <Transcript
+              lines={lines}
+              logRef={log}
+              railRef={rail}
+              onSelect={(id) => (active.current = id)}
+              onOpen={openEvidence}
+            />
+            <EvidencePanel onSelect={(id) => (active.current = id)} onOpen={openEvidence} />
+            <Composer
+              inputRef={input}
+              state={composer}
+              running={running}
               onSubmit={submit}
-            >
-              <span {...stylex.props(styles.composerLabel)} aria-hidden="true">
-                <span {...stylex.props(ui.sans)}>→</span>
-              </span>
-              <span
-                {...stylex.props(styles.cursor, composer.empty && !running && styles.blinking)}
-                aria-hidden="true"
-              />
-              <span
-                {...stylex.props(styles.overflow, composer.overflow && styles.overflowShown)}
-                aria-hidden="true"
-              >
-                ...
-              </span>
-              <input
-                ref={input}
-                {...stylex.props(ui.reset, styles.input, composer.empty && styles.caretHidden)}
-                type="text"
-                autocomplete="off"
-                spellcheck={false}
-                tabIndex={-1}
-                placeholder="Ask Heph about these materials"
-                readOnly={running}
-                onInput={queueSync}
-                onScroll={syncComposer}
-                onClick={queueSync}
-                onFocus={queueSync}
-                onKeyUp={queueSync}
-                onPointerUp={queueSync}
-                onSelect={queueSync}
-              />
-              <button
-                {...stylex.props(ui.reset, styles.submit)}
-                type="submit"
-                tabIndex={-1}
-                aria-label="Submit Heph prompt"
-                disabled={running}
-                onClick={(event) => event.detail > 0 && event.currentTarget.blur()}
-              >
-                <span {...stylex.props(ui.sans, styles.submitSymbol)} aria-hidden="true">
-                  ↩
-                </span>
-              </button>
-            </form>
-            <div {...stylex.props(styles.commands)} aria-hidden="true">
-              {running ? (
-                <>
-                  <span>
-                    STOP <b {...stylex.props(styles.key)}>esc</b>
-                  </span>
-                  <span {...stylex.props(styles.command)}>
-                    EXIT <b {...stylex.props(styles.key)}>ctrl+c</b>
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>
-                    ARMORY <b {...stylex.props(styles.key)}>ctrl+a</b>
-                  </span>
-                  <span {...stylex.props(styles.command)}>
-                    MATERIALS <b {...stylex.props(styles.key)}>ctrl+o</b>
-                  </span>
-                  <span {...stylex.props(styles.command, styles.optional)}>
-                    COMMANDS <b {...stylex.props(styles.key)}>ctrl+p</b>
-                  </span>
-                  <span {...stylex.props(styles.command, styles.optional)}>
-                    REASONING <b {...stylex.props(styles.key)}>shift+tab</b>
-                  </span>
-                </>
-              )}
-            </div>
+              onSync={syncComposer}
+            />
+            <CommandBar running={running} />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function Titlebar() {
+  return (
+    <div {...stylex.props(styles.titlebar)}>
+      <span {...stylex.props(styles.controls)}>
+        {(["red", "yellow", "green"] as const).map((control) => (
+          <span {...stylex.props(styles.control, styles[control])} />
+        ))}
+      </span>
+    </div>
+  );
+}
+
+function StatusBar() {
+  return (
+    <div {...stylex.props(styles.status)}>
+      <strong {...stylex.props(styles.statusItem, styles.brand)}>Heph</strong>
+      <span {...stylex.props(styles.statusItem)}>
+        ARMORY <b {...stylex.props(styles.key)}>classics</b>
+      </span>
+      <span {...stylex.props(styles.statusItem)}>
+        MODEL <b {...stylex.props(styles.key)}>gpt-5.5</b>
+      </span>
+      <span {...stylex.props(styles.statusItem, styles.optional)}>
+        REASONING <b {...stylex.props(styles.key)}>low</b>
+      </span>
+    </div>
+  );
+}
+
+type EvidenceActions = {
+  /** Hovering or focusing evidence makes it the target of a bare `/evidence`. */
+  onSelect: (id: EvidenceId) => void;
+  onOpen: (id: EvidenceId) => void;
+};
+
+/** An inline `[E1]` citation in the transcript, or a file in the evidence panel. */
+function EvidenceButton({
+  id,
+  variant,
+  onSelect,
+  onOpen,
+  children,
+}: EvidenceActions & {
+  id: EvidenceId;
+  variant: "citation" | "item";
+  children: ComponentChildren;
+}) {
+  return (
+    <button
+      {...stylex.props(
+        ui.reset,
+        variant === "item" && styles.ellipsis,
+        variant === "item" ? styles.evidenceItem : styles.citation,
+      )}
+      type="button"
+      tabIndex={-1}
+      onPointerEnter={() => onSelect(id)}
+      onFocus={() => onSelect(id)}
+      onClick={(event) => {
+        onOpen(id);
+        if (event.detail > 0) event.currentTarget.blur();
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Transcript({
+  lines,
+  logRef,
+  railRef,
+  onSelect,
+  onOpen,
+}: EvidenceActions & {
+  lines: Line[];
+  logRef: RefObject<HTMLDivElement>;
+  railRef: RefObject<HTMLDivElement>;
+}) {
+  return (
+    <div {...stylex.props(styles.transcript)}>
+      <div ref={logRef} {...stylex.props(styles.output)} aria-live="polite">
+        <div ref={railRef} {...stylex.props(styles.rail)}>
+          {lines.map((line, index) =>
+            line.kind === "prompt" ? (
+              <div
+                {...stylex.props(
+                  styles.row,
+                  styles.prompt,
+                  lines[index - 1]?.kind === "line" && styles.afterLine,
+                )}
+              >
+                {line.text}
+              </div>
+            ) : (
+              <p {...stylex.props(styles.line, styles[line.tone])}>
+                {line.command && (
+                  <>
+                    <span {...stylex.props(ui.sans)}>→</span>{" "}
+                  </>
+                )}
+                {line.parts.map((part) =>
+                  typeof part === "string" ? (
+                    part
+                  ) : (
+                    <EvidenceButton
+                      key={part.evidenceId}
+                      id={part.evidenceId}
+                      variant="citation"
+                      onSelect={onSelect}
+                      onOpen={onOpen}
+                    >
+                      [{part.evidenceId}]
+                    </EvidenceButton>
+                  ),
+                )}
+              </p>
+            ),
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EvidencePanel({ onSelect, onOpen }: EvidenceActions) {
+  return (
+    <aside {...stylex.props(styles.evidence)} aria-label="Demo scope and evidence materials">
+      <p {...stylex.props(styles.ellipsis, styles.evidenceOpen)}>
+        EVIDENCE <b {...stylex.props(styles.key)}>ctrl+g</b>
+      </p>
+      <p {...stylex.props(styles.ellipsis, styles.scope)}>
+        SCOPE <b {...stylex.props(styles.key)}>4/4</b>
+      </p>
+      <p {...stylex.props(styles.ellipsis, styles.meta)}>
+        EXCERPTS <b {...stylex.props(styles.key)}>4</b>
+      </p>
+      <div {...stylex.props(styles.evidenceList)}>
+        {materials.map((item) => (
+          <EvidenceButton
+            key={item.id}
+            id={item.id}
+            variant="item"
+            onSelect={onSelect}
+            onOpen={onOpen}
+          >
+            @{item.file}
+          </EvidenceButton>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+// Preact types only know the lowercase `spellcheck`, which React Doctor rejects as a JSX
+// attribute, so it is spread in to render the same `spellcheck="false"`.
+const noSpellcheck = { spellcheck: false } satisfies InputHTMLAttributes;
+
+function Composer({
+  inputRef,
+  state,
+  running,
+  onSubmit,
+  onSync,
+}: {
+  inputRef: RefObject<HTMLInputElement>;
+  state: ComposerState;
+  running: boolean;
+  onSubmit: (event: SubmitEvent) => void;
+  /** Re-measures the composer right away. */
+  onSync: () => void;
+}) {
+  const queueSync = () => requestAnimationFrame(onSync);
+  return (
+    <form
+      {...stylex.props(styles.row, styles.composer)}
+      aria-label="Ask the simulated Heph demo"
+      onSubmit={onSubmit}
+    >
+      <span {...stylex.props(styles.composerLabel)} aria-hidden="true">
+        <span {...stylex.props(ui.sans)}>→</span>
+      </span>
+      <span
+        {...stylex.props(styles.cursor, state.empty && !running && styles.blinking)}
+        aria-hidden="true"
+      />
+      <span
+        {...stylex.props(styles.overflow, state.overflow && styles.overflowShown)}
+        aria-hidden="true"
+      >
+        ...
+      </span>
+      <input
+        ref={inputRef}
+        {...stylex.props(ui.reset, styles.input, state.empty && styles.caretHidden)}
+        type="text"
+        autoComplete="off"
+        {...noSpellcheck}
+        tabIndex={-1}
+        placeholder="Ask Heph about these materials"
+        readOnly={running}
+        onInput={queueSync}
+        onScroll={onSync}
+        onClick={queueSync}
+        onFocus={queueSync}
+        onKeyUp={queueSync}
+        onPointerUp={queueSync}
+        onSelect={queueSync}
+      />
+      <button
+        {...stylex.props(ui.reset, styles.submit)}
+        type="submit"
+        tabIndex={-1}
+        aria-label="Submit Heph prompt"
+        disabled={running}
+        onClick={(event) => event.detail > 0 && event.currentTarget.blur()}
+      >
+        <span {...stylex.props(ui.sans, styles.submitSymbol)} aria-hidden="true">
+          ↩
+        </span>
+      </button>
+    </form>
+  );
+}
+
+function CommandBar({ running }: { running: boolean }) {
+  return (
+    <div {...stylex.props(styles.commands)} aria-hidden="true">
+      {running ? (
+        <>
+          <span>
+            STOP <b {...stylex.props(styles.key)}>esc</b>
+          </span>
+          <span {...stylex.props(styles.command)}>
+            EXIT <b {...stylex.props(styles.key)}>ctrl+c</b>
+          </span>
+        </>
+      ) : (
+        <>
+          <span>
+            ARMORY <b {...stylex.props(styles.key)}>ctrl+a</b>
+          </span>
+          <span {...stylex.props(styles.command)}>
+            MATERIALS <b {...stylex.props(styles.key)}>ctrl+o</b>
+          </span>
+          <span {...stylex.props(styles.command, styles.optional)}>
+            COMMANDS <b {...stylex.props(styles.key)}>ctrl+p</b>
+          </span>
+          <span {...stylex.props(styles.command, styles.optional)}>
+            REASONING <b {...stylex.props(styles.key)}>shift+tab</b>
+          </span>
+        </>
+      )}
     </div>
   );
 }

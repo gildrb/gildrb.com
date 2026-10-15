@@ -367,14 +367,24 @@ export function Article({
     if (block.type === "h2") sections.push([]);
     sections.at(-1)?.push(block);
   }
+  // Groups are fixed for the page; each is keyed by what it opens with.
   const render = (groups: Group[], nested: boolean) =>
     groups.map((item, index) =>
       Array.isArray(item) ? (
-        <Prose key={index} blocks={item} after={groups[index - 1]} nested={nested} />
+        <Prose
+          key={`prose:${JSON.stringify(item[0])}`}
+          blocks={item}
+          after={groups[index - 1]}
+          nested={nested}
+        />
       ) : item.type === "media" ? (
-        <Figures key={index} items={item.items} eager={eager && item === firstMedia} />
+        <Figures
+          key={`media:${item.items.map(({ id }) => id).join(",")}`}
+          items={item.items}
+          eager={eager && item === firstMedia}
+        />
       ) : (
-        <Code key={index} {...item} />
+        <Code key={`code:${item.title}:${item.code.length}`} {...item} />
       ),
     );
   const [intro = [], ...chapters] = sections;

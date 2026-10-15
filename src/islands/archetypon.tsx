@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { TargetedEvent } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { colors, media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
@@ -176,12 +176,15 @@ async function preview(file: File): Promise<string> {
 
 type Options = { formats: Format[]; config: string } | { errors: string[] };
 
-function readOptions(
-  selected: ReadonlySet<Format>,
-  sizes: ReadonlySet<number>,
-  filled: boolean,
-  quality: string,
-): Options {
+/** The options as picked; a new object whenever one of them changes. */
+type Settings = {
+  selected: ReadonlySet<Format>;
+  sizes: ReadonlySet<number>;
+  filled: boolean;
+  quality: string;
+};
+
+function readOptions({ selected, sizes, filled, quality }: Settings): Options {
   const chosen = formats.filter((format) => selected.has(format));
   const errors: string[] = [];
   if (sizes.size === 0 && chosen.some((f) => raster.includes(f))) {
@@ -205,6 +208,144 @@ const cleanQuality = (text: string) => {
   return digits === "" ? "" : String(Math.min(Number(digits), 100));
 };
 
+/** One conversion: the files, and the options already read for the engine. */
+type Job = {
+  files: readonly File[];
+  fonts: readonly File[];
+  formats: Format[];
+  config: string;
+  note: string;
+};
+
+/** Where a running conversion reports to. */
+type Sink = {
+  /** Whether this run is still the current one; a newer run or a clear silences it. */
+  live: () => boolean;
+  stop: () => void;
+  update: (index: number, change: (result: Result) => Result) => void;
+  addFont: (font: Font) => void;
+  setStatus: (status: Status) => void;
+  setDownload: (download: Download) => void;
+};
+
+/** Sends a job to a fresh engine and reports what it says until it is done. */
+function run(current: Worker, job: Job, sink: Sink): void {
+  const { files, note } = job;
+  const failures: string[] = [];
+  const converted = new Set<number>();
+
+  current.addEventListener("message", ({ data }: MessageEvent<unknown>) => {
+    if (!sink.live()) return;
+    const message = decode(data);
+    if (!message) {
+      sink.stop();
+      sink.setStatus({ text: "The converter sent something it should not have.", error: true });
+      return;
+    }
+    switch (message.type) {
+      case "font":
+        sink.addFont({ text: message.families.join(", ") || message.name, error: false });
+        return;
+      case "font-error":
+        failures.push(`${message.name}: ${message.message}`);
+        sink.addFont({ text: `${message.name}: ${message.message}`, error: true });
+        return;
+      case "open": {
+        const size = `${message.width} × ${message.height}`;
+        sink.update(message.index, (result) => ({ ...result, size }));
+        return;
+      }
+      case "step":
+        sink.update(message.index, (result) => mark(result, message.format, "running"));
+        return;
+      case "stepped":
+        sink.update(message.index, (result) => ({
+          ...mark(result, message.format, "done"),
+          files: [...result.files, ...message.files],
+        }));
+        return;
+      case "converted":
+        converted.add(message.index);
+        return;
+      case "failed": {
+        const name = files[message.index]?.name ?? "An SVG";
+        const text =
+          message.code === noFonts
+            ? `${name} has text but no fonts. Drop the .ttf, .otf or .ttc files it uses, or convert its text to outlines.`
+            : message.message;
+        failures.push(`${name}: ${text}`);
+        sink.update(message.index, (result) => ({
+          ...result,
+          steps: result.steps.map(({ format }) => ({ format, state: "pending" as const })),
+          files: [],
+          error: text,
+        }));
+        return;
+      }
+      case "done": {
+        sink.stop();
+        if (message.zip === null) {
+          sink.setStatus({
+            text: "Nothing was converted. The problems are listed below.",
+            error: true,
+          });
+          return;
+        }
+        const first = files[0];
+        const name = files.length === 1 && first ? `${stem(first.name)}.zip` : "archetypon.zip";
+        const url = URL.createObjectURL(new Blob([message.zip], { type: "application/zip" }));
+        sink.setDownload({ url, name, bytes: message.zip.byteLength });
+        const seconds = (message.ms / 1000).toFixed(1);
+        const problems =
+          failures.length === 0 ? "" : ` ${count(failures.length, "problem")} below.`;
+        sink.setStatus({
+          text: `Converted ${converted.size} of ${count(files.length, "SVG")} in ${seconds} s.${problems}${note}`,
+          error: failures.length > 0,
+        });
+        return;
+      }
+      case "error":
+        sink.stop();
+        sink.setStatus({ text: `Conversion failed: ${message.message}`, error: true });
+        return;
+    }
+  });
+  current.addEventListener("error", (event) => {
+    event.preventDefault();
+    if (!sink.live()) return;
+    sink.stop();
+    sink.setStatus({
+      text: `The converter could not start${event.message ? `: ${event.message}` : "."}`,
+      error: true,
+    });
+  });
+
+  void Promise.all([
+    Promise.all(
+      files.map(async (file) => ({ stem: stem(file.name), data: await file.arrayBuffer() })),
+    ),
+    Promise.all(
+      job.fonts.map(async (file) => ({ name: file.name, data: await file.arrayBuffer() })),
+    ),
+  ]).then(
+    ([svgData, fontData]) => {
+      if (!sink.live()) return;
+      current.postMessage(
+        { svgs: svgData, fonts: fontData, formats: job.formats, options: job.config },
+        [...svgData, ...fontData].map((item) => item.data),
+      );
+    },
+    (error: unknown) => {
+      if (!sink.live()) return;
+      sink.stop();
+      sink.setStatus({
+        text: `The files could not be read: ${error instanceof Error ? error.message : String(error)}`,
+        error: true,
+      });
+    },
+  );
+}
+
 export function Converter() {
   const [svgs, setSvgs] = useState<File[]>([]);
   const [fonts, setFonts] = useState<File[]>([]);
@@ -218,216 +359,98 @@ export function Converter() {
   const [download, setDownload] = useState<Download | null>(null);
   const [dragging, setDragging] = useState(false);
   const worker = useRef<Worker | null>(null);
-  const picker = useRef<HTMLInputElement>(null);
-  const sizeRow = useRef<HTMLDivElement>(null);
-  const [sizeEdges, setSizeEdges] = useState({ start: false, end: false });
-
-  // Phones keep the sizes on one row that scrolls sideways between edge fades, like the project
-  // table. Browsers with scroll-driven animations tie the fades to the scroll position in CSS;
-  // this fallback only serves the others.
-  useEffect(() => {
-    const element = sizeRow.current;
-    if (!element || CSS.supports("animation-timeline: scroll()")) return undefined;
-    const update = () =>
-      setSizeEdges({
-        start: element.scrollLeft > 1,
-        end: element.scrollWidth - element.clientWidth - element.scrollLeft > 1,
-      });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    element.addEventListener("scroll", update, { passive: true });
-    return () => {
-      observer.disconnect();
-      element.removeEventListener("scroll", update);
-    };
-  }, []);
+  const settings = useMemo<Settings>(
+    () => ({ selected, sizes, filled, quality }),
+    [selected, sizes, filled, quality],
+  );
+  // The settings of the last conversion: once they differ, the options have changed since.
+  const [applied, setApplied] = useState(settings);
 
   // Stop the engine and free the ZIP when the page goes away.
   useEffect(() => () => worker.current?.terminate(), []);
   useEffect(() => () => void (download && URL.revokeObjectURL(download.url)), [download]);
 
-  function stop() {
+  const stop = useCallback(() => {
     worker.current?.terminate();
     worker.current = null;
-  }
+  }, []);
 
-  function convert(files: readonly File[], fontFiles: readonly File[], note = "") {
-    if (files.length === 0) return;
-    const options = readOptions(selected, sizes, filled, quality);
-    if ("errors" in options) {
-      setStatus({ text: options.errors.join(" "), error: true });
-      return;
-    }
-    stop();
-    setDownload(null);
-    setFontList([]);
-    setResults(
-      files.map((file) => ({
-        name: file.name,
-        preview: null,
-        size: null,
-        steps: options.formats.map((format) => ({ format, state: "pending" as const })),
-        files: [],
-        error: null,
-      })),
-    );
-    setStatus({ text: `Converting ${count(files.length, "SVG")}…${note}`, error: false });
-    const update = (index: number, change: (result: Result) => Result) =>
-      setResults((list) => list.map((result, at) => (at === index ? change(result) : result)));
-    for (const [index, file] of files.entries()) {
-      preview(file).then(
-        (url) => update(index, (result) => ({ ...result, preview: url })),
-        () => update(index, (result) => ({ ...result, preview: null })),
-      );
-    }
-
-    const current = new Worker(engine, { type: "module" });
-    worker.current = current;
-    const failures: string[] = [];
-    const converted = new Set<number>();
-
-    current.addEventListener("message", ({ data }: MessageEvent<unknown>) => {
-      if (worker.current !== current) return;
-      const message = decode(data);
-      if (!message) {
-        stop();
-        setStatus({ text: "The converter sent something it should not have.", error: true });
+  const convert = useCallback(
+    (files: readonly File[], fontFiles: readonly File[], note = "") => {
+      if (files.length === 0) return;
+      setApplied(settings);
+      const options = readOptions(settings);
+      if ("errors" in options) {
+        setStatus({ text: options.errors.join(" "), error: true });
         return;
       }
-      switch (message.type) {
-        case "font":
-          setFontList((list) => [
-            ...list,
-            { text: message.families.join(", ") || message.name, error: false },
-          ]);
-          return;
-        case "font-error":
-          failures.push(`${message.name}: ${message.message}`);
-          setFontList((list) => [
-            ...list,
-            { text: `${message.name}: ${message.message}`, error: true },
-          ]);
-          return;
-        case "open": {
-          const size = `${message.width} × ${message.height}`;
-          update(message.index, (result) => ({ ...result, size }));
-          return;
-        }
-        case "step":
-          update(message.index, (result) => mark(result, message.format, "running"));
-          return;
-        case "stepped":
-          update(message.index, (result) => ({
-            ...mark(result, message.format, "done"),
-            files: [...result.files, ...message.files],
-          }));
-          return;
-        case "converted":
-          converted.add(message.index);
-          return;
-        case "failed": {
-          const name = files[message.index]?.name ?? "An SVG";
-          const text =
-            message.code === noFonts
-              ? `${name} has text but no fonts. Drop the .ttf, .otf or .ttc files it uses, or convert its text to outlines.`
-              : message.message;
-          failures.push(`${name}: ${text}`);
-          update(message.index, (result) => ({
-            ...result,
-            steps: result.steps.map(({ format }) => ({ format, state: "pending" as const })),
-            files: [],
-            error: text,
-          }));
-          return;
-        }
-        case "done": {
-          stop();
-          if (message.zip === null) {
-            setStatus({
-              text: "Nothing was converted. The problems are listed below.",
-              error: true,
-            });
-            return;
-          }
-          const first = files[0];
-          const name = files.length === 1 && first ? `${stem(first.name)}.zip` : "archetypon.zip";
-          const url = URL.createObjectURL(new Blob([message.zip], { type: "application/zip" }));
-          setDownload({ url, name, bytes: message.zip.byteLength });
-          const seconds = (message.ms / 1000).toFixed(1);
-          const problems =
-            failures.length === 0 ? "" : ` ${count(failures.length, "problem")} below.`;
-          setStatus({
-            text: `Converted ${converted.size} of ${count(files.length, "SVG")} in ${seconds} s.${problems}${note}`,
-            error: failures.length > 0,
-          });
-          return;
-        }
-        case "error":
-          stop();
-          setStatus({ text: `Conversion failed: ${message.message}`, error: true });
-          return;
-      }
-    });
-    current.addEventListener("error", (event) => {
-      event.preventDefault();
-      if (worker.current !== current) return;
       stop();
-      setStatus({
-        text: `The converter could not start${event.message ? `: ${event.message}` : "."}`,
-        error: true,
-      });
-    });
-
-    void Promise.all([
-      Promise.all(
-        files.map(async (file) => ({ stem: stem(file.name), data: await file.arrayBuffer() })),
-      ),
-      Promise.all(
-        fontFiles.map(async (file) => ({ name: file.name, data: await file.arrayBuffer() })),
-      ),
-    ]).then(
-      ([svgData, fontData]) => {
-        if (worker.current !== current) return;
-        current.postMessage(
-          { svgs: svgData, fonts: fontData, formats: options.formats, options: options.config },
-          [...svgData, ...fontData].map((item) => item.data),
+      setDownload(null);
+      setFontList([]);
+      setResults(
+        files.map((file) => ({
+          name: file.name,
+          preview: null,
+          size: null,
+          steps: options.formats.map((format) => ({ format, state: "pending" as const })),
+          files: [],
+          error: null,
+        })),
+      );
+      setStatus({ text: `Converting ${count(files.length, "SVG")}…${note}`, error: false });
+      const update = (index: number, change: (result: Result) => Result) =>
+        setResults((list) => list.map((result, at) => (at === index ? change(result) : result)));
+      for (const [index, file] of files.entries()) {
+        preview(file).then(
+          (url) => update(index, (result) => ({ ...result, preview: url })),
+          () => update(index, (result) => ({ ...result, preview: null })),
         );
-      },
-      (error: unknown) => {
-        if (worker.current !== current) return;
-        stop();
+      }
+
+      const current = new Worker(engine, { type: "module" });
+      worker.current = current;
+      run(
+        current,
+        { files, fonts: fontFiles, formats: options.formats, config: options.config, note },
+        {
+          live: () => worker.current === current,
+          stop,
+          update,
+          addFont: (font) => setFontList((list) => [...list, font]),
+          setStatus,
+          setDownload,
+        },
+      );
+    },
+    [settings, stop],
+  );
+
+  const add = useCallback(
+    (dropped: readonly File[]) => {
+      let nextSvgs = svgs;
+      let nextFonts = fonts;
+      const ignored: string[] = [];
+      for (const file of dropped) {
+        const type = kind(file.name);
+        if (type === "svg") nextSvgs = upsert(nextSvgs, file);
+        else if (type === "font") nextFonts = upsert(nextFonts, file);
+        else ignored.push(file.name);
+      }
+      setSvgs(nextSvgs);
+      setFonts(nextFonts);
+      const skipped = ignored.length > 0 ? ` Skipped ${ignored.join(", ")}.` : "";
+      if (nextSvgs.length > 0) convert(nextSvgs, nextFonts, skipped);
+      else if (ignored.length > 0) {
         setStatus({
-          text: `The files could not be read: ${error instanceof Error ? error.message : String(error)}`,
+          text: `Skipped ${ignored.join(", ")}: only SVG, SVGZ, TTF, OTF and TTC files work.`,
           error: true,
         });
-      },
-    );
-  }
-
-  function add(dropped: readonly File[]) {
-    let nextSvgs = svgs;
-    let nextFonts = fonts;
-    const ignored: string[] = [];
-    for (const file of dropped) {
-      const type = kind(file.name);
-      if (type === "svg") nextSvgs = upsert(nextSvgs, file);
-      else if (type === "font") nextFonts = upsert(nextFonts, file);
-      else ignored.push(file.name);
-    }
-    setSvgs(nextSvgs);
-    setFonts(nextFonts);
-    const skipped = ignored.length > 0 ? ` Skipped ${ignored.join(", ")}.` : "";
-    if (nextSvgs.length > 0) convert(nextSvgs, nextFonts, skipped);
-    else if (ignored.length > 0) {
-      setStatus({
-        text: `Skipped ${ignored.join(", ")}: only SVG, SVGZ, TTF, OTF and TTC files work.`,
-        error: true,
-      });
-    } else if (nextFonts.length > 0) {
-      setStatus({ text: `${count(nextFonts.length, "font")} ready. Add an SVG.`, error: false });
-    }
-  }
+      } else if (nextFonts.length > 0) {
+        setStatus({ text: `${count(nextFonts.length, "font")} ready. Add an SVG.`, error: false });
+      }
+    },
+    [svgs, fonts, convert],
+  );
 
   function clear() {
     stop();
@@ -440,15 +463,14 @@ export function Converter() {
   }
 
   // The whole page takes drops. Counting enters and leaves keeps child elements from
-  // flickering the state as the pointer crosses them.
-  const addRef = useRef(add);
-  addRef.current = add;
+  // flickering the state as the pointer crosses them; the count outlives the listeners, which
+  // change with the files.
+  const dragDepth = useRef(0);
   useEffect(() => {
-    let depth = 0;
     const enter = (event: DragEvent) => {
       if (!hasFiles(event)) return;
       event.preventDefault();
-      depth += 1;
+      dragDepth.current += 1;
       setDragging(true);
     };
     const over = (event: DragEvent) => {
@@ -458,15 +480,15 @@ export function Converter() {
     };
     const leave = (event: DragEvent) => {
       if (!hasFiles(event)) return;
-      depth = Math.max(0, depth - 1);
-      setDragging(depth > 0);
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      setDragging(dragDepth.current > 0);
     };
     const drop = (event: DragEvent) => {
       if (!hasFiles(event) || !event.dataTransfer) return;
       event.preventDefault();
-      depth = 0;
+      dragDepth.current = 0;
       setDragging(false);
-      addRef.current([...event.dataTransfer.files]);
+      add([...event.dataTransfer.files]);
     };
     addEventListener("dragenter", enter);
     addEventListener("dragover", over);
@@ -478,24 +500,17 @@ export function Converter() {
       removeEventListener("dragleave", leave);
       removeEventListener("drop", drop);
     };
-  }, []);
+  }, [add]);
 
   // Options apply as they change: the files convert again after a short pause in typing.
-  const convertRef = useRef(convert);
-  convertRef.current = convert;
-  const optionsChanged = useRef(false);
   useEffect(() => {
-    if (!optionsChanged.current) {
-      optionsChanged.current = true;
-      return undefined;
-    }
-    if (svgs.length === 0) return undefined;
-    const timer = setTimeout(() => convertRef.current(svgs, fonts), 400);
+    if (applied === settings || svgs.length === 0) return undefined;
+    const timer = setTimeout(() => convert(svgs, fonts), 400);
     return () => clearTimeout(timer);
-  }, [selected, sizes, filled, quality]);
+  }, [applied, settings, svgs, fonts, convert]);
 
   /** Gives one toggle a state; a set keeps its identity when nothing changes. */
-  function paint(key: Key, on: boolean) {
+  const paint = useCallback((key: Key, on: boolean) => {
     const change = <T,>(current: ReadonlySet<T>, value: T): ReadonlySet<T> => {
       if (current.has(value) === on) return current;
       const next = new Set(current);
@@ -505,69 +520,7 @@ export function Converter() {
     };
     if (key.group === "format") setSelected((current) => change(current, key.value));
     else setSizes((current) => change(current, key.value));
-  }
-
-  // Like selecting in Photos: press one toggle and drag across the others in its row to give
-  // them all the state the first one took.
-  const painting = useRef<{ group: Key["group"]; on: boolean } | null>(null);
-  // A finger on a row that scrolls may be dragging it, so it picks on release (click) instead.
-  const tapping = useRef(false);
-  useEffect(() => {
-    const move = (event: PointerEvent) => {
-      const stroke = painting.current;
-      if (stroke === null) return;
-      const target = document.elementFromPoint(event.clientX, event.clientY);
-      const key = keyOf(target?.closest<HTMLElement>("[data-toggle]")?.dataset.toggle);
-      if (key && key.group === stroke.group) paint(key, stroke.on);
-    };
-    const end = () => (painting.current = null);
-    addEventListener("pointermove", move);
-    addEventListener("pointerup", end);
-    addEventListener("pointercancel", end);
-    return () => {
-      removeEventListener("pointermove", move);
-      removeEventListener("pointerup", end);
-      removeEventListener("pointercancel", end);
-    };
   }, []);
-
-  function toggle(key: Key, label: string, on: boolean) {
-    return (
-      <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, on && styles.on)}
-        type="button"
-        data-toggle={`${key.group}:${key.value}`}
-        aria-pressed={on}
-        onPointerDown={(event) => {
-          if (event.button !== 0) return;
-          const row = event.currentTarget.parentElement;
-          tapping.current =
-            event.pointerType !== "mouse" && row !== null && row.scrollWidth - row.clientWidth > 1;
-          if (tapping.current) return;
-          // No focus or text selection from a pointer; the press itself picks.
-          event.preventDefault();
-          painting.current = { group: key.group, on: !on };
-          paint(key, !on);
-        }}
-        // Keyboard, or a tap on a row that scrolls: any other pointer already picked on press.
-        onClick={(event) => {
-          if (event.detail !== 0 && !tapping.current) return;
-          tapping.current = false;
-          paint(key, !on);
-        }}
-      >
-        {label}
-      </button>
-    );
-  }
-
-  function typeQuality(event: TargetedEvent<HTMLInputElement>) {
-    const input = event.currentTarget;
-    const value = cleanQuality(input.value);
-    // Write a refused character straight back out, so it never shows.
-    if (input.value !== value) input.value = value;
-    setQuality(value);
-  }
 
   const empty = svgs.length === 0 && fonts.length === 0;
 
@@ -578,103 +531,17 @@ export function Converter() {
         ZIP. It runs in your browser: nothing is uploaded.
       </p>
 
-      <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.drop, dragging && styles.dragging)}
-        type="button"
-        onClick={() => picker.current?.click()}
-      >
-        <span {...stylex.props(styles.dropTitle)}>
-          {dragging ? "Drop to add them" : "Drop SVG files here"}
-        </span>
-        <span {...stylex.props(styles.dropNote)}>
-          or click to choose. Add the .ttf, .otf or .ttc fonts their text uses.
-        </span>
-      </button>
-      <input
-        ref={picker}
-        {...stylex.props(ui.srOnly)}
-        type="file"
-        multiple
-        tabIndex={-1}
-        aria-hidden="true"
-        accept=".svg,.svgz,.ttf,.otf,.ttc,image/svg+xml"
-        onChange={(event) => {
-          const input = event.currentTarget;
-          add([...(input.files ?? [])]);
-          input.value = "";
-        }}
-      />
+      <DropZone dragging={dragging} onFiles={add} />
 
-      <div {...stylex.props(styles.options)} role="group" aria-label="Options">
-        <div {...stylex.props(styles.option)} role="group" aria-labelledby="archetypon-formats">
-          <span {...stylex.props(styles.label)} id="archetypon-formats">
-            Formats
-          </span>
-          <div {...stylex.props(styles.toggles)}>
-            {formats.map((format) =>
-              toggle({ group: "format", value: format }, labels[format], selected.has(format)),
-            )}
-          </div>
-        </div>
-        <div {...stylex.props(styles.option)} role="group" aria-labelledby="archetypon-sizes">
-          <span {...stylex.props(styles.label)} id="archetypon-sizes">
-            Sizes
-          </span>
-          <div
-            {...stylex.props(
-              styles.sizes,
-              sizeEdges.start && styles.fadeStart,
-              sizeEdges.end && styles.fadeEnd,
-            )}
-          >
-            <div ref={sizeRow} {...stylex.props(styles.toggles, styles.sizeRow)}>
-              {sizeOptions.map((size) =>
-                toggle({ group: "size", value: size }, String(size), sizes.has(size)),
-              )}
-            </div>
-          </div>
-        </div>
-        <div {...stylex.props(styles.option)}>
-          <span {...stylex.props(styles.label)} id="archetypon-background">
-            Background
-          </span>
-          <button
-            {...stylex.props(ui.reset, ui.focusRing, styles.toggle, styles.on, styles.single)}
-            type="button"
-            aria-labelledby="archetypon-background archetypon-background-value"
-            onClick={() => setFilled((current) => !current)}
-          >
-            <span id="archetypon-background-value">{filled ? "Opaque" : "Transparent"}</span>
-          </button>
-        </div>
-        <label {...stylex.props(styles.option)}>
-          <span {...stylex.props(styles.label)}>JPEG quality</span>
-          <span {...stylex.props(styles.percent)}>
-            <span {...stylex.props(styles.digits)}>
-              {/* The empty columns show dark grey zeros (010%, 000%); the typed digits'
-                  columns stay blank here, covered by the field's own text. */}
-              <span {...stylex.props(ui.figures, styles.padding)} aria-hidden="true">
-                {"0".repeat(3 - quality.length)}
-                <span {...stylex.props(styles.typed)}>{quality}</span>
-              </span>
-              <input
-                {...stylex.props(ui.figures, styles.input)}
-                value={quality}
-                inputMode="numeric"
-                maxLength={3}
-                autoComplete="off"
-                aria-describedby="archetypon-quality"
-                onInput={typeQuality}
-                onBlur={() => (quality === "" || quality === "0") && setQuality("100")}
-              />
-            </span>
-            <span aria-hidden="true">%</span>
-          </span>
-          <span {...stylex.props(ui.srOnly)} id="archetypon-quality">
-            Percent, from 1 to 100
-          </span>
-        </label>
-      </div>
+      <OptionsPanel
+        selected={selected}
+        sizes={sizes}
+        filled={filled}
+        quality={quality}
+        onPaint={paint}
+        onFilledChange={setFilled}
+        onQualityChange={setQuality}
+      />
 
       <p {...stylex.props(styles.status, status?.error === true && styles.problem)} role="status">
         {status?.text ?? ""}
@@ -705,59 +572,273 @@ export function Converter() {
         </ul>
       )}
 
-      {results.length > 0 && (
-        <ol {...stylex.props(styles.list)} aria-label="Results">
-          {results.map((result, index) => (
-            <li {...stylex.props(styles.result, index > 0 && styles.divided)}>
-              {result.preview ? (
-                <img
-                  {...stylex.props(styles.preview)}
-                  src={result.preview}
-                  alt=""
-                  width={48}
-                  height={48}
-                />
-              ) : (
-                <span {...stylex.props(styles.preview)} />
-              )}
-              <div {...stylex.props(styles.body)}>
-                <p {...stylex.props(styles.name)}>{result.name}</p>
-                {result.size && <p {...stylex.props(styles.meta)}>{result.size}</p>}
-                <ol {...stylex.props(styles.steps)} aria-label="Formats">
-                  {result.steps.map(({ format, state }) => (
-                    <li {...stylex.props(styles.step, styles[state])}>
-                      {labels[format]}
-                      <span {...stylex.props(ui.srOnly)}>
-                        {state === "done" ? ", done" : state === "running" ? ", running" : ""}
-                      </span>
+      {results.length > 0 && <ResultList results={results} />}
+    </div>
+  );
+}
+
+type DropZoneProps = { dragging: boolean; onFiles: (files: readonly File[]) => void };
+
+/** The drop target, which also opens the file picker. */
+function DropZone({ dragging, onFiles }: DropZoneProps) {
+  const picker = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <button
+        {...stylex.props(ui.reset, ui.focusRing, styles.drop, dragging && styles.dragging)}
+        type="button"
+        onClick={() => picker.current?.click()}
+      >
+        <span {...stylex.props(styles.dropTitle)}>
+          {dragging ? "Drop to add them" : "Drop SVG files here"}
+        </span>
+        <span {...stylex.props(styles.dropNote)}>
+          or click to choose. Add the .ttf, .otf or .ttc fonts their text uses.
+        </span>
+      </button>
+      <input
+        ref={picker}
+        {...stylex.props(ui.srOnly)}
+        type="file"
+        multiple
+        tabIndex={-1}
+        aria-hidden="true"
+        accept=".svg,.svgz,.ttf,.otf,.ttc,image/svg+xml"
+        onChange={(event) => {
+          const input = event.currentTarget;
+          onFiles([...(input.files ?? [])]);
+          input.value = "";
+        }}
+      />
+    </>
+  );
+}
+
+type OptionsPanelProps = Settings & {
+  onPaint: (key: Key, on: boolean) => void;
+  onFilledChange: (filled: boolean) => void;
+  onQualityChange: (quality: string) => void;
+};
+
+function OptionsPanel({
+  selected,
+  sizes,
+  filled,
+  quality,
+  onPaint,
+  onFilledChange,
+  onQualityChange,
+}: OptionsPanelProps) {
+  const sizeRow = useRef<HTMLDivElement>(null);
+  const [sizeEdges, setSizeEdges] = useState({ start: false, end: false });
+
+  // Phones keep the sizes on one row that scrolls sideways between edge fades, like the project
+  // table. Browsers with scroll-driven animations tie the fades to the scroll position in CSS;
+  // this fallback only serves the others.
+  useEffect(() => {
+    const element = sizeRow.current;
+    if (!element || CSS.supports("animation-timeline: scroll()")) return undefined;
+    const update = () =>
+      setSizeEdges({
+        start: element.scrollLeft > 1,
+        end: element.scrollWidth - element.clientWidth - element.scrollLeft > 1,
+      });
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    element.addEventListener("scroll", update, { passive: true });
+    return () => {
+      observer.disconnect();
+      element.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  // Like selecting in Photos: press one toggle and drag across the others in its row to give
+  // them all the state the first one took.
+  const painting = useRef<{ group: Key["group"]; on: boolean } | null>(null);
+  // A finger on a row that scrolls may be dragging it, so it picks on release (click) instead.
+  const tapping = useRef(false);
+  useEffect(() => {
+    const move = (event: PointerEvent) => {
+      const stroke = painting.current;
+      if (stroke === null) return;
+      const target = document.elementFromPoint(event.clientX, event.clientY);
+      const key = keyOf(target?.closest<HTMLElement>("[data-toggle]")?.dataset.toggle);
+      if (key && key.group === stroke.group) onPaint(key, stroke.on);
+    };
+    const end = () => (painting.current = null);
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", end);
+    addEventListener("pointercancel", end);
+    return () => {
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", end);
+      removeEventListener("pointercancel", end);
+    };
+  }, [onPaint]);
+
+  function toggle(key: Key, label: string, on: boolean) {
+    return (
+      <button
+        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, on && styles.on)}
+        type="button"
+        data-toggle={`${key.group}:${key.value}`}
+        aria-pressed={on}
+        onPointerDown={(event) => {
+          if (event.button !== 0) return;
+          const row = event.currentTarget.parentElement;
+          tapping.current =
+            event.pointerType !== "mouse" && row !== null && row.scrollWidth - row.clientWidth > 1;
+          if (tapping.current) return;
+          // No focus or text selection from a pointer; the press itself picks.
+          event.preventDefault();
+          painting.current = { group: key.group, on: !on };
+          onPaint(key, !on);
+        }}
+        // Keyboard, or a tap on a row that scrolls: any other pointer already picked on press.
+        onClick={(event) => {
+          if (event.detail !== 0 && !tapping.current) return;
+          tapping.current = false;
+          onPaint(key, !on);
+        }}
+      >
+        {label}
+      </button>
+    );
+  }
+
+  function typeQuality(event: TargetedEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const value = cleanQuality(input.value);
+    // Write a refused character straight back out, so it never shows.
+    if (input.value !== value) input.value = value;
+    onQualityChange(value);
+  }
+
+  return (
+    <div {...stylex.props(styles.options)} role="group" aria-label="Options">
+      <div {...stylex.props(styles.option)} role="group" aria-labelledby="archetypon-formats">
+        <span {...stylex.props(styles.label)} id="archetypon-formats">
+          Formats
+        </span>
+        <div {...stylex.props(styles.toggles)}>
+          {formats.map((format) =>
+            toggle({ group: "format", value: format }, labels[format], selected.has(format)),
+          )}
+        </div>
+      </div>
+      <div {...stylex.props(styles.option)} role="group" aria-labelledby="archetypon-sizes">
+        <span {...stylex.props(styles.label)} id="archetypon-sizes">
+          Sizes
+        </span>
+        <div
+          {...stylex.props(
+            styles.sizes,
+            sizeEdges.start && styles.fadeStart,
+            sizeEdges.end && styles.fadeEnd,
+          )}
+        >
+          <div ref={sizeRow} {...stylex.props(styles.toggles, styles.sizeRow)}>
+            {sizeOptions.map((size) =>
+              toggle({ group: "size", value: size }, String(size), sizes.has(size)),
+            )}
+          </div>
+        </div>
+      </div>
+      <div {...stylex.props(styles.option)}>
+        <span {...stylex.props(styles.label)} id="archetypon-background">
+          Background
+        </span>
+        <button
+          {...stylex.props(ui.reset, ui.focusRing, styles.toggle, styles.on, styles.single)}
+          type="button"
+          aria-labelledby="archetypon-background archetypon-background-value"
+          onClick={() => onFilledChange(!filled)}
+        >
+          <span id="archetypon-background-value">{filled ? "Opaque" : "Transparent"}</span>
+        </button>
+      </div>
+      <label {...stylex.props(styles.option)}>
+        <span {...stylex.props(styles.label)}>JPEG quality</span>
+        <span {...stylex.props(styles.percent)}>
+          <span {...stylex.props(styles.digits)}>
+            {/* The empty columns show dark grey zeros (010%, 000%); the typed digits'
+                columns stay blank here, covered by the field's own text. */}
+            <span {...stylex.props(ui.figures, styles.padding)} aria-hidden="true">
+              {"0".repeat(3 - quality.length)}
+              <span {...stylex.props(styles.typed)}>{quality}</span>
+            </span>
+            <input
+              {...stylex.props(ui.figures, styles.input)}
+              value={quality}
+              inputMode="numeric"
+              maxLength={3}
+              autoComplete="off"
+              aria-describedby="archetypon-quality"
+              onInput={typeQuality}
+              onBlur={() => (quality === "" || quality === "0") && onQualityChange("100")}
+            />
+          </span>
+          <span aria-hidden="true">%</span>
+        </span>
+        <span {...stylex.props(ui.srOnly)} id="archetypon-quality">
+          Percent, from 1 to 100
+        </span>
+      </label>
+    </div>
+  );
+}
+
+function ResultList({ results }: { results: readonly Result[] }) {
+  return (
+    <ol {...stylex.props(styles.list)} aria-label="Results">
+      {results.map((result, index) => (
+        <li {...stylex.props(styles.result, index > 0 && styles.divided)}>
+          {result.preview ? (
+            <img
+              {...stylex.props(styles.preview)}
+              src={result.preview}
+              alt=""
+              width={48}
+              height={48}
+            />
+          ) : (
+            <span {...stylex.props(styles.preview)} />
+          )}
+          <div {...stylex.props(styles.body)}>
+            <p {...stylex.props(styles.name)}>{result.name}</p>
+            {result.size && <p {...stylex.props(styles.meta)}>{result.size}</p>}
+            <ol {...stylex.props(styles.steps)} aria-label="Formats">
+              {result.steps.map(({ format, state }) => (
+                <li {...stylex.props(styles.step, styles[state])}>
+                  {labels[format]}
+                  <span {...stylex.props(ui.srOnly)}>
+                    {state === "done" ? ", done" : state === "running" ? ", running" : ""}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            {result.error && <p {...stylex.props(styles.meta, styles.problem)}>{result.error}</p>}
+            {result.files.length > 0 && (
+              <details {...stylex.props(styles.details)}>
+                <summary {...stylex.props(ui.quiet, ui.focusRing, styles.summary)}>
+                  {count(result.files.length, "file")},{" "}
+                  {formatBytes(result.files.reduce((sum, file) => sum + file.size, 0))}
+                </summary>
+                <ul {...stylex.props(styles.files)}>
+                  {result.files.map((file) => (
+                    <li {...stylex.props(styles.file)}>
+                      <span {...stylex.props(styles.path)}>{file.path}</span>
+                      <span {...stylex.props(ui.figures)}>{formatBytes(file.size)}</span>
                     </li>
                   ))}
-                </ol>
-                {result.error && (
-                  <p {...stylex.props(styles.meta, styles.problem)}>{result.error}</p>
-                )}
-                {result.files.length > 0 && (
-                  <details {...stylex.props(styles.details)}>
-                    <summary {...stylex.props(ui.quiet, ui.focusRing, styles.summary)}>
-                      {count(result.files.length, "file")},{" "}
-                      {formatBytes(result.files.reduce((sum, file) => sum + file.size, 0))}
-                    </summary>
-                    <ul {...stylex.props(styles.files)}>
-                      {result.files.map((file) => (
-                        <li {...stylex.props(styles.file)}>
-                          <span {...stylex.props(styles.path)}>{file.path}</span>
-                          <span {...stylex.props(ui.figures)}>{formatBytes(file.size)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
+                </ul>
+              </details>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }
 
