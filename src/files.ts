@@ -278,6 +278,16 @@ const hostMetaJson = json({
   links: [{ rel: "lrdd", type: "application/jrd+json", template: lrdd }, ...discovery],
 });
 
+/**
+ * Personal Agent Protocol discovery (draft 0.1): a public website only. No agent, API session or
+ * sign-in is declared, since none exists; the API and MCP server are anonymous and read-only.
+ */
+const poppy = json({
+  protocol_version: "0.1",
+  organization: { name: person.name, domain: new URL(origin).hostname },
+  web: {},
+});
+
 export const files: Record<string, string> = {
   "profile.json": json(profile),
   "llms.txt": llms,
@@ -289,4 +299,5 @@ export const files: Record<string, string> = {
   ".well-known/webfinger": webfinger,
   ".well-known/host-meta": hostMeta,
   ".well-known/host-meta.json": hostMetaJson,
+  ".well-known/poppy.json": poppy,
 };
