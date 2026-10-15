@@ -7,10 +7,12 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { compareRows, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
 import { autoplayVideos } from "./video.ts";
+import { routeWheel } from "./wheel.ts";
 import { enableZoom } from "./zoom.ts";
 
 enableZoom();
 autoplayVideos();
+routeWheel();
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
   theme: () => ThemeToggle,
