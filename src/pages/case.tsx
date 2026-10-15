@@ -174,7 +174,7 @@ export function CasePage({
       current={item.name}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Archive", work: work.filter(({ project }) => project.slug !== item.slug) }}
+      third={{ $: "Archive", work }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />

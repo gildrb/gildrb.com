@@ -16,7 +16,8 @@ export type Media = {
   video?: true;
   /**
    * Shown in the archive (`archive.tsx`): finished or working artwork of Gil's own, not
-   * feedback threads, app screenshots or other people's work.
+   * feedback threads, app screenshots or other people's work. Labelled with its case study, or
+   * "Archive" when no case page shows it.
    */
   archive?: true;
 };
