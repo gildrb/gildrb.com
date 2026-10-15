@@ -87,7 +87,8 @@ export function Portfolio() {
                       styles[key],
                     )}
                     type="button"
-                    aria-label={`Sort projects by ${key}`}
+                    // Starts with the visible label, so voice control finds it by what it says.
+                    aria-label={`${label}, sort projects by ${key}`}
                     onClick={(event) => select(key, event)}
                   >
                     <span>{label}&nbsp;</span>

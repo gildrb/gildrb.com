@@ -22,8 +22,9 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         home ? styles.home : styles.next,
       )}
       href={project.href}
-      aria-labelledby={`${id}-title`}
-      aria-describedby={`${id}-date ${id}-scope ${id}-description`}
+      // Named by what it shows, in reading order (date, title, scope); the sentence describes.
+      aria-labelledby={`${id}-date ${id}-title ${id}-scope`}
+      aria-describedby={`${id}-description`}
     >
       <time
         {...stylex.props(ui.text, styles.cell, styles.date)}
