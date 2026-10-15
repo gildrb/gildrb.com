@@ -158,6 +158,18 @@ if (allCases && isSortKey(sortKey) && isSortDirection(sortDirection)) {
   allCases.append(...articles.toSorted((left, right) => compare(sortRow(left), sortRow(right))));
 }
 
+// /all?open=<id>, from an archive tile elsewhere: that work comes first, top left, and opens
+// enlarged; sending it back shows the whole archive around it.
+const opened = allCases?.querySelector<HTMLElement>(
+  `:scope > figure[data-work="${CSS.escape(params.get("open") ?? "")}"]`,
+);
+if (allCases && opened) {
+  allCases.prepend(opened);
+  const zoom = opened.querySelector<HTMLButtonElement>("[data-zoom]");
+  // After the first layout, so the enlargement starts from the tile's place in the grid.
+  if (zoom) requestAnimationFrame(() => zoom.click());
+}
+
 function sortRow(element: HTMLElement) {
   return {
     date: element.dataset.date ?? "",

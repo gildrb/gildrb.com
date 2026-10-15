@@ -42,13 +42,16 @@ export function collect(markdown: Readonly<Record<string, string>>): Work[] {
   return [...work, ...alone];
 }
 
-/** The tile's label and where it leads: the case study, or the archive itself. */
+/**
+ * The tile's label and where it leads: the case study, or the archive page opened on this very
+ * work (first in the grid and enlarged, see `client.ts`).
+ */
 function destination(work: Work): { label: string; href: string } {
   switch (work.from.$) {
     case "Case":
       return { label: work.from.project.name, href: `/${work.from.project.slug}` };
     case "Archive":
-      return { label: "Archive", href: "/all" };
+      return { label: "Archive", href: `/all?open=${work.id}` };
     default: {
       const _: never = work.from;
       return _;
@@ -132,7 +135,7 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
     );
   }
   return (
-    <figure {...stylex.props(styles.tile)} {...sortData(work)}>
+    <figure {...stylex.props(styles.tile)} {...sortData(work)} data-work={work.id}>
       <div {...stylex.props(styles.cell)}>
         {item.video ? (
           art
