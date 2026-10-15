@@ -176,6 +176,7 @@ export function SideArchive({ work, home }: { work: readonly Work[]; home: boole
       {...stylex.props(styles.side, home ? styles.home : styles.inner)}
       aria-label="Archive"
       data-nosnippet
+      data-side-archive
     >
       <div {...stylex.props(styles.grid)}>
         {work.map((item) => (
@@ -203,6 +204,8 @@ const styles = stylex.create({
     display: { default: "none", [media.wide]: "block" },
     gridColumn: 3,
     overflowY: "auto",
+    // Reaching its end must not scroll the page beside it (see also `wheel.ts`).
+    overscrollBehavior: "contain",
     scrollbarWidth: "none",
   },
   home: {
