@@ -21,12 +21,15 @@ node_modules/.bin/vp check >/tmp/gildrb-check.log 2>&1 || { tail -n 30 /tmp/gild
 node_modules/.bin/vp run build >/tmp/gildrb-build.log 2>&1 || { tail -n 30 /tmp/gildrb-build.log; exit 1; }
 
 # The live homepage must carry this build's script hash before it is worth measuring.
-script=$(grep -o '/assets/client-[^"]*\.js' dist/index.html | head -n 1)
+# (A captured page, not `curl | grep -q`: grep quitting early would fail the pipe.)
+script=$(grep -o '/assets/client-[^"]*\.js' dist/index.html | sed -n 1p)
+live=""
 for _ in $(seq 1 40); do
-  curl -sf "https://gildrb.com/?v=$RANDOM" | grep -q "$script" && break
+  live=$(curl -sf "https://gildrb.com/?v=$RANDOM" || true)
+  [[ "$live" == *"$script"* ]] && break
   sleep 6
 done
-curl -sf "https://gildrb.com/?v=$RANDOM" | grep -q "$script" || { echo "live site is not on this build ($script)"; exit 1; }
+[[ "$live" == *"$script"* ]] || { echo "live site is not on this build ($script)"; exit 1; }
 
 scores=()
 for page in / /t3 /all; do
