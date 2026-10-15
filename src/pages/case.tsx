@@ -225,7 +225,7 @@ function Next({ projects: list }: { projects: readonly Project[] }) {
     <nav {...stylex.props(styles.column, styles.phoneItem, styles.next)} aria-label="More projects">
       <div {...stylex.props(styles.nextList)}>
         {list.map((project, index) => (
-          <Row project={project} first={index === 0} home={false} />
+          <Row key={project.href} project={project} first={index === 0} home={false} />
         ))}
       </div>
     </nav>

@@ -44,10 +44,10 @@ function Head({ shareImage }: { shareImage: string }) {
       />
       <link rel="canonical" href={`${origin}/`} />
       {alternates.map(([rel, type, path, linkTitle]) => (
-        <link rel={rel} type={type} href={`${origin}${path}`} title={linkTitle} />
+        <link key={path} rel={rel} type={type} href={`${origin}${path}`} title={linkTitle} />
       ))}
       {profiles.map(({ href }) => (
-        <link rel="me" href={href} />
+        <link key={href} rel="me" href={href} />
       ))}
       <meta property="og:type" content="profile" />
       <meta property="og:url" content={`${origin}/`} />
