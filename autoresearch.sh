@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Segment 3: agent readiness of the live site, scored by isitagentready.com's own API with its
-# default "All Checks" profile. The percentage is computed exactly as the site's page does:
-# passes over passes and failures, leaving out commerce, neutral (informational) checks and the
-# Personal Agent Protocol (its `Re()`, informational per its skill).
-# Gates: React Doctor stays 100, check and build pass, the live site serves this build.
+# Segment 4: is-agentic.com's "Content without JavaScript" check (the only one below full marks
+# that code can fix; its report caches, so it cannot be re-run per change). Reproduced on the
+# build: visible text over the <body> markup without scripts, which matches its evidence
+# (1606 chars at 2.1%). Target: >= 500 chars and >= 5%.
+# Gates: React Doctor stays 100, tests, check and build pass.
 set -euo pipefail
 root="$(cd "$(dirname "$0")" && pwd)"
 cd "$root"
@@ -16,30 +16,16 @@ doctor=$(jq -r '.summary.score' "$report")
 echo "METRIC react_doctor_score=$doctor"
 [ "$doctor" = 100 ] || { echo "React Doctor dropped to $doctor"; exit 1; }
 node_modules/.bin/vp check >/tmp/gildrb-check.log 2>&1 || { tail -n 30 /tmp/gildrb-check.log; exit 1; }
+node_modules/.bin/vp test >/tmp/gildrb-test.log 2>&1 || { tail -n 40 /tmp/gildrb-test.log; exit 1; }
 node_modules/.bin/vp run build >/tmp/gildrb-build.log 2>&1 || { tail -n 30 /tmp/gildrb-build.log; exit 1; }
 
-# (A captured page, not `curl | grep -q`: grep quitting early would fail the pipe.)
-script=$(grep -o '/assets/client-[^"]*\.js' dist/index.html | sed -n 1p)
-live=""
-for _ in $(seq 1 40); do
-  live=$(curl -sf "https://gildrb.com/?v=$RANDOM" || true)
-  [[ "$live" == *"$script"* ]] && break
-  sleep 6
-done
-[[ "$live" == *"$script"* ]] || { echo "live site is not on this build ($script)"; exit 1; }
-
-# The scanner's default profile: every check but the A2A card and AP2.
-checks='["robotsTxt","sitemap","linkHeaders","dnsAid","markdownNegotiation","robotsTxtAiRules","contentSignals","webBotAuth","apiCatalog","oauthDiscovery","oauthProtectedResource","authMd","mcpServerCard","agentSkills","webMcp","ard","personalAgentProtocol","x402","mpp","ucp","acp"]'
-out=/tmp/gildrb-agent-ready.json
-curl -sf --max-time 120 -X POST https://isitagentready.com/api/scan \
-  -H 'Content-Type: application/json' \
-  -d "{\"url\":\"https://gildrb.com\",\"enabledChecks\":$checks}" -o "$out"
-jq -r '.checks | to_entries[] | .key as $c | .value | to_entries[] | "  \(.value.status) \($c).\(.key)"' "$out"
-jq -r '[.checks | to_entries[] | select(.key != "commerce") | .value | to_entries[]
-    | select(.key != "personalAgentProtocol") | .value.status
-    | select(. == "pass" or . == "fail")] as $s
-  | ($s | map(select(. == "pass")) | length) as $p
-  | "METRIC agent_ready_pct=\(if ($s | length) > 0 then ($p * 100 / ($s | length) | round) else 0 end)",
-    "METRIC agent_checks_passed=\($p)",
-    "METRIC agent_checks_failed=\(($s | length) - $p)"' "$out"
-echo "METRIC agent_level=$(jq -r '.level' "$out")"
+python3 - <<'EOF'
+import html, re
+page = open("dist/index.html", encoding="utf-8").read()
+body = re.search(r"<body[\s\S]*</body>", page).group(0)
+markup = re.sub(r"<script[\s\S]*?</script>", "", body)
+text = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", markup))).strip()
+print(f"METRIC content_ratio_pct={100 * len(text) / len(markup):.2f}")
+print(f"METRIC content_chars={len(text)}")
+print(f"METRIC html_bytes={len(page)}")
+EOF
