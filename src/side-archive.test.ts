@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+// @vitest-environment-options {"settings":{"enableJavaScriptEvaluation":true}}
 import { afterEach, describe, expect, test, vi } from "vite-plus/test";
 import { buildSideArchive, type SideArchiveData } from "./side-archive.ts";
 
@@ -49,25 +50,29 @@ const data: SideArchiveData = {
   ],
 };
 
-/** Runs the builder the way pages do: its own source, inlined after an empty grid. */
+/**
+ * Runs the builder the way pages do: its own source in an inline script right after an empty
+ * grid, so it reaches nothing of this module and finds the grid through `currentScript`.
+ */
 function build(): HTMLElement {
-  document.body.innerHTML = '<section><div id="grid"></div><script id="run"></script></section>';
+  document.body.innerHTML = '<section><div id="grid"></div></section>';
   const grid = document.querySelector<HTMLElement>("#grid");
-  const script = document.querySelector<HTMLScriptElement>("#run");
-  if (grid === null || script === null) throw new Error("fixture missing");
-  vi.spyOn(document, "currentScript", "get").mockReturnValue(script);
-  // The production path: the source text, run on its own, with no access to this module.
-  new Function(`(${buildSideArchive.toString()})(${JSON.stringify(data)})`)();
+  if (grid === null) throw new Error("fixture missing");
+  const script = document.createElement("script");
+  script.textContent = `(${buildSideArchive.toString()})(${JSON.stringify(data)})`;
+  grid.after(script);
   return grid;
 }
+
+const byText = (left: string, right: string) => left.localeCompare(right);
 
 afterEach(() => vi.restoreAllMocks());
 
 describe("buildSideArchive", () => {
   test("builds every tile exactly once, as a link to where it belongs", () => {
     const links = [...build().querySelectorAll("a")];
-    expect(links.map((link) => link.getAttribute("href")).toSorted()).toEqual(
-      data.tiles.map(({ href }) => href).toSorted(),
+    expect(links.map((link) => link.getAttribute("href") ?? "").toSorted(byText)).toEqual(
+      data.tiles.map(({ href }) => href).toSorted(byText),
     );
     const t3 = links.find((link) => link.getAttribute("href") === "/t3");
     expect(t3?.getAttribute("aria-label")).toBe("T3: T3 mark");
