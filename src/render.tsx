@@ -49,17 +49,20 @@ export function render(assets: Assets): Record<string, string> {
     ...Object.fromEntries(
       cases.map((item) => [
         `${item.slug}.html`,
-        html(<CasePage assets={assets} item={item} markdown={text(item.slug)} />),
+        html(<CasePage assets={assets} item={item} markdown={text(item.slug)} work={work} />),
       ]),
     ),
     ...Object.fromEntries(
       pages.map((page) => [
         `${page.slug}.html`,
-        html(<DocPage assets={assets} page={page} markdown={text(page.slug)} />),
+        html(<DocPage assets={assets} page={page} markdown={text(page.slug)} work={work} />),
       ]),
     ),
     ...Object.fromEntries(
-      tools.map((item) => [`${item.slug}.html`, html(<ToolPage assets={assets} item={item} />)]),
+      tools.map((item) => [
+        `${item.slug}.html`,
+        html(<ToolPage assets={assets} item={item} work={work} />),
+      ]),
     ),
     ...Object.fromEntries(
       Object.entries(markdown).map(([slug, body]) => [`content/${slug}.md`, body]),
