@@ -41,7 +41,7 @@ This path does not exist on gildrb.com. The response is a real HTTP 404.
 ## Where to look next
 
 - [Homepage](https://gildrb.com/)
-- [All projects](https://gildrb.com/all)
+- [Archive](https://gildrb.com/all)
 - [Sitemap](https://gildrb.com/sitemap.xml)
 - [llms.txt](https://gildrb.com/llms.txt)
 - [llms-full.txt](https://gildrb.com/llms-full.txt)

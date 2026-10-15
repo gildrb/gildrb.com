@@ -167,12 +167,22 @@ export function Sidebar({
   );
 }
 
-export function Main({ home = false, children }: { home?: boolean; children: ComponentChildren }) {
+export function Main({
+  home = false,
+  wide = false,
+  children,
+}: {
+  home?: boolean;
+  /** Spans every column right of the sidebar, as the archive does. */
+  wide?: boolean;
+  children: ComponentChildren;
+}) {
   return (
     <main
       {...stylex.props(
         styles.content,
         home ? [styles.homeColumn, styles.homeContent] : styles.caseContent,
+        wide && styles.wideContent,
       )}
     >
       {/* The skip link's target. `<main>` itself cannot take focus on phones, where it is
@@ -385,13 +395,21 @@ const styles = stylex.create({
     // A minimum margin: the layout keeps its full width until the viewport cannot fit it.
     paddingInline: { default: "32px", [media.mobile]: phoneGutter },
   },
+  /**
+   * Desktop: sidebar and content. Wide screens add a third column, where the homepage shows the
+   * archive; the layout then spans the whole wrapper, so the sidebar holds still across pages.
+   */
   layout: {
     display: "grid",
     gridTemplateColumns: {
       default: `${space.sidebarColumn} 1fr`,
+      [media.wide]: `${space.sidebarColumn} ${space.contentColumn} 1fr`,
       [media.mobile]: `minmax(0, 1fr) ${space.toggleSize}`,
     },
-    maxWidth: `calc(${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn})`,
+    maxWidth: {
+      default: `calc(${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn})`,
+      [media.wide]: "none",
+    },
     margin: "0 auto",
     minHeight: { default: "100vh", [media.mobile]: "auto" },
     gap: { default: space.layoutGap, [media.mobile]: 0 },
@@ -461,6 +479,10 @@ const styles = stylex.create({
     clipPath: { default: "inset(50%)", ":focus-visible": "none" },
   },
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
+  wideContent: {
+    maxWidth: "none",
+    gridColumn: { default: null, [media.wide]: "2 / -1" },
+  },
   caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "26px" },
   homeToggle: {
     gridRow: { default: null, [media.mobile]: 1 },

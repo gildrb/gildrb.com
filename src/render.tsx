@@ -1,5 +1,6 @@
 import type { VNode } from "preact";
 import { renderToString } from "preact-render-to-string";
+import { collect } from "./archive.tsx";
 import { files } from "./files.ts";
 import type { Assets } from "./layout.tsx";
 import { AllPage, CasePage, DocPage, ToolPage } from "./pages/case.tsx";
@@ -41,9 +42,10 @@ const html = (page: VNode) =>
 
 /** Every generated file of the site, keyed by its path in the output directory. */
 export function render(assets: Assets): Record<string, string> {
+  const work = collect(markdown);
   return {
-    "index.html": html(<Home assets={assets} />),
-    "all.html": html(<AllPage assets={assets} markdown={markdown} />),
+    "index.html": html(<Home assets={assets} work={work} />),
+    "all.html": html(<AllPage assets={assets} work={work} />),
     ...Object.fromEntries(
       cases.map((item) => [
         `${item.slug}.html`,
