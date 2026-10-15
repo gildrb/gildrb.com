@@ -32,11 +32,11 @@ done
 checks='["robotsTxt","sitemap","linkHeaders","dnsAid","markdownNegotiation","robotsTxtAiRules","contentSignals","webBotAuth","apiCatalog","oauthDiscovery","oauthProtectedResource","authMd","mcpServerCard","agentSkills","webMcp","ard","personalAgentProtocol","x402","mpp","ucp","acp"]'
 out=/tmp/gildrb-agent-ready.json
 curl -sf --max-time 120 -X POST https://isitagentready.com/api/scan \
+  -H 'Content-Type: application/json' \
+  -d "{\"url\":\"https://gildrb.com\",\"enabledChecks\":$checks}" -o "$out"
+jq -r '.checks | to_entries[] | .key as $c | .value | to_entries[] | "  \(.value.status) \($c).\(.key)"' "$out"
 jq -r '[.checks | to_entries[] | select(.key != "commerce") | .value | to_entries[]
     | select(.key != "personalAgentProtocol") | .value.status
-    | select(. == "pass" or . == "fail")] as $s
-jq -r '.checks | to_entries[] | .key as $c | .value | to_entries[] | "  \(.value.status) \($c).\(.key)"' "$out"
-jq -r '[.checks | to_entries[] | select(.key != "commerce") | .value[] | .status
     | select(. == "pass" or . == "fail")] as $s
   | ($s | map(select(. == "pass")) | length) as $p
   | "METRIC agent_ready_pct=\(if ($s | length) > 0 then ($p * 100 / ($s | length) | round) else 0 end)",
