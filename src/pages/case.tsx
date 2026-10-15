@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { ArchiveGrid, type Work } from "../archive.tsx";
+import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { Article, parse, singleSizes, sources } from "../markdown.tsx";
@@ -40,7 +40,7 @@ function Frame({
   table,
   head,
   mono,
-  wide = false,
+  third,
   children,
 }: {
   assets: Assets;
@@ -55,7 +55,11 @@ function Frame({
   table?: readonly Project[];
   head: preact.ComponentChildren;
   mono: boolean;
-  wide?: boolean;
+  /**
+   * Wide screens' third column: the archive beside the text, or the page's own content spanning
+   * it (the archive page).
+   */
+  third: { $: "Archive"; work: readonly Work[] } | { $: "Content" };
   children: preact.ComponentChildren;
 }) {
   const url = `${origin}${path}`;
@@ -94,7 +98,8 @@ function Frame({
           <Name current={current} />
           <PageLinks phone={false} />
         </Sidebar>
-        <Main wide={wide}>{children}</Main>
+        <Main wide={third.$ === "Content"}>{children}</Main>
+        {third.$ === "Archive" && <SideArchive work={third.work} home={false} />}
         <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
@@ -148,10 +153,12 @@ export function CasePage({
   assets,
   item,
   markdown,
+  work,
 }: {
   assets: Assets;
   item: Case;
   markdown: string;
+  work: readonly Work[];
 }) {
   const url = `${origin}/${item.slug}`;
   const image = item.ogImage && versioned(`/images/optimized/${item.ogImage}`);
@@ -167,6 +174,7 @@ export function CasePage({
       current={item.name}
       table={others}
       mono={monoBlocks(markdown)}
+      third={{ $: "Archive", work: work.filter(({ project }) => project.slug !== item.slug) }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -234,7 +242,7 @@ export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[
       description={`Logos, typefaces, identities and websites by ${person.name}.`}
       current="Archive"
       mono={false}
-      wide
+      third={{ $: "Content" }}
       head={<Alternates />}
     >
       <ArchiveGrid work={work} />
@@ -268,10 +276,12 @@ export function DocPage({
   assets,
   page,
   markdown,
+  work,
 }: {
   assets: Assets;
   page: (typeof pages)[number];
   markdown: string;
+  work: readonly Work[];
 }) {
   return (
     <Frame
@@ -281,6 +291,7 @@ export function DocPage({
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}
+      third={{ $: "Archive", work }}
       head={
         <>
           <Alternates slug={page.slug} name={page.name} />
@@ -295,7 +306,15 @@ export function DocPage({
 }
 
 /** A tool that runs on the page. */
-export function ToolPage({ assets, item }: { assets: Assets; item: Tool }) {
+export function ToolPage({
+  assets,
+  item,
+  work,
+}: {
+  assets: Assets;
+  item: Tool;
+  work: readonly Work[];
+}) {
   const url = `${origin}/${item.slug}`;
   const others = next(`/${item.slug}`);
   return (
@@ -307,6 +326,7 @@ export function ToolPage({ assets, item }: { assets: Assets; item: Tool }) {
       current={item.name}
       table={others}
       mono={false}
+      third={{ $: "Archive", work }}
       head={
         <>
           <Alternates />

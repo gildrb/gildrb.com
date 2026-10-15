@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { HomeArchive, type Work } from "../archive.tsx";
+import { SideArchive, type Work } from "../archive.tsx";
 import { profile } from "../files.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
@@ -91,7 +91,7 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
           <Island name="portfolio" component={Portfolio} props={{}} />
           <Metadata style={styles.footer} />
         </Main>
-        <HomeArchive work={work} />
+        <SideArchive work={work} home />
       </Shell>
     </Document>
   );

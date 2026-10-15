@@ -36,10 +36,10 @@ export function collect(markdown: Readonly<Record<string, string>>): Work[] {
 const tileSizes = "(max-width: 767px) calc(50vw - 20px), 320px";
 
 /**
- * A square cell with the artwork contained in it at its own ratio. On the homepage the tile
- * opens its case study; in the archive the image enlarges (`zoom.ts`) and the caption links.
+ * A square cell with the artwork contained in it at its own ratio. Beside a page (`link`) the
+ * tile opens its case study; in the archive the image enlarges (`zoom.ts`) and the caption links.
  */
-function Tile({ work, home, eager }: { work: Work; home: boolean; eager: boolean }) {
+function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean }) {
   const item = artwork[work.id];
   if (item === undefined) throw new Error(`Unknown media id: ${work.id}`);
   const { project } = work;
@@ -52,7 +52,7 @@ function Tile({ work, home, eager }: { work: Work; home: boolean; eager: boolean
     <video
       {...stylex.props(styles.art)}
       // Bare in the archive, so it takes the square's share itself; else its link does.
-      {...(!home && { style: size })}
+      {...(!link && { style: size })}
       width={item.width}
       height={item.height}
       poster={src}
@@ -84,7 +84,7 @@ function Tile({ work, home, eager }: { work: Work; home: boolean; eager: boolean
       data-scope={project.scope}
     >
       <div {...stylex.props(styles.cell)}>
-        {home ? (
+        {link ? (
           <a
             {...stylex.props(ui.focusRing, styles.frame)}
             style={size}
@@ -108,7 +108,7 @@ function Tile({ work, home, eager }: { work: Work; home: boolean; eager: boolean
           </button>
         )}
       </div>
-      {!home && (
+      {!link && (
         <figcaption {...stylex.props(styles.caption)}>
           <a {...stylex.props(ui.quiet, ui.focusRing)} href={href}>
             {project.name}
@@ -124,22 +124,27 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
   return (
     <div {...stylex.props(styles.grid, styles.page)} data-all-cases>
       {work.map((item, index) => (
-        <Tile work={item} home={false} eager={index === 0} />
+        <Tile work={item} link={false} eager={index === 0} />
       ))}
     </div>
   );
 }
 
 /**
- * The homepage's third column on wide screens: the archive beside the table, scrolling on its
- * own so the page still holds to the viewport.
+ * The third column on wide screens: the archive beside the homepage table or a page's text.
+ * It scrolls on its own, so the homepage still holds to the viewport and an inner page keeps it
+ * in view while the text scrolls. A case study leaves its own artwork out: it is in the text.
  */
-export function HomeArchive({ work }: { work: readonly Work[] }) {
+export function SideArchive({ work, home }: { work: readonly Work[]; home: boolean }) {
   return (
-    <section {...stylex.props(styles.home)} aria-label="Archive" data-nosnippet>
+    <section
+      {...stylex.props(styles.side, home ? styles.home : styles.inner)}
+      aria-label="Archive"
+      data-nosnippet
+    >
       <div {...stylex.props(styles.grid)}>
         {work.map((item) => (
-          <Tile work={item} home eager={false} />
+          <Tile work={item} link eager={false} />
         ))}
       </div>
     </section>
@@ -159,30 +164,40 @@ const styles = stylex.create({
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
     order: { default: null, [media.mobile]: 5 },
   },
-  home: {
+  side: {
     display: { default: "none", [media.wide]: "block" },
     gridColumn: 3,
+    overflowY: "auto",
+    scrollbarWidth: "none",
+  },
+  home: {
     gridRow: "1 / 4",
     // Adds no height of its own: the column is as tall as the table beside it, and scrolls.
     contain: "size",
-    overflowY: "auto",
-    scrollbarWidth: "none",
     // Scrolls out to the viewport's edges, past the page inset.
     marginBlock: `calc(${space.pageInset} * -1)`,
     paddingBlock: space.pageInset,
   },
   tile: { minWidth: 0, margin: 0 },
   cell: { display: "grid", placeItems: "center", aspectRatio: "1" },
-  frame: { display: "block", borderRadius: space.tileRadius },
+  frame: { display: "block" },
   zoom: { cursor: { default: "auto", [media.desktop]: "zoom-in" } },
   art: {
     display: "block",
     width: "100%",
     height: "auto",
-    borderRadius: space.tileRadius,
     userSelect: "none",
     WebkitUserDrag: "none",
   },
-  mark: { borderRadius: 0, filter: colors.artworkFilter },
+  mark: { filter: colors.artworkFilter },
   caption: { marginTop: "8px", fontSize: "14px", lineHeight: "20px" },
+  /** Inner pages: held in view, the viewport's height, while the page scrolls beside it. */
+  inner: {
+    gridRow: 1,
+    alignSelf: "start",
+    position: "sticky",
+    top: 0,
+    height: "100vh",
+    paddingBlock: space.pageInset,
+  },
 });

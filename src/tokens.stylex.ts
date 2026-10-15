@@ -149,7 +149,6 @@ export const space = stylex.defineVars({
   /** Archive tiles: one square cell, at least this wide; the grid fills the rest. */
   tileMin: `${26 * unit}px`,
   tileGap: `${4 * unit}px`,
-  tileRadius: "12px",
   tableGap: `${2 * unit}px`,
   mobileTableGap: "clamp(8px, 3vw, 16px)",
   mobileCellEndSpace: "10px",
