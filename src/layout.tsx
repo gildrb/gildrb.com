@@ -44,15 +44,25 @@ const globalCss = [
   "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
 ].join("\n");
 
+// Also exposed for the font gate, which realigns with the final font before revealing.
+const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space.sectionContentGap.slice(4, -1))});window.__align()`;
+
+/**
+ * JSON safe inside a `<script>`: `<`, `>` and `&` cannot close the element or open a comment,
+ * and the line separators JavaScript once rejected in strings are escaped too.
+ */
+function scriptJson(value: unknown, indent?: number): string {
+  return JSON.stringify(value, null, indent)
+    .replaceAll("<", "\\u003c")
+    .replaceAll(">", "\\u003e")
+    .replaceAll("&", "\\u0026")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
+}
+
 export function JsonLd({ value }: { value: unknown }) {
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(value, null, 2).replaceAll("<", "\\u003c"),
-      }}
-    />
-  );
+  const json = scriptJson(value, 2);
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
 }
 
 /** The HTML document: shared head, theme bootstrap, inlined CSS and the island script. */
@@ -89,9 +99,9 @@ export function Document({
         <title>{title}</title>
         <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preload" href={interUrl} as="font" type="font/woff2" crossorigin="anonymous" />
+        <link rel="preload" href={interUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         {mono && (
-          <link rel="preload" href={monoUrl} as="font" type="font/woff2" crossorigin="anonymous" />
+          <link rel="preload" href={monoUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         )}
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
@@ -122,13 +132,7 @@ export function Document({
         />
         {children}
         {/* Align the layout before the first paint (see the render-blocking `expect` in <head>). */}
-        <script
-          data-cfasync="false"
-          dangerouslySetInnerHTML={{
-            // Also exposed for the font gate, which realigns with the final font before revealing.
-            __html: `window.__align=()=>(${align.toString()})(${JSON.stringify(space.sectionContentGap.slice(4, -1))});window.__align()`,
-          }}
-        />
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: alignScript }} />
         <div id="aligned" hidden />
       </body>
     </html>
@@ -211,7 +215,7 @@ export function Name({ current }: { current?: string }) {
     <h1
       {...stylex.props(ui.heading, styles.name, styles.homeName)}
       id="site-title"
-      itemprop="name"
+      itemProp="name"
       {...untranslated}
     >
       Gil Rodrigues
@@ -262,7 +266,7 @@ export function Links({
         href={item.href}
         target="_blank"
         rel={me ? "me noopener noreferrer" : "noopener noreferrer"}
-        itemprop={me ? "sameAs" : undefined}
+        itemProp={me ? "sameAs" : undefined}
         {...untranslated}
       >
         <span data-nosnippet>{item.label}</span>

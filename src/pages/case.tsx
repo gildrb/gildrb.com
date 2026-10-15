@@ -117,7 +117,7 @@ function HeroPreload({ markdown }: { markdown: string }) {
       as="image"
       href={src}
       {...(srcset && { imagesrcset: srcset, imagesizes: singleSizes })}
-      fetchpriority="high"
+      fetchPriority="high"
     />
   );
 }
