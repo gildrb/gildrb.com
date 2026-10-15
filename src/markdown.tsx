@@ -370,11 +370,11 @@ export function Article({
   const render = (groups: Group[], nested: boolean) =>
     groups.map((item, index) =>
       Array.isArray(item) ? (
-        <Prose blocks={item} after={groups[index - 1]} nested={nested} />
+        <Prose key={index} blocks={item} after={groups[index - 1]} nested={nested} />
       ) : item.type === "media" ? (
-        <Figures items={item.items} eager={eager && item === firstMedia} />
+        <Figures key={index} items={item.items} eager={eager && item === firstMedia} />
       ) : (
-        <Code {...item} />
+        <Code key={index} {...item} />
       ),
     );
   const [intro = [], ...chapters] = sections;

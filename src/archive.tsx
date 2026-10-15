@@ -167,7 +167,7 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
   return (
     <div {...stylex.props(styles.grid, styles.page)} data-all-cases>
       {work.map((item, index) => (
-        <Tile work={item} link={false} eager={index === 0} />
+        <Tile key={item.id} work={item} link={false} eager={index === 0} />
       ))}
     </div>
   );
@@ -195,7 +195,7 @@ export function SideArchive({ work, home }: { work: readonly Work[]; home: boole
     >
       <div {...stylex.props(styles.grid)}>
         {work.map((item) => (
-          <Tile work={item} link eager={false} />
+          <Tile key={item.id} work={item} link eager={false} />
         ))}
       </div>
       <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: shuffleScript }} />

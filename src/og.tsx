@@ -117,9 +117,10 @@ function IsoDate({ text }: { text: string }) {
   if (characters.join("") !== text) throw new Error(`Not an ISO date: ${text}`);
   return (
     <div style={{ display: "flex" }}>
-      {characters.map((character) =>
+      {characters.map((character, index) =>
         character === "-" ? (
           <span
+            key={index}
             style={{
               marginLeft: figureEm(figureUnits.beforeHyphen),
               marginRight: figureEm(figureUnits.afterHyphen),
@@ -129,6 +130,7 @@ function IsoDate({ text }: { text: string }) {
           </span>
         ) : (
           <span
+            key={index}
             style={{
               display: "flex",
               justifyContent: "center",
@@ -183,8 +185,10 @@ function Page({ css }: { css: string }) {
         }}
       >
         <div style={{ ...cell, height: header, color: color(colors.secondary) }}>{head}</div>
-        {cells.map((content) => (
-          <div style={{ ...cell, height: row, paddingTop: rowPadding }}>{content}</div>
+        {cells.map((content, index) => (
+          <div key={index} style={{ ...cell, height: row, paddingTop: rowPadding }}>
+            {content}
+          </div>
         ))}
       </div>
     );
@@ -265,6 +269,7 @@ function Page({ css }: { css: string }) {
           {[header - 1, ...projects.slice(1).map((_, index) => header + (index + 1) * row)].map(
             (top) => (
               <div
+                key={top}
                 style={{
                   position: "absolute",
                   left: 0,
@@ -278,8 +283,8 @@ function Page({ css }: { css: string }) {
           )}
           {column(
             "Date\u00a0↓",
-            projects.map(({ date }) => (
-              <span style={{ color: color(colors.tertiary) }}>
+            projects.map(({ date, href }) => (
+              <span key={href} style={{ color: color(colors.tertiary) }}>
                 <IsoDate text={date} />
               </span>
             )),
@@ -287,20 +292,23 @@ function Page({ css }: { css: string }) {
           )}
           {column(
             "Project",
-            projects.map(({ title }) => <span>{title}</span>),
+            projects.map(({ title, href }) => <span key={href}>{title}</span>),
             length(space.titleColumn),
           )}
           {column(
             "Scope",
-            projects.map(({ scope }) => (
-              <span style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>{scope}</span>
+            projects.map(({ scope, href }) => (
+              <span key={href} style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>
+                {scope}
+              </span>
             )),
             "grow",
           )}
           {column(
             "Archive",
-            projects.map(({ external }) => (
+            projects.map(({ external, href }) => (
               <span
+                key={href}
                 style={{
                   display: "flex",
                   justifyContent: "center",
