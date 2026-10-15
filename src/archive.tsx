@@ -78,11 +78,17 @@ function sortData(work: Work) {
 const tileSizes = "(max-width: 767px) calc(50vw - 20px), 320px";
 
 /**
+ * How a tile's image loads: the archive's first image is its largest paint, so it comes first;
+ * the rest of the first row loads with the page; everything below waits until it is near.
+ */
+type Load = "first" | "eager" | "lazy";
+
+/**
  * A square cell with the artwork contained in it at its own ratio, and a label beneath naming
  * its project. Beside a page (`link`) the whole tile opens the project; in the archive the image
  * enlarges (`zoom.ts`) and the label links.
  */
-function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean }) {
+function Tile({ work, link, load }: { work: Work; link: boolean; load: Load }) {
   const item = artwork[work.id];
   if (item === undefined) throw new Error(`Unknown media id: ${work.id}`);
   const { label, href } = destination(work);
@@ -90,6 +96,8 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
   const share = Math.min(item.width / item.height, 1) * (item.mark ? 0.88 : 1);
   const size = { width: `${(share * 100).toFixed(3)}%` };
   const { src, srcset } = sources(work.id);
+  // A poster has no srcset; a tile is never wider than the smallest variant.
+  const poster = srcset?.split(" ")[0] ?? src;
   const art = item.video ? (
     <video
       {...stylex.props(styles.art)}
@@ -97,7 +105,7 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
       {...(!link && { style: size })}
       width={item.width}
       height={item.height}
-      poster={src}
+      poster={poster}
       src={versioned(`/videos/gil-rodrigues-${work.id}.mp4`)}
       muted
       loop
@@ -113,7 +121,8 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
       width={item.width}
       height={item.height}
       decoding="async"
-      {...(eager ? { fetchpriority: "high" } : { loading: "lazy" })}
+      {...(load === "first" && { fetchPriority: "high" })}
+      {...(load === "lazy" && { loading: "lazy" })}
       src={src}
       {...(srcset && { srcset, sizes: tileSizes })}
     />
@@ -170,7 +179,18 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
   return (
     <div {...stylex.props(styles.grid, styles.page)} data-all-cases>
       {work.map((item, index) => (
-        <Tile key={item.id} work={item} link={false} eager={index === 0} />
+        <Tile
+          key={item.id}
+          work={item}
+          link={false}
+          load={
+            index === work.findIndex(({ id }) => artwork[id]?.video !== true)
+              ? "first"
+              : index < 5
+                ? "eager"
+                : "lazy"
+          }
+        />
       ))}
     </div>
   );
@@ -198,7 +218,7 @@ export function SideArchive({ work, home }: { work: readonly Work[]; home: boole
     >
       <div {...stylex.props(styles.grid)}>
         {work.map((item) => (
-          <Tile key={item.id} work={item} link eager={false} />
+          <Tile key={item.id} work={item} link load="lazy" />
         ))}
       </div>
       <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: shuffleScript }} />
