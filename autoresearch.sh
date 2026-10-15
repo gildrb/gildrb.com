@@ -37,10 +37,11 @@ for page in / /t3 /all; do
     out="/tmp/gildrb-lh-${strategy}${page//\//_}.json"
     preset=()
     [ "$strategy" = desktop ] && preset=(--preset=desktop)
-    CHROME_PATH="$(command -v chromium)" npx --yes lighthouse@13 "https://gildrb.com$page" \
+    # Outside the repo, like React Doctor: its devEngines pin npm.
+    (cd /tmp && CHROME_PATH="$(command -v chromium)" npx --yes lighthouse@13 "https://gildrb.com$page" \
       "${preset[@]}" --quiet --output=json --output-path="$out" \
       --only-categories=performance,accessibility,best-practices,seo \
-      --chrome-flags="--headless=new --no-sandbox" >/tmp/gildrb-lh.log 2>&1 ||
+      --chrome-flags="--headless=new --no-sandbox") >/tmp/gildrb-lh.log 2>&1 ||
       { tail -n 20 /tmp/gildrb-lh.log; exit 1; }
     line=$(jq -r '[.categories[] | "\(.id)=\(.score * 100 | round)"] | join(" ")' "$out")
     echo "  $strategy $page $line"
