@@ -170,3 +170,6 @@ export const rowMarker = stylex.defineMarker();
  * viewport is too short for the full layout (see `align.ts`).
  */
 export const rootMarker = stylex.defineMarker();
+
+/** Put on an archive tile link so its label can react to the tile's hover and focus. */
+export const tileMarker = stylex.defineMarker();

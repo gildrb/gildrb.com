@@ -2,19 +2,22 @@ import * as stylex from "@stylexjs/stylex";
 import { parse, sources } from "./markdown.tsx";
 import { media as artwork } from "./media.ts";
 import { type Case, cases } from "./site.ts";
-import { colors, media, space } from "./tokens.stylex.ts";
+import { colors, media, space, tileMarker } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
-/** One piece of artwork and the case study it comes from. */
-export type Work = { id: string; project: Case };
+/**
+ * One piece of artwork and where it comes from: a case study, or the archive alone for work
+ * that has no project page.
+ */
+export type Work = { id: string; from: { $: "Case"; project: Case } | { $: "Archive" } };
 
 /**
- * The archive: every `archive` media item, newest case first and in its page's order. Each
- * flagged item must appear on a case page, since its tile names and links that case.
+ * The archive: every `archive` media item, newest case first and in its page's order, then the
+ * items no case page shows, in `media.ts` order.
  */
 export function collect(markdown: Readonly<Record<string, string>>): Work[] {
-  const work = cases.flatMap((project) => {
+  const work: Work[] = cases.flatMap((project) => {
     const body = markdown[project.slug];
     if (body === undefined) throw new Error(`Missing src/content/${project.slug}.md`);
     const ids = parse(body).blocks.flatMap((block) =>
@@ -22,28 +25,56 @@ export function collect(markdown: Readonly<Record<string, string>>): Work[] {
     );
     return ids
       .filter((id, index) => artwork[id]?.archive === true && ids.indexOf(id) === index)
-      .map((id) => ({ id, project }));
+      .map((id) => ({ id, from: { $: "Case", project } }));
   });
   const shown = new Set(work.map(({ id }) => id));
-  for (const [id, item] of Object.entries(artwork)) {
-    if (item.archive === true && !shown.has(id)) {
-      throw new Error(`Archive media ${id} is on no case page`);
+  const alone: Work[] = Object.entries(artwork)
+    .filter(([id, item]) => item.archive === true && !shown.has(id))
+    .map(([id]) => ({ id, from: { $: "Archive" } }));
+  return [...work, ...alone];
+}
+
+/** The tile's label and where it leads: the case study, or the archive itself. */
+function destination(work: Work): { label: string; href: string } {
+  switch (work.from.$) {
+    case "Case":
+      return { label: work.from.project.name, href: `/${work.from.project.slug}` };
+    case "Archive":
+      return { label: "Archive", href: "/all" };
+    default: {
+      const _: never = work.from;
+      return _;
     }
   }
-  return work;
+}
+
+/** What `?sort=` on the archive page orders by; archive-only work has no date or scope. */
+function sortData(work: Work) {
+  switch (work.from.$) {
+    case "Case": {
+      const { date, title, scope } = work.from.project;
+      return { "data-date": date, "data-title": title, "data-scope": scope };
+    }
+    case "Archive":
+      return { "data-date": "", "data-title": "Archive", "data-scope": "" };
+    default: {
+      const _: never = work.from;
+      return _;
+    }
+  }
 }
 
 const tileSizes = "(max-width: 767px) calc(50vw - 20px), 320px";
 
 /**
- * A square cell with the artwork contained in it at its own ratio. Beside a page (`link`) the
- * tile opens its case study; in the archive the image enlarges (`zoom.ts`) and the caption links.
+ * A square cell with the artwork contained in it at its own ratio, and a label beneath naming
+ * its project. Beside a page (`link`) the whole tile opens the project; in the archive the image
+ * enlarges (`zoom.ts`) and the label links.
  */
 function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean }) {
   const item = artwork[work.id];
   if (item === undefined) throw new Error(`Unknown media id: ${work.id}`);
-  const { project } = work;
-  const href = `/${project.slug}`;
+  const { label, href } = destination(work);
   // The artwork's width as a share of the square's: full for landscape, less for portrait.
   const share = Math.min(item.width / item.height, 1) * (item.mark ? 0.88 : 1);
   const size = { width: `${(share * 100).toFixed(3)}%` };
@@ -51,7 +82,7 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
   const art = item.video ? (
     <video
       {...stylex.props(styles.art)}
-      // Bare in the archive, so it takes the square's share itself; else its link does.
+      // Bare in the archive, so it takes the square's share itself; else its frame does.
       {...(!link && { style: size })}
       width={item.width}
       height={item.height}
@@ -76,24 +107,26 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
       {...(srcset && { srcset, sizes: tileSizes })}
     />
   );
-  return (
-    <figure
-      {...stylex.props(styles.tile)}
-      data-date={project.date}
-      data-title={project.title}
-      data-scope={project.scope}
-    >
-      <div {...stylex.props(styles.cell)}>
-        {link ? (
-          <a
-            {...stylex.props(ui.focusRing, styles.frame)}
-            style={size}
-            href={href}
-            aria-label={`${project.name}: ${item.alt}`}
-          >
+  if (link) {
+    return (
+      <a
+        {...stylex.props(ui.focusRing, styles.tile, styles.linkTile, tileMarker)}
+        href={href}
+        aria-label={`${label}: ${item.alt}`}
+      >
+        <div {...stylex.props(styles.cell)}>
+          <div {...stylex.props(styles.frame)} style={size}>
             {art}
-          </a>
-        ) : item.video ? (
+          </div>
+        </div>
+        <span {...stylex.props(styles.caption, styles.linkCaption)}>{label}</span>
+      </a>
+    );
+  }
+  return (
+    <figure {...stylex.props(styles.tile)} {...sortData(work)}>
+      <div {...stylex.props(styles.cell)}>
+        {item.video ? (
           art
         ) : (
           <button
@@ -108,13 +141,15 @@ function Tile({ work, link, eager }: { work: Work; link: boolean; eager: boolean
           </button>
         )}
       </div>
-      {!link && (
-        <figcaption {...stylex.props(styles.caption)}>
+      <figcaption {...stylex.props(styles.caption)}>
+        {work.from.$ === "Case" ? (
           <a {...stylex.props(ui.quiet, ui.focusRing)} href={href}>
-            {project.name}
+            {label}
           </a>
-        </figcaption>
-      )}
+        ) : (
+          <span {...stylex.props(styles.plain)}>{label}</span>
+        )}
+      </figcaption>
     </figure>
   );
 }
@@ -133,7 +168,7 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
 /**
  * The third column on wide screens: the archive beside the homepage table or a page's text.
  * It scrolls on its own, so the homepage still holds to the viewport and an inner page keeps it
- * in view while the text scrolls. A case study leaves its own artwork out: it is in the text.
+ * in view while the text scrolls.
  */
 export function SideArchive({ work, home }: { work: readonly Work[]; home: boolean }) {
   return (
@@ -190,7 +225,17 @@ const styles = stylex.create({
     WebkitUserDrag: "none",
   },
   mark: { filter: colors.artworkFilter },
-  caption: { marginTop: "8px", fontSize: "14px", lineHeight: "20px" },
+  caption: { display: "block", marginTop: "8px", fontSize: "14px", lineHeight: "20px" },
+  linkTile: { display: "block", textDecoration: "none" },
+  /** Raised to full contrast while its tile is hovered, like a quiet link. */
+  linkCaption: {
+    color: {
+      default: colors.tertiary,
+      [stylex.when.ancestor(":hover", tileMarker)]: { [media.hover]: colors.primary },
+      [stylex.when.ancestor(":focus-visible", tileMarker)]: colors.primary,
+    },
+  },
+  plain: { color: colors.tertiary },
   /** Inner pages: held in view, the viewport's height, while the page scrolls beside it. */
   inner: {
     gridRow: 1,
