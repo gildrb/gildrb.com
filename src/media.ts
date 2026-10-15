@@ -16,10 +16,12 @@ export type Media = {
   video?: true;
   /**
    * Shown in the archive (`archive.tsx`): finished or working artwork of Gil's own, not
-   * feedback threads, app screenshots or other people's work. Labelled with its case study, or
-   * "Archive" when no case page shows it.
+   * feedback threads, app screenshots or other people's work. Labelled with its case study:
+   * the one whose page shows it, else `project`; "Archive" when it belongs to none.
    */
   archive?: true;
+  /** Archive work that no case page shows but that belongs to this case study (its slug). */
+  project?: string;
 };
 
 export const media: Readonly<Record<string, Media>> = {
@@ -346,5 +348,91 @@ export const media: Readonly<Record<string, Media>> = {
     archive: true,
     width: 1200,
     height: 642,
+  },
+  "archive-raccoon-mascot": {
+    alt: "Gray raccoon mascot head with a white outline on black",
+    archive: true,
+    width: 4096,
+    height: 3072,
+  },
+  "archive-chrome-pattern": {
+    alt: "Grid of chrome-shaded block shapes in black and white",
+    archive: true,
+    width: 3840,
+    height: 2160,
+  },
+  "archive-filen-chrome": {
+    alt: "Chrome Filen mark and wordmark across vertical light panels",
+    archive: true,
+    project: "filen",
+    width: 4096,
+    height: 2095,
+  },
+  "archive-embossed-monogram": {
+    alt: "Embossed black monogram with a diamond crossbar on black",
+    archive: true,
+    width: 2048,
+    height: 1176,
+  },
+  "archive-book-mark": {
+    alt: "Black mark of an open book with an angled spine on white",
+    archive: true,
+    width: 1504,
+    height: 1128,
+  },
+  "archive-logo-system-card": {
+    alt: "Logo System business card with a blue L mark above its dark wordmark",
+    archive: true,
+    width: 4000,
+    height: 3000,
+  },
+  "archive-chrome-chevron": {
+    alt: "Chrome chevron mark with blue reflections on black",
+    archive: true,
+    width: 2800,
+    height: 2100,
+  },
+  "archive-neon-lettering": {
+    alt: "Spiked lettering in neon blue inside a red orbit on black",
+    archive: true,
+    width: 4096,
+    height: 2756,
+  },
+  "archive-stream-graphics": {
+    alt: "Board of stream graphics: offline, starting and break screens, emotes and logos",
+    archive: true,
+    width: 4096,
+    height: 2223,
+  },
+  "archive-hexagon-mark": {
+    alt: "Purple and pink hexagonal C mark beside its construction lines",
+    archive: true,
+    width: 4096,
+    height: 2047,
+  },
+  "archive-peaks-mark": {
+    alt: "Red mountain-peak mark in four colorways on black and white",
+    archive: true,
+    width: 4096,
+    height: 2867,
+  },
+  "archive-chrome-lettering": {
+    alt: "Spiked chrome lettering in blue and purple on a starry black",
+    archive: true,
+    width: 2000,
+    height: 2000,
+  },
+  "archive-curves-gradient": {
+    alt: "CURVES wordmark and character set in gradient color over a blue swirl",
+    archive: true,
+    project: "curves",
+    width: 4096,
+    height: 2304,
+  },
+  "archive-corebeam-animation": {
+    alt: "Animated Corebeam Industries mark: two blocks open into the wordmark and close again",
+    archive: true,
+    width: 1280,
+    height: 720,
   },
 };
