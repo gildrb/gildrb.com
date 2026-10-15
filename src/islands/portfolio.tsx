@@ -64,64 +64,63 @@ export function Portfolio() {
         edges.bottom && styles.fadeBottom,
       )}
     >
-      <div
-        {...stylex.props(ui.text, ui.sans, styles.header)}
-        role="table"
-        aria-label="Project columns"
-      >
-        {/* ARIA roles only: the wrappers take no box, so the buttons stay on the subgrid. */}
-        <div {...stylex.props(styles.contents)} role="row">
-          {columns.map(({ key, label }) => {
-            const active = sort.key === key;
-            return (
-              <div
-                {...stylex.props(styles.contents)}
-                role="columnheader"
-                aria-sort={active ? sort.direction : undefined}
-              >
-                <button
-                  {...stylex.props(
-                    stylex.defaultMarker(),
-                    ui.target,
-                    ui.reset,
-                    ui.focusRing,
-                    styles.sort,
-                    styles[key],
-                  )}
-                  type="button"
-                  aria-label={`Sort projects by ${key}`}
-                  onClick={(event) => select(key, event)}
+      <table {...stylex.props(ui.text, ui.sans, styles.header)} aria-label="Project columns">
+        {/* The wrappers take no box, so the buttons stay on the subgrid. */}
+        <thead {...stylex.props(styles.contents)}>
+          <tr {...stylex.props(styles.contents)}>
+            {columns.map(({ key, label }) => {
+              const active = sort.key === key;
+              return (
+                <th
+                  key={key}
+                  {...stylex.props(styles.contents, styles.cellText)}
+                  scope="col"
+                  aria-sort={active ? sort.direction : undefined}
                 >
-                  <span>{label}&nbsp;</span>
-                  <span
+                  <button
                     {...stylex.props(
-                      ui.sans,
-                      styles.indicator,
-                      styles[`${key}Indicator`],
-                      active && styles.visible,
+                      stylex.defaultMarker(),
+                      ui.target,
+                      ui.reset,
+                      ui.focusRing,
+                      styles.sort,
+                      styles[key],
                     )}
-                    aria-hidden="true"
+                    type="button"
+                    aria-label={`Sort projects by ${key}`}
+                    onClick={(event) => select(key, event)}
                   >
-                    {active && sort.direction === "ascending" ? "↑" : "↓"}
-                  </span>
-                </button>
-              </div>
-            );
-          })}
-          <div {...stylex.props(styles.contents)} role="cell">
-            <a
-              {...stylex.props(ui.target, ui.focusRing, styles.archive)}
-              href={`/all?sort=${sort.key}&direction=${sort.direction}`}
-            >
-              Archive
-              <span {...stylex.props(ui.sans)} aria-hidden="true">
-                {" "}
-                →
-              </span>
-            </a>
-          </div>
-        </div>
-      </div>
+                    <span>{label}&nbsp;</span>
+                    <span
+                      {...stylex.props(
+                        ui.sans,
+                        styles.indicator,
+                        styles[`${key}Indicator`],
+                        active && styles.visible,
+                      )}
+                      aria-hidden="true"
+                    >
+                      {active && sort.direction === "ascending" ? "↑" : "↓"}
+                    </span>
+                  </button>
+                </th>
+              );
+            })}
+            <td {...stylex.props(styles.contents)}>
+              <a
+                {...stylex.props(ui.target, ui.focusRing, styles.archive)}
+                href={`/all?sort=${sort.key}&direction=${sort.direction}`}
+              >
+                Archive
+                <span {...stylex.props(ui.sans)} aria-hidden="true">
+                  {" "}
+                  →
+                </span>
+              </a>
+            </td>
+          </tr>
+        </thead>
+      </table>
       <section
         data-scroll-list
         ref={section}
@@ -273,6 +272,8 @@ const styles = stylex.create({
   scopeIndicator: { transform: "translateX(1.3px)" },
   visible: { visibility: "visible" },
   contents: { display: "contents" },
+  /** Header cells read as the row's text, not bold and centred. */
+  cellText: { fontWeight: "inherit", textAlign: "start" },
   // Spans the scope column too, flush right: on phones the arrow column stays as narrow as its
   // arrows instead of taking the label's width, which would push the table off screen.
   archive: {
