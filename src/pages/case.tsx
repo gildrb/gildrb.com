@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { ArchiveGrid, type Work } from "../archive.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { Article, parse, singleSizes, sources } from "../markdown.tsx";
@@ -13,16 +14,7 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { Row } from "../row.tsx";
-import {
-  type Case,
-  cases,
-  origin,
-  pages,
-  person,
-  type Project,
-  projects,
-  type Tool,
-} from "../site.ts";
+import { type Case, origin, pages, person, type Project, projects, type Tool } from "../site.ts";
 import { media, space } from "../tokens.stylex.ts";
 import { versioned } from "../versioned.ts";
 
@@ -48,6 +40,7 @@ function Frame({
   table,
   head,
   mono,
+  wide = false,
   children,
 }: {
   assets: Assets;
@@ -62,6 +55,7 @@ function Frame({
   table?: readonly Project[];
   head: preact.ComponentChildren;
   mono: boolean;
+  wide?: boolean;
   children: preact.ComponentChildren;
 }) {
   const url = `${origin}${path}`;
@@ -100,7 +94,7 @@ function Frame({
           <Name current={current} />
           <PageLinks phone={false} />
         </Sidebar>
-        <Main>{children}</Main>
+        <Main wide={wide}>{children}</Main>
         <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
@@ -230,48 +224,20 @@ function Next({ projects: list }: { projects: readonly Project[] }) {
   );
 }
 
-/** Every case study on one page, newest first; `?sort=` from the homepage table reorders them. */
-export function AllPage({
-  assets,
-  markdown,
-}: {
-  assets: Assets;
-  markdown: Readonly<Record<string, string>>;
-}) {
-  const description = `All case studies by ${person.name}.`;
+/** The archive: the artwork of every case study as one grid of images, newest first. */
+export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[] }) {
   return (
     <Frame
       assets={assets}
       path="/all"
       type="website"
-      description={description}
+      description={`Logos, typefaces, identities and websites by ${person.name}.`}
       current="Archive"
-      mono
-      head={
-        <>
-          <Alternates />
-          <HeroPreload markdown={markdown[cases[0]?.slug ?? ""] ?? ""} />
-        </>
-      }
+      mono={false}
+      wide
+      head={<Alternates />}
     >
-      <div {...stylex.props(styles.phoneItem)} data-all-cases>
-        {cases.map((item, index) => (
-          <article
-            {...stylex.props(
-              styles.column,
-              index > 0 && styles.nextCase,
-              // Aligns the last line with the theme toggle; a closing ## section already does.
-              !parse(markdown[item.slug] ?? "").blocks.some((block) => block.type === "h2") &&
-                styles.settle,
-            )}
-            data-date={item.date}
-            data-title={item.title}
-            data-scope={item.scope}
-          >
-            <Article markdown={markdown[item.slug] ?? ""} eager={index === 0} showTitle />
-          </article>
-        ))}
-      </div>
+      <ArchiveGrid work={work} />
     </Frame>
   );
 }
@@ -281,18 +247,6 @@ const styles = stylex.create({
   phoneItem: {
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
     order: { default: null, [media.mobile]: 5 },
-  },
-  nextCase: {
-    marginTop: `calc(${space.caseTitleTextGap} * 1.618)`,
-    // Offscreen case studies skip style and layout until they approach the viewport.
-    contentVisibility: "auto",
-    containIntrinsicSize: "auto 4000px",
-  },
-  settle: {
-    paddingBottom: {
-      default: null,
-      "@media (min-width: 769px)": `calc(${space.toggleSize} / 2 - 12px)`,
-    },
   },
   next: {
     marginTop: { default: "48px", "@media (min-width: 769px)": "auto" },

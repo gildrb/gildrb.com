@@ -14,6 +14,8 @@ const arrowColumn = `${8 * unit}px`;
 export const media = stylex.defineConsts({
   mobile: "@media (max-width: 767px)",
   desktop: "@media (min-width: 768px)",
+  /** Room for a third column: the archive beside the homepage, wider archive grid. */
+  wide: "@media (min-width: 1280px)",
   hover: "@media (hover: hover)",
   motion: "@media screen and (prefers-reduced-motion: no-preference)",
 });
@@ -144,6 +146,10 @@ export const space = stylex.defineVars({
   contentColumn: `${68 * unit}px`,
   layoutGap: `${6 * unit}px`,
   mediaRadius: "22px",
+  /** Archive tiles: one square cell, at least this wide; the grid fills the rest. */
+  tileMin: `${26 * unit}px`,
+  tileGap: `${4 * unit}px`,
+  tileRadius: "12px",
   tableGap: `${2 * unit}px`,
   mobileTableGap: "clamp(8px, 3vw, 16px)",
   mobileCellEndSpace: "10px",

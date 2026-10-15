@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { HomeArchive, type Work } from "../archive.tsx";
 import { profile } from "../files.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
@@ -66,7 +67,7 @@ function Head({ shareImage }: { shareImage: string }) {
   );
 }
 
-export function Home({ assets }: { assets: Assets }) {
+export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }) {
   return (
     <Document
       assets={assets}
@@ -90,6 +91,7 @@ export function Home({ assets }: { assets: Assets }) {
           <Island name="portfolio" component={Portfolio} props={{}} />
           <Metadata style={styles.footer} />
         </Main>
+        <HomeArchive work={work} />
       </Shell>
     </Document>
   );

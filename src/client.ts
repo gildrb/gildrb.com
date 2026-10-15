@@ -16,7 +16,7 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   theme: () => ThemeToggle,
   email: () => Email,
   portfolio: () => Portfolio,
-  // Only the Heph case study and /all show the terminal; keep it out of the homepage bundle.
+  // Only the Heph case study shows the terminal; keep it out of the homepage bundle.
   heph: () => import("./islands/heph.tsx").then((module) => module.Terminal),
   // Only /archetypon runs the converter; its engine loads once files arrive.
   archetypon: () => import("./islands/archetypon.tsx").then((module) => module.Converter),
@@ -152,7 +152,7 @@ const sortKey = params.get("sort");
 const sortDirection = params.get("direction");
 if (allCases && isSortKey(sortKey) && isSortDirection(sortDirection)) {
   const compare = compareRows(sortKey, sortDirection);
-  const articles = [...allCases.querySelectorAll<HTMLElement>(":scope > article")];
+  const articles = [...allCases.querySelectorAll<HTMLElement>(":scope > figure")];
   allCases.append(...articles.toSorted((left, right) => compare(sortRow(left), sortRow(right))));
 }
 
