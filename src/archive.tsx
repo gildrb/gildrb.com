@@ -1,10 +1,20 @@
 import * as stylex from "@stylexjs/stylex";
+import { scriptJson } from "./layout.tsx";
 import { parse, sources } from "./markdown.tsx";
-import { media as artwork } from "./media.ts";
+import { type Media, media as artwork } from "./media.ts";
+import { buildSideArchive, type SideArchiveData } from "./side-archive.ts";
 import { type Case, cases } from "./site.ts";
 import { colors, media, space, tileMarker } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
+
+/**
+ * The artwork's width as a percentage of its square, as CSS: full for landscape, less for
+ * portrait; logo marks keep their inset.
+ */
+function share(item: Media): string {
+  return (Math.min(item.width / item.height, 1) * (item.mark ? 88 : 100)).toFixed(3);
+}
 
 /**
  * One piece of artwork and where it comes from: a case study, or the archive alone for work
@@ -83,26 +93,20 @@ const tileSizes = "(max-width: 767px) calc(50vw - 20px), 320px";
  */
 type Load = "first" | "eager" | "lazy";
 
-/**
- * A square cell with the artwork contained in it at its own ratio, and a label beneath naming
- * its project. Beside a page (`link`) the whole tile opens the project; in the archive the image
- * enlarges (`zoom.ts`) and the label links.
- */
-function Tile({ work, link, load }: { work: Work; link: boolean; load: Load }) {
+/** A square cell with the artwork contained in it at its own ratio; it enlarges (`zoom.ts`). */
+function Tile({ work, load }: { work: Work; load: Load }) {
   const item = artwork[work.id];
   if (item === undefined) throw new Error(`Unknown media id: ${work.id}`);
   const { label, href } = destination(work);
-  // The artwork's width as a share of the square's: full for landscape, less for portrait.
-  const share = Math.min(item.width / item.height, 1) * (item.mark ? 0.88 : 1);
-  const size = { width: `${(share * 100).toFixed(3)}%` };
+  const size = { width: `${share(item)}%` };
   const { src, srcset } = sources(work.id);
   // A poster has no srcset; a tile is never wider than the smallest variant.
   const poster = srcset?.split(" ")[0] ?? src;
   const art = item.video ? (
     <video
       {...stylex.props(styles.art)}
-      // Bare in the archive, so it takes the square's share itself; else its frame does.
-      {...(!link && { style: size })}
+      // Bare, so it takes the square's share itself.
+      style={size}
       width={item.width}
       height={item.height}
       poster={poster}
@@ -127,22 +131,6 @@ function Tile({ work, link, load }: { work: Work; link: boolean; load: Load }) {
       {...(srcset && { srcset, sizes: tileSizes })}
     />
   );
-  if (link) {
-    return (
-      <a
-        {...stylex.props(ui.focusRing, styles.tile, styles.linkTile, tileMarker)}
-        href={href}
-        aria-label={`${label}: ${item.alt}`}
-      >
-        <div {...stylex.props(styles.cell)}>
-          <div {...stylex.props(styles.frame)} style={size}>
-            {art}
-          </div>
-        </div>
-        <span {...stylex.props(styles.caption, styles.linkCaption)}>{label}</span>
-      </a>
-    );
-  }
   return (
     <figure {...stylex.props(styles.tile)} {...sortData(work)} data-work={work.id}>
       <div {...stylex.props(styles.cell)}>
@@ -182,7 +170,6 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
         <Tile
           key={item.id}
           work={item}
-          link={false}
           load={
             index === work.findIndex(({ id }) => artwork[id]?.video !== true)
               ? "first"
@@ -196,19 +183,60 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
   );
 }
 
-/**
- * Shuffles the tiles before them, as the parser reaches it, so a fresh order paints first.
- * Fisher–Yates over the element's children; inline, since a module would run after paint.
- */
-const shuffleScript =
-  "{const g=document.currentScript.previousElementSibling,t=[...g.children];for(let i=t.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[t[i],t[j]]=[t[j],t[i]]}g.append(...t)}";
+const imagePrefix = "/images/optimized/gil-rodrigues-";
+
+/** The tiles beside a page, as data for `buildSideArchive`. */
+function sideData(work: readonly Work[]): SideArchiveData {
+  const strip = (path: string) => {
+    if (!path.startsWith(imagePrefix)) throw new Error(`Image outside ${imagePrefix}: ${path}`);
+    return path.slice(imagePrefix.length);
+  };
+  return {
+    classes: {
+      link: stylex.props(ui.focusRing, styles.tile, styles.linkTile, tileMarker).className ?? "",
+      cell: stylex.props(styles.cell).className ?? "",
+      frame: stylex.props(styles.frame).className ?? "",
+      caption: stylex.props(styles.caption, styles.linkCaption).className ?? "",
+      art: stylex.props(styles.art).className ?? "",
+      markArt: stylex.props(styles.art, styles.mark).className ?? "",
+    },
+    images: imagePrefix,
+    sizes: tileSizes,
+    tiles: work.map((piece) => {
+      const item = artwork[piece.id];
+      if (item === undefined) throw new Error(`Unknown media id: ${piece.id}`);
+      const { label, href } = destination(piece);
+      const { src, srcset } = sources(piece.id);
+      const variants = srcset?.split(", ").map(strip);
+      return {
+        href,
+        label,
+        alt: item.alt,
+        width: item.width,
+        height: item.height,
+        share: share(item),
+        ...(item.video
+          ? // A poster has no srcset; a tile is never wider than the smallest variant.
+            {
+              src: variants?.[0]?.split(" ")[0] ?? strip(src),
+              video: versioned(`/videos/gil-rodrigues-${piece.id}.mp4`),
+            }
+          : { src: strip(src), ...(variants && { srcset: variants.join(", ") }) }),
+        ...(item.mark && { mark: true }),
+      };
+    }),
+  };
+}
 
 /**
  * The third column on wide screens: the archive beside the homepage table or a page's text, in
  * a new random order on every visit. It scrolls on its own, so the homepage still holds to the
- * viewport and an inner page keeps it in view while the text scrolls.
+ * viewport and an inner page keeps it in view while the text scrolls. Its tiles are built from
+ * data as the page parses (`side-archive.ts`); without JavaScript the column stays empty and
+ * the archive page has them all.
  */
 export function SideArchive({ work, home }: { work: readonly Work[]; home: boolean }) {
+  const script = `(${buildSideArchive.toString()})(${scriptJson(sideData(work))})`;
   return (
     <section
       {...stylex.props(styles.side, home ? styles.home : styles.inner)}
@@ -216,12 +244,8 @@ export function SideArchive({ work, home }: { work: readonly Work[]; home: boole
       data-nosnippet
       data-side-archive
     >
-      <div {...stylex.props(styles.grid)}>
-        {work.map((item) => (
-          <Tile key={item.id} work={item} link load="lazy" />
-        ))}
-      </div>
-      <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: shuffleScript }} />
+      <div {...stylex.props(styles.grid)} />
+      <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: script }} />
     </section>
   );
 }

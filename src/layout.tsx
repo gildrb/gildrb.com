@@ -51,7 +51,7 @@ const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space
  * JSON safe inside a `<script>`: `<`, `>` and `&` cannot close the element or open a comment,
  * and the line separators JavaScript once rejected in strings are escaped too.
  */
-function scriptJson(value: unknown, indent?: number): string {
+export function scriptJson(value: unknown, indent?: number): string {
   return JSON.stringify(value, null, indent)
     .replaceAll("<", "\\u003c")
     .replaceAll(">", "\\u003e")
