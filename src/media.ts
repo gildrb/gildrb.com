@@ -451,7 +451,6 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-curves-gradient": {
     alt: "CURVES wordmark and character set in gradient color over a blue swirl",
     archive: true,
-    home: true,
     project: "curves",
     width: 4096,
     height: 2304,
