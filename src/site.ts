@@ -21,8 +21,8 @@ export type Link = { label: string; href: string };
 export const profiles: readonly Link[] = [
   { label: "Are.na", href: "https://www.are.na/gil-rodrigues-tat8yjcamq4" },
   { label: "GitHub", href: "https://github.com/gildrb" },
+  { label: "Goodreads", href: "https://www.goodreads.com/user/show/179740227-gil-rodrigues" },
   { label: "Letterboxd", href: "https://letterboxd.com/gildrb/" },
-  { label: "Literal", href: "https://literal.club/gildrb" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/gildrb/" },
 ];
 
