@@ -238,7 +238,6 @@ export const media: Readonly<Record<string, Media>> = {
   "n0thing-typewriter-direction": {
     alt: "Typewriter-inspired n0thing and Jordan Gilbert wordmark",
     archive: true,
-    home: true,
     width: 1600,
     height: 982,
   },
