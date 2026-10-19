@@ -28,6 +28,11 @@ export type Work = { id: string; from: { $: "Case"; project: Case } | { $: "Arch
  * order.
  */
 export function collect(markdown: Readonly<Record<string, string>>): Work[] {
+  for (const [id, item] of Object.entries(artwork)) {
+    if (item.home === true && item.archive !== true) {
+      throw new Error(`Homepage media ${id} is not in the archive`);
+    }
+  }
   const entries = Object.entries(artwork).filter(([, item]) => item.archive === true);
   for (const [id, { project }] of entries) {
     if (project !== undefined && !cases.some(({ slug }) => slug === project)) {
@@ -229,11 +234,11 @@ function sideData(work: readonly Work[]): SideArchiveData {
 }
 
 /**
- * The third column on wide screens: the archive beside the homepage table or a page's text, in
- * a new random order on every visit. It scrolls on its own, so the homepage still holds to the
- * viewport and an inner page keeps it in view while the text scrolls. Its tiles are built from
- * data as the page parses (`side-archive.ts`); without JavaScript the column stays empty and
- * the archive page has them all.
+ * The third column on wide screens: the archive beside a page's text, or its `home` picks beside
+ * the homepage table, in a new random order on every visit. It scrolls on its own, so the
+ * homepage still holds to the viewport and an inner page keeps it in view while the text
+ * scrolls. Its tiles are built from data as the page parses (`side-archive.ts`); without
+ * JavaScript the column stays empty and the archive page has them all.
  */
 export function SideArchive({ work, home }: { work: readonly Work[]; home: boolean }) {
   const script = `(${buildSideArchive.toString()})(${scriptJson(sideData(work))})`;

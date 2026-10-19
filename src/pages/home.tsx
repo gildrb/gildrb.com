@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { SideArchive, type Work } from "../archive.tsx";
 import { profile } from "../files.ts";
+import { media as artwork } from "../media.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
 import {
@@ -91,7 +92,7 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
           <Island name="portfolio" component={Portfolio} props={{}} />
           <Metadata style={styles.footer} />
         </Main>
-        <SideArchive work={work} home />
+        <SideArchive work={work.filter(({ id }) => artwork[id]?.home === true)} home />
       </Shell>
     </Document>
   );

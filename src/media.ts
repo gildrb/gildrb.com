@@ -20,6 +20,8 @@ export type Media = {
    * the one whose page shows it, else `project`; "Archive" when it belongs to none.
    */
   archive?: true;
+  /** Archive work picked for the homepage's archive column; the rest shows on other pages only. */
+  home?: true;
   /** Archive work that no case page shows but that belongs to this case study (its slug). */
   project?: string;
 };
@@ -28,6 +30,7 @@ export const media: Readonly<Record<string, Media>> = {
   "ben-davis-brandmark": {
     alt: "White db monogram with a central diagonal joining mirrored letterforms",
     archive: true,
+    home: true,
     width: 2000,
     height: 1112,
     mark: "center",
@@ -35,6 +38,7 @@ export const media: Readonly<Record<string, Media>> = {
   "ben-davis-site-tour": {
     alt: "Screen recording of davis7.sh: the db mark turning into the wordmark, hovering links, the Sponsors page and switching to light mode",
     archive: true,
+    home: true,
     width: 1080,
     height: 1036,
     video: true,
@@ -48,6 +52,7 @@ export const media: Readonly<Record<string, Media>> = {
   "local-studio-tour": {
     alt: "Screen recording of the Local Studio website: the hero, the app interface, the setup prompt for coding models and the phone screens",
     archive: true,
+    home: true,
     width: 1080,
     height: 1014,
     video: true,
@@ -55,6 +60,7 @@ export const media: Readonly<Record<string, Media>> = {
   "ben-davis-construction": {
     alt: "Ben Davis db monogram shown with construction points and the finished mark",
     archive: true,
+    home: true,
     width: 4096,
     height: 2304,
   },
@@ -103,48 +109,56 @@ export const media: Readonly<Record<string, Media>> = {
   "filen-app-icon": {
     alt: "Filen app icon using a dimensional rendering of the identity mark",
     archive: true,
+    home: true,
     width: 3940,
     height: 2260,
   },
   "filen-brand-system-board": {
     alt: "Filen brand system board with logo, copy, icon, and typography",
     archive: true,
+    home: true,
     width: 1600,
     height: 999,
   },
   "filen-exploration-board": {
     alt: "Filen exploration board containing sketches, rejected symbols, wordmarks, and refined identity directions",
     archive: true,
+    home: true,
     width: 1280,
     height: 956,
   },
   "filen-identity-system-overview": {
     alt: "Filen red identity exploration showing the logo, typography, app icon, and campaign executions",
     archive: true,
+    home: true,
     width: 1600,
     height: 1444,
   },
   "filen-light-lockup": {
     alt: "Metallic Filen lockup across vertical light panels",
     archive: true,
+    home: true,
     width: 1600,
     height: 921,
   },
   "filen-light-study": {
     alt: "Monochrome Filen light study with soft beams emerging from the lower-left corner",
     archive: true,
+    home: true,
     width: 1600,
     height: 1600,
   },
   "filen-logo-scale": {
     alt: "Filen mark tested at four decreasing sizes",
     archive: true,
+    home: true,
     width: 3940,
     height: 2260,
   },
   "filen-logo-texture": {
     alt: "Filen mark over a streaked monochrome visual texture",
     archive: true,
+    home: true,
     width: 3940,
     height: 2260,
   },
@@ -156,24 +170,28 @@ export const media: Readonly<Record<string, Media>> = {
   "filen-pattern-exploration": {
     alt: "Filen pattern explorations built from repeated protective scales",
     archive: true,
+    home: true,
     width: 1600,
     height: 611,
   },
   "filen-storage-message": {
     alt: "Campaign graphic reading Storage that earns nothing from knowing you",
     archive: true,
+    home: true,
     width: 3940,
     height: 2260,
   },
   "filen-wordmark": {
     alt: "Final Filen mark and wordmark in white on black",
     archive: true,
+    home: true,
     width: 3940,
     height: 2260,
   },
   "filen-zero-knowledge-campaign": {
     alt: "Campaign graphic reading Zero knowledge. Total control.",
     archive: true,
+    home: true,
     width: 3940,
     height: 2260,
   },
@@ -185,6 +203,7 @@ export const media: Readonly<Record<string, Media>> = {
   "heph-lockup": {
     alt: "Heph symbol and wordmark",
     archive: true,
+    home: true,
     width: 3023,
     height: 860,
     mark: "start",
@@ -202,6 +221,7 @@ export const media: Readonly<Record<string, Media>> = {
   "ml7-logo-system": {
     alt: "mL7 logo with black lettering and an orange directional stroke on white",
     archive: true,
+    home: true,
     width: 3473,
     height: 2263,
   },
@@ -213,24 +233,28 @@ export const media: Readonly<Record<string, Media>> = {
   "n0thing-pixel-variations": {
     alt: "Black, white, and red n0thing pixel wordmark variations",
     archive: true,
+    home: true,
     width: 1600,
     height: 1007,
   },
   "n0thing-typewriter-direction": {
     alt: "Typewriter-inspired n0thing and Jordan Gilbert wordmark",
     archive: true,
+    home: true,
     width: 1600,
     height: 982,
   },
   "n0thing-wordmark-animation": {
     alt: "Animated medium-gray n0thing pixel wordmark on black with a blinking underscore",
     archive: true,
+    home: true,
     width: 1280,
     height: 720,
   },
   "t3-before-after": {
     alt: "T3 logomark before and after comparison showing the final refined joint and terminals",
     archive: true,
+    home: true,
     width: 3446,
     height: 2520,
   },
@@ -252,6 +276,7 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-code-construction": {
     alt: "T3 Code wordmark with diagonal construction guides across the T3 and C",
     archive: true,
+    home: true,
     width: 1600,
     height: 900,
   },
@@ -263,24 +288,28 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-code-outline": {
     alt: "T3 Code wordmark above a larger outlined version on black",
     archive: true,
+    home: true,
     width: 1600,
     height: 900,
   },
   "t3-code-scale": {
     alt: "White T3 Code wordmark shown at five decreasing sizes on black",
     archive: true,
+    home: true,
     width: 1600,
     height: 900,
   },
   "t3-color-tests": {
     alt: "T3 pink and monochrome colorway tests for the logomark",
     archive: true,
+    home: true,
     width: 1199,
     height: 899,
   },
   "t3-connected-mark": {
     alt: "White connected lowercase t and 3 logomark on a dark canvas",
     archive: true,
+    home: true,
     width: 1724,
     height: 1200,
   },
@@ -322,30 +351,35 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-ghost-grid": {
     alt: "Ghosted T3 comparison grid showing overlapping logomark proportions",
     archive: true,
+    home: true,
     width: 1200,
     height: 744,
   },
   "t3-mark": {
     alt: "T3 logomark exploration shown as a compact black and white symbol",
     archive: true,
+    home: true,
     width: 1200,
     height: 1200,
   },
   "t3-render": {
     alt: "T3 logomark rendered in a light application setting",
     archive: true,
+    home: true,
     width: 1200,
     height: 675,
   },
   "t3-system-board": {
     alt: "T3 identity system board with logotypes, icons, favicons, and clear-space lockup",
     archive: true,
+    home: true,
     width: 2048,
     height: 1853,
   },
   "t3-weight-tests": {
     alt: "T3 logomark weight and angle tests comparing heavier and lighter constructions",
     archive: true,
+    home: true,
     width: 1200,
     height: 642,
   },
@@ -371,12 +405,14 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-embossed-monogram": {
     alt: "Embossed black monogram with a diamond crossbar on black",
     archive: true,
+    home: true,
     width: 2048,
     height: 1176,
   },
   "archive-book-mark": {
     alt: "Black mark of an open book with an angled spine on white",
     archive: true,
+    home: true,
     width: 1504,
     height: 1128,
   },
@@ -389,12 +425,14 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-chrome-chevron": {
     alt: "Chrome chevron mark with blue reflections on black",
     archive: true,
+    home: true,
     width: 2800,
     height: 2100,
   },
   "archive-neon-lettering": {
     alt: "Spiked lettering in neon blue inside a red orbit on black",
     archive: true,
+    home: true,
     width: 4096,
     height: 2756,
   },
@@ -413,18 +451,21 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-peaks-mark": {
     alt: "Red mountain-peak mark in four colorways on black and white",
     archive: true,
+    home: true,
     width: 4096,
     height: 2867,
   },
   "archive-chrome-lettering": {
     alt: "Spiked chrome lettering in blue and purple on a starry black",
     archive: true,
+    home: true,
     width: 2000,
     height: 2000,
   },
   "archive-curves-gradient": {
     alt: "CURVES wordmark and character set in gradient color over a blue swirl",
     archive: true,
+    home: true,
     project: "curves",
     width: 4096,
     height: 2304,
@@ -432,6 +473,7 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-corebeam-animation": {
     alt: "Animated Corebeam Industries mark: two blocks open into the wordmark and close again",
     archive: true,
+    home: true,
     width: 1280,
     height: 720,
   },
