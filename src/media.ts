@@ -203,7 +203,6 @@ export const media: Readonly<Record<string, Media>> = {
   "heph-lockup": {
     alt: "Heph symbol and wordmark",
     archive: true,
-    home: true,
     width: 3023,
     height: 860,
     mark: "start",
@@ -233,7 +232,6 @@ export const media: Readonly<Record<string, Media>> = {
   "n0thing-pixel-variations": {
     alt: "Black, white, and red n0thing pixel wordmark variations",
     archive: true,
-    home: true,
     width: 1600,
     height: 1007,
   },
@@ -302,7 +300,6 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-color-tests": {
     alt: "T3 pink and monochrome colorway tests for the logomark",
     archive: true,
-    home: true,
     width: 1199,
     height: 899,
   },
@@ -425,7 +422,6 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-chrome-chevron": {
     alt: "Chrome chevron mark with blue reflections on black",
     archive: true,
-    home: true,
     width: 2800,
     height: 2100,
   },
@@ -458,7 +454,6 @@ export const media: Readonly<Record<string, Media>> = {
   "archive-chrome-lettering": {
     alt: "Spiked chrome lettering in blue and purple on a starry black",
     archive: true,
-    home: true,
     width: 2000,
     height: 2000,
   },
