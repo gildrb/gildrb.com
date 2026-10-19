@@ -252,7 +252,6 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-before-after": {
     alt: "T3 logomark before and after comparison showing the final refined joint and terminals",
     archive: true,
-    home: true,
     width: 3446,
     height: 2520,
   },
@@ -274,7 +273,6 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-code-construction": {
     alt: "T3 Code wordmark with diagonal construction guides across the T3 and C",
     archive: true,
-    home: true,
     width: 1600,
     height: 900,
   },
@@ -286,7 +284,6 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-code-outline": {
     alt: "T3 Code wordmark above a larger outlined version on black",
     archive: true,
-    home: true,
     width: 1600,
     height: 900,
   },
@@ -306,7 +303,6 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-connected-mark": {
     alt: "White connected lowercase t and 3 logomark on a dark canvas",
     archive: true,
-    home: true,
     width: 1724,
     height: 1200,
   },
@@ -348,7 +344,6 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-ghost-grid": {
     alt: "Ghosted T3 comparison grid showing overlapping logomark proportions",
     archive: true,
-    home: true,
     width: 1200,
     height: 744,
   },
@@ -362,21 +357,18 @@ export const media: Readonly<Record<string, Media>> = {
   "t3-render": {
     alt: "T3 logomark rendered in a light application setting",
     archive: true,
-    home: true,
     width: 1200,
     height: 675,
   },
   "t3-system-board": {
     alt: "T3 identity system board with logotypes, icons, favicons, and clear-space lockup",
     archive: true,
-    home: true,
     width: 2048,
     height: 1853,
   },
   "t3-weight-tests": {
     alt: "T3 logomark weight and angle tests comparing heavier and lighter constructions",
     archive: true,
-    home: true,
     width: 1200,
     height: 642,
   },
