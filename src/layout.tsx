@@ -337,7 +337,7 @@ export function Metadata({ style }: { style?: Style }) {
         ))}
         <a
           {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, styles.source)}
-          href="https://github.com/gildrb/web"
+          href="https://github.com/gildrb/gildrb.com"
           rel="noopener noreferrer"
           target="_blank"
         >

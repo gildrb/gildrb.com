@@ -1,6 +1,6 @@
 # Filen
 
-Self-initiated identity for the storage app I use, 2026. [Posted on X](https://x.com/gilrdb/status/2021242178727452998)
+Self-initiated identity for the storage app I use, 2026. [Posted on X](https://x.com/gildrb_/status/2021242178727452998)
 
 ![](media:filen-wordmark)
 

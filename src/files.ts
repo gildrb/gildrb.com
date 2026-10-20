@@ -174,7 +174,7 @@ ${profiles.map(({ label, href }) => `${label}: ${href}`).join("\n")}
 
 /* SITE */
 Language: English
-Source: https://github.com/gildrb/web
+Source: https://github.com/gildrb/gildrb.com
 LLM reference: ${url("/llms.txt")}
 Full text: ${url("/llms-full.txt")}
 Profile: ${url("/profile.json")}
