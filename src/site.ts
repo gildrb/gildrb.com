@@ -51,8 +51,10 @@ type Row = {
 
 export type Case = Row & {
   slug: string;
-  /** Breadcrumb and document title. */
+  /** Breadcrumb name. */
   name: string;
+  /** Tab and link-preview title: what the work is, in search words; the breadcrumb stays `name`. */
+  headline: string;
   ogDescription: string;
   /** Social preview image, relative to `/images/optimized/`. */
   ogImage?: string;
@@ -66,6 +68,7 @@ export const cases: readonly Case[] = [
     date: "2026-08-26",
     title: "Local Studio",
     name: "Local Studio",
+    headline: "Local Studio: brand and website for private AI on your Mac",
     scope: "Brand, Engineering",
     description:
       "The brand and website Gil Rodrigues designed and built for Local Studio, private AI that runs on your Mac.",
@@ -77,6 +80,7 @@ export const cases: readonly Case[] = [
     date: "2026-07-25",
     title: "T3",
     name: "T3",
+    headline: "T3: a self-initiated logomark exploration by Gil Rodrigues",
     scope: "Logo",
     description:
       "A self-initiated T3 logomark exploration built across products, icons, and a family of rejected directions.",
@@ -89,6 +93,7 @@ export const cases: readonly Case[] = [
     date: "2026-07-07",
     title: "Ben Davis",
     name: "Ben Davis",
+    headline: "Ben Davis: a db monogram and the davis7.sh website",
     scope: "Engineering, Logo",
     description:
       "A db monogram Gil Rodrigues drew for developer Ben Davis, and the davis7.sh site designed and built around it.",
@@ -101,6 +106,7 @@ export const cases: readonly Case[] = [
     date: "2026-04-21",
     title: "Heph",
     name: "Heph",
+    headline: "Heph: ask your own files and see where each answer came from",
     scope: "Engineering, Product",
     description:
       "Heph answers questions from your own files and shows where each answer came from.",
@@ -111,6 +117,7 @@ export const cases: readonly Case[] = [
     date: "2026-01-14",
     title: "Filen",
     name: "Filen",
+    headline: "Filen: a self-initiated identity concept by Gil Rodrigues",
     scope: "Brand",
     description:
       "How Gil Rodrigues developed a self-initiated identity concept for Filen, from rejected marks to an app icon and campaign system.",
@@ -123,6 +130,7 @@ export const cases: readonly Case[] = [
     date: "2019-11-15",
     title: "n0thing",
     name: "n0thing",
+    headline: "n0thing: a pixel wordmark for Jordan “n0thing” Gilbert",
     scope: "Logo",
     description:
       "How Gil Rodrigues developed Jordan “n0thing” Gilbert's commissioned pixel wordmark through a rejected typewriter study, final exports, and motion.",
@@ -135,6 +143,7 @@ export const cases: readonly Case[] = [
     date: "2019-01-25",
     title: "CURVES",
     name: "CURVES",
+    headline: "CURVES: a free geometric display typeface by Gil Rodrigues",
     scope: "Type",
     description:
       "CURVES is a free display typeface Gil Rodrigues designed in 2019, built from geometric forms and released as a 96-glyph unicase font.",
@@ -147,6 +156,7 @@ export const cases: readonly Case[] = [
     date: "2018-11-13",
     title: "mL7",
     name: "mL7",
+    headline: "mL7: a compact channel logo by Gil Rodrigues",
     scope: "Logo",
     description: "How Gil Rodrigues designed the compact mL7 channel logo in 2018.",
     ogDescription:

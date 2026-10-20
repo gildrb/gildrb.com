@@ -186,6 +186,7 @@ export function CasePage({
       shareDescription={item.ogDescription}
       {...(image && { image })}
       current={item.name}
+      title={item.headline}
       table={others}
       mono={monoBlocks(markdown)}
       third={{ $: "Archive", work }}
