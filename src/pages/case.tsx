@@ -14,7 +14,16 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { Row } from "../row.tsx";
-import { type Case, origin, pages, person, type Project, projects, type Tool } from "../site.ts";
+import {
+  type Case,
+  origin,
+  pages,
+  person,
+  type Product,
+  products,
+  type Project,
+  projects,
+} from "../site.ts";
 import { media, space } from "../tokens.stylex.ts";
 import { versioned } from "../versioned.ts";
 
@@ -26,17 +35,19 @@ const monoBlocks = (markdown: string) =>
   );
 
 /**
- * Every inner page. Its tab and its link preview read like its breadcrumb ("Gil Rodrigues → T3");
- * the preview shows the page's own image, or else the homepage as rendered at build time.
+ * Every inner page. Its tab and its link preview read like its breadcrumb ("Gil Rodrigues → T3")
+ * unless the page names its own `title`; the preview shows the page's own image, or else the
+ * homepage as rendered at build time.
  */
 function Frame({
   assets,
-  path,
+  url,
+  current,
+  title = `${person.name} → ${current}`,
   type,
   description,
   shareDescription = description,
   image = assets.shareImage,
-  current,
   table,
   head,
   mono,
@@ -44,7 +55,9 @@ function Frame({
   children,
 }: {
   assets: Assets;
-  path: `/${string}`;
+  /** The canonical URL. */
+  url: string;
+  title?: string;
   type: "article" | "website";
   description: string;
   shareDescription?: string;
@@ -62,8 +75,6 @@ function Frame({
   third: { $: "Archive"; work: readonly Work[] } | { $: "Content" };
   children: preact.ComponentChildren;
 }) {
-  const url = `${origin}${path}`;
-  const title = `${person.name} → ${current}`;
   return (
     <Document
       assets={assets}
@@ -166,7 +177,7 @@ export function CasePage({
   return (
     <Frame
       assets={assets}
-      path={`/${item.slug}`}
+      url={url}
       type="article"
       description={item.description}
       shareDescription={item.ogDescription}
@@ -210,10 +221,12 @@ export function CasePage({
 
 /**
  * The three projects after this one in the homepage's order, wrapping round to the newest;
- * external projects are left out, since they have no page here.
+ * external projects are left out unless they are products, whose pages live on their own hosts.
  */
 function next(href: string): Project[] {
-  const own = projects.filter((project) => !project.external);
+  const own = projects.filter(
+    (project) => !project.external || products.some(({ home }) => `${home}/` === project.href),
+  );
   const at = own.findIndex((project) => project.href === href);
   return [1, 2, 3]
     .map((step) => own[(at + step) % own.length])
@@ -237,7 +250,7 @@ export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[
   return (
     <Frame
       assets={assets}
-      path="/all"
+      url={`${origin}/all`}
       type="website"
       description={`Logos, typefaces, identities and websites by ${person.name}.`}
       current="Archive"
@@ -264,6 +277,8 @@ const styles = stylex.create({
       "@media (min-width: 769px)": `calc(${space.toggleSize} / 2 - 12px)`,
     },
   },
+  /** The text under Archetypon's converter. */
+  below: { marginTop: "48px" },
   nextList: {
     display: "grid",
     gridTemplateColumns: space.tableColumns,
@@ -286,7 +301,7 @@ export function DocPage({
   return (
     <Frame
       assets={assets}
-      path={`/${page.slug}`}
+      url={`${origin}/${page.slug}`}
       type="website"
       description={page.description}
       current={page.name}
@@ -305,53 +320,71 @@ export function DocPage({
   );
 }
 
-/** A tool that runs on the page. */
-export function ToolPage({
+/**
+ * A product, served on its own host (see `worker/products.ts`): what it solves, in Markdown, and
+ * for Archetypon the converter itself above the text.
+ */
+export function ProductPage({
   assets,
   item,
+  markdown,
   work,
 }: {
   assets: Assets;
-  item: Tool;
+  item: Product;
+  markdown: string;
   work: readonly Work[];
 }) {
-  const url = `${origin}/${item.slug}`;
-  const others = next(`/${item.slug}`);
+  const url = `${item.home}/`;
+  const others = next(url);
   return (
     <Frame
       assets={assets}
-      path={`/${item.slug}`}
+      url={url}
+      title={item.headline}
       type="website"
       description={item.description}
       current={item.name}
       table={others}
-      mono={false}
+      mono={monoBlocks(markdown)}
       third={{ $: "Archive", work }}
       head={
         <>
-          <Alternates />
+          <Alternates slug={item.slug} name={item.name} />
           <JsonLd
             value={{
               "@context": "https://schema.org",
-              "@type": "WebApplication",
-              "@id": `${url}#tool`,
+              "@type": "SoftwareApplication",
+              "@id": `${url}#software`,
               url,
               name: item.name,
               description: item.description,
-              applicationCategory: "DesignApplication",
-              operatingSystem: "Any",
-              browserRequirements: "Requires WebAssembly",
+              applicationCategory: item.category,
+              operatingSystem: item.operatingSystem,
+              ...(item.converter && { browserRequirements: "Requires WebAssembly" }),
+              offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
               isAccessibleForFree: true,
-              author: { "@type": "Person", "@id": `${origin}/#person`, name: person.name },
+              codeRepository: item.repository,
+              author: {
+                "@type": "Person",
+                "@id": `${origin}/#person`,
+                name: person.name,
+                url: `${origin}/`,
+              },
               inLanguage: "en",
             }}
           />
         </>
       }
     >
-      <div {...stylex.props(styles.column, styles.phoneItem)}>
-        <Island name="archetypon" component={Converter} props={{}} />
-      </div>
+      {item.converter && (
+        <div {...stylex.props(styles.column, styles.phoneItem)}>
+          <Island name="archetypon" component={Converter} props={{}} />
+        </div>
+      )}
+      <article {...stylex.props(styles.column, styles.phoneItem, item.converter && styles.below)}>
+        <Article markdown={markdown} eager showTitle={false} />
+      </article>
       <Next projects={others} />
     </Frame>
   );

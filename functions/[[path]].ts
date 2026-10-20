@@ -1,4 +1,4 @@
-import { pages, slugs } from "../src/site.ts";
+import { origin, pages, products, slugs } from "../src/site.ts";
 import {
   apiHeaders,
   canonicalHost,
@@ -12,11 +12,21 @@ import {
 const markdown = new Map([
   ["/", "/index.html.md"],
   ["/all", "/llms-full.txt"],
-  ...[...slugs, ...pages.map(({ slug }) => slug)].map((slug): [string, string] => [
-    `/${slug}`,
-    `/content/${slug}.md`,
-  ]),
+  ...[...slugs, ...pages.map(({ slug }) => slug), ...products.map(({ slug }) => slug)].map(
+    (slug): [string, string] => [`/${slug}`, `/content/${slug}.md`],
+  ),
 ]);
+
+/**
+ * Product pages live on their own hosts. On gildrb.com their old paths redirect there; the
+ * products Worker (`worker/products.ts`) still reads them from the Pages deployment's own host.
+ */
+const productHomes = new Map(
+  products.flatMap(({ slug, home }): [string, string][] =>
+    [`/${slug}`, `/${slug}/`, `/${slug}.html`].map((path) => [path, `${home}/`]),
+  ),
+);
+const siteHost = new URL(origin).hostname;
 
 const aliases = new Map([
   ["/api/profile", "/profile.json"],
@@ -77,6 +87,8 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
   if (redirect) return redirect;
   const url = new URL(request.url);
   const { pathname } = url;
+  const home = url.hostname === siteHost ? productHomes.get(pathname) : undefined;
+  if (home) return Response.redirect(home, 301);
   // Plain page and file requests go straight to static serving; only Markdown negotiation,
   // aliases and the API need the work below.
   const plain =

@@ -155,18 +155,86 @@ export const cases: readonly Case[] = [
   },
 ];
 
-/** Tools that run on the site itself: their rows open the tool, not a case study. */
-export type Tool = Row & { slug: string; name: string };
+/** Software I make. Each has its own host; `gildrb.com/<slug>` redirects there. */
+export type Product = Row & {
+  slug: string;
+  name: string;
+  /** The origin the page lives on; its canonical URL is this origin's root. */
+  home: `https://${string}`;
+  /** Hosts that redirect to `home`, keeping the path. */
+  aliases: readonly string[];
+  /** Tab and search title: what it does, in the words people search for. */
+  headline: string;
+  repository: `https://github.com/${string}`;
+  /** schema.org `applicationCategory`. */
+  category: "DeveloperApplication" | "DesignApplication";
+  operatingSystem: string;
+  /** Archetypon also runs on its page; the others only describe themselves. */
+  converter: boolean;
+  /**
+   * A `curl … | sh` installer behind the home host: `/install` always, and `/` for clients that
+   * do not ask for HTML.
+   */
+  installer: { $: "None" } | { $: "Script"; url: `https://${string}` };
+};
 
-export const tools: readonly Tool[] = [
+export const products: readonly Product[] = [
+  {
+    slug: "eukhe",
+    date: "2026-10-05",
+    title: "Eukhe",
+    name: "Eukhe",
+    scope: "Engineering, Tool",
+    home: "https://eukhe.com",
+    aliases: ["eukhe.gildrb.com", "www.eukhe.com"],
+    headline: "Eukhe: a coding agent that remembers every chat",
+    description:
+      "A coding agent and gateway with one endless chat as its memory, so it never loses the context of your work.",
+    repository: "https://github.com/gildrb/eukhe",
+    category: "DeveloperApplication",
+    operatingSystem: "macOS (Apple Silicon), Linux",
+    converter: false,
+    installer: {
+      $: "Script",
+      url: "https://github.com/gildrb/eukhe/releases/latest/download/install.sh",
+    },
+  },
   {
     slug: "archetypon",
     date: "2026-09-26",
     title: "Archetypon",
     name: "Archetypon",
     scope: "Tool",
+    home: "https://archetypon.gildrb.com",
+    aliases: [],
+    headline: "Archetypon: convert SVG to PNG, ICO, WebP, JPEG and PDF in your browser",
     description:
       "Turn SVG files into optimized SVG, PDF, PNG, WebP, JPEG and ICO assets, in your browser.",
+    repository: "https://github.com/gildrb/archetypon",
+    category: "DesignApplication",
+    operatingSystem: "Any",
+    converter: true,
+    installer: { $: "None" },
+  },
+  {
+    slug: "poros",
+    date: "2026-09-02",
+    title: "Poros",
+    name: "Poros",
+    scope: "Engineering, Tool",
+    home: "https://poros.gildrb.com",
+    aliases: [],
+    headline: "Poros: open your server's dev server on your Mac or phone over Tailscale",
+    description:
+      "Develop on a server and open the dev server on your Mac, phone or tablet: one command gives it a private HTTPS link on your tailnet.",
+    repository: "https://github.com/gildrb/poros",
+    category: "DeveloperApplication",
+    operatingSystem: "macOS, Linux",
+    converter: false,
+    installer: {
+      $: "Script",
+      url: "https://raw.githubusercontent.com/gildrb/poros/main/install.sh",
+    },
   },
 ];
 
@@ -178,7 +246,7 @@ export type Project = Row & { href: string; external: boolean };
 /** Homepage rows, newest first. */
 export const projects: readonly Project[] = [
   ...cases.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
-  ...tools.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
+  ...products.map((item) => ({ ...item, href: `${item.home}/`, external: true })),
   ...externals.map((item) => ({ ...item, external: true })),
 ].toSorted((left, right) => right.date.localeCompare(left.date));
 

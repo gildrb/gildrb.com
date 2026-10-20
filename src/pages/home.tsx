@@ -15,12 +15,17 @@ import {
   Shell,
   Sidebar,
 } from "../layout.tsx";
-import { developers, origin, person, profiles } from "../site.ts";
+import { developers, origin, person, products, profiles } from "../site.ts";
 import { colors, media, rootMarker, space, underline } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
-const title = person.name;
+const title = `${person.name} (${person.handle})`;
+
+/** What search results show under the name: the role, then the work people look for. */
+const description = `${person.summary} Logos, brands and websites, and open-source tools: ${products
+  .map(({ name }) => name)
+  .join(", ")}.`;
 
 /** Machine-readable versions of this page, advertised to crawlers and agents. */
 const alternates: [rel: string, type: string, path: string, title: string][] = [
@@ -37,7 +42,7 @@ const alternates: [rel: string, type: string, path: string, title: string][] = [
 function Head({ shareImage }: { shareImage: string }) {
   return (
     <>
-      <meta name="description" content={person.summary} />
+      <meta name="description" content={description} />
       <meta name="author" content={person.name} />
       <meta
         name="robots"
@@ -53,7 +58,7 @@ function Head({ shareImage }: { shareImage: string }) {
       <meta property="og:type" content="profile" />
       <meta property="og:url" content={`${origin}/`} />
       <meta property="og:title" content={title} />
-      <meta property="og:description" content={person.summary} />
+      <meta property="og:description" content={description} />
       <meta property="og:site_name" content={person.name} />
       <meta property="og:image" content={`${origin}${shareImage}`} />
       <meta property="og:image:width" content={String(shareFrame.width)} />

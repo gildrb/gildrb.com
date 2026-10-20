@@ -1,4 +1,4 @@
-import { cases, email, origin, pages, person, profiles, projects, tools } from "./site.ts";
+import { cases, email, origin, pages, person, products, profiles, projects } from "./site.ts";
 import { versioned } from "./versioned.ts";
 
 /**
@@ -8,10 +8,9 @@ import { versioned } from "./versioned.ts";
 
 const url = (path: string) => `${origin}${path}`;
 
-const work = projects.map(({ href, title, scope, date, external }) => {
-  const item = [...cases, ...tools].find((entry) => `/${entry.slug}` === href);
+const work = projects.map(({ href, title, scope, date, external, description }) => {
   const link = external ? href : url(href);
-  return `- [${title}](${link}) (${scope}, ${date.slice(0, 7)})${item ? `: ${item.description}` : ""}`;
+  return `- [${title}](${link}) (${scope}, ${date.slice(0, 7)}): ${description}`;
 });
 
 const sameAs = profiles.map(({ href }) => href);
@@ -29,7 +28,10 @@ export const profile = {
       inLanguage: "en",
       publisher: { "@id": url("/#person") },
       about: { "@id": url("/#person") },
-      hasPart: cases.map(({ slug }) => ({ "@id": url(`/${slug}#case-study`) })),
+      hasPart: [
+        ...cases.map(({ slug }) => ({ "@id": url(`/${slug}#case-study`) })),
+        ...products.map(({ home }) => ({ "@id": `${home}/#software` })),
+      ],
     },
     {
       "@type": "ProfilePage",
@@ -65,6 +67,18 @@ export const profile = {
       inLanguage: "en",
       author: { "@id": url("/#person") },
       isPartOf: { "@id": url("/#website") },
+    })),
+    ...products.map((item) => ({
+      "@type": "SoftwareApplication",
+      "@id": `${item.home}/#software`,
+      url: `${item.home}/`,
+      name: item.name,
+      description: item.description,
+      applicationCategory: item.category,
+      operatingSystem: item.operatingSystem,
+      codeRepository: item.repository,
+      isAccessibleForFree: true,
+      author: { "@id": url("/#person") },
     })),
   ],
 };
@@ -207,25 +221,23 @@ ${cases
 </rss>
 `;
 
-const sitemapPaths = [
-  "/",
-  "/all",
-  ...[...cases, ...pages].flatMap(({ slug }) => [`/${slug}`, `/content/${slug}.md`]),
-  ...tools.map(({ slug }) => `/${slug}`),
-  "/llms.txt",
-  "/llms-full.txt",
-  "/index.html.md",
-  "/profile.json",
-  "/feed.xml",
-  "/humans.txt",
-  "/api-docs.md",
-  "/auth.md",
-  "/openapi.json",
+/**
+ * Pages for search engines only: the Markdown and machine-readable copies are found through
+ * llms.txt and the `alternate` links. Product pages on gildrb.com subdomains belong here too,
+ * since one Search Console domain property covers them; other domains keep their own sitemap.
+ */
+const sitemapUrls = [
+  url("/"),
+  url("/all"),
+  ...[...cases, ...pages].map(({ slug }) => url(`/${slug}`)),
+  ...products
+    .map(({ home }) => `${home}/`)
+    .filter((home) => new URL(home).hostname.endsWith(`.${new URL(origin).hostname}`)),
 ];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapPaths.map((path) => `  <url><loc>${url(path)}</loc></url>`).join("\n")}
+${sitemapUrls.map((loc) => `  <url><loc>${loc}</loc></url>`).join("\n")}
 </urlset>
 `;
 

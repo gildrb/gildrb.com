@@ -1,0 +1,14 @@
+// Product pages on their own hosts; see products.ts. Deploy: `npx wrangler deploy -c worker/wrangler.jsonc`.
+{
+  "name": "gildrb-products",
+  "main": "products.ts",
+  "compatibility_date": "2026-10-20",
+  "workers_dev": false,
+  "routes": [
+    { "pattern": "archetypon.gildrb.com", "custom_domain": true },
+    { "pattern": "poros.gildrb.com", "custom_domain": true },
+    { "pattern": "eukhe.gildrb.com", "custom_domain": true },
+    { "pattern": "eukhe.com/*", "zone_name": "eukhe.com" },
+    { "pattern": "www.eukhe.com/*", "zone_name": "eukhe.com" },
+  ],
+}

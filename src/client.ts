@@ -20,7 +20,7 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   portfolio: () => Portfolio,
   // Only the Heph case study shows the terminal; keep it out of the homepage bundle.
   heph: () => import("./islands/heph.tsx").then((module) => module.Terminal),
-  // Only /archetypon runs the converter; its engine loads once files arrive.
+  // Only Archetypon's page (archetypon.gildrb.com) runs the converter; its engine loads once files arrive.
   archetypon: () => import("./islands/archetypon.tsx").then((module) => module.Converter),
 };
 

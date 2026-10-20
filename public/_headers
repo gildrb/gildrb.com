@@ -42,6 +42,8 @@
   Content-Type: text/markdown; charset=utf-8
 
 /content/*
+  ! X-Robots-Tag
+  X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=0, must-revalidate
   Content-Type: text/markdown; charset=utf-8
   Link: <https://gildrb.com/llms-full.txt>; rel="alternate describedby"; type="text/markdown", <https://gildrb.com/llms.txt>; rel="alternate"; type="text/markdown"

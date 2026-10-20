@@ -3,9 +3,9 @@ import { renderToString } from "preact-render-to-string";
 import { collect } from "./archive.tsx";
 import { files } from "./files.ts";
 import type { Assets } from "./layout.tsx";
-import { AllPage, CasePage, DocPage, ToolPage } from "./pages/case.tsx";
+import { AllPage, CasePage, DocPage, ProductPage } from "./pages/case.tsx";
 import { Home } from "./pages/home.tsx";
-import { cases, origin, pages, tools } from "./site.ts";
+import { cases, origin, pages, products } from "./site.ts";
 
 // For the build (`vite.config.ts`): the share image comes first, since the pages link it, and the
 // stamped copies of `public/` files last, once rendering has named them all.
@@ -59,9 +59,9 @@ export function render(assets: Assets): Record<string, string> {
       ]),
     ),
     ...Object.fromEntries(
-      tools.map((item) => [
+      products.map((item) => [
         `${item.slug}.html`,
-        html(<ToolPage assets={assets} item={item} work={work} />),
+        html(<ProductPage assets={assets} item={item} markdown={text(item.slug)} work={work} />),
       ]),
     ),
     ...Object.fromEntries(
@@ -77,13 +77,19 @@ function fullText(): string {
   const sections = [
     {
       heading: "Homepage",
-      path: "/",
+      path: `${origin}/`,
       source: "/index.html.md",
       body: files["index.html.md"] ?? "",
     },
     ...[...cases, ...pages].map(({ slug, name }) => ({
       heading: name,
-      path: `/${slug}`,
+      path: `${origin}/${slug}`,
+      source: `/content/${slug}.md`,
+      body: text(slug),
+    })),
+    ...products.map(({ slug, name, home }) => ({
+      heading: name,
+      path: `${home}/`,
       source: `/content/${slug}.md`,
       body: text(slug),
     })),
@@ -92,20 +98,15 @@ function fullText(): string {
 
 > Every public page of ${origin}/ in one Markdown file.
 
-${sections.map(({ heading, path }) => `- [${heading}](${origin}${path})`).join("\n")}
+${sections.map(({ heading, path }) => `- [${heading}](${path})`).join("\n")}
 
 ---
 
 ${sections
   .map(({ heading, path, source, body }) =>
-    [
-      `## ${heading}`,
-      "",
-      `Page: ${origin}${path}`,
-      `Markdown: ${origin}${source}`,
-      "",
-      body.trim(),
-    ].join("\n"),
+    [`## ${heading}`, "", `Page: ${path}`, `Markdown: ${origin}${source}`, "", body.trim()].join(
+      "\n",
+    ),
   )
   .join("\n\n---\n\n")}
 `;
