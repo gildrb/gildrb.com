@@ -121,8 +121,9 @@ for (const link of document.querySelectorAll('a[href="#top"]')) {
   });
 }
 
-// Homepage: arrow keys step through the links, the theme toggle and the table.
-if (location.pathname === "/") {
+// Homepage: arrow keys step through the links, the theme toggle and the table. Only the homepage
+// has the site-title heading; product pages are also served at `/`, on their own hosts.
+if (document.getElementById("site-title")) {
   document.addEventListener("keydown", (event) => {
     if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
     event.preventDefault();

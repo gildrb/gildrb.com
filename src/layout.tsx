@@ -5,7 +5,7 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
-import { contacts, type Link, person, type Project, profiles, projects } from "./site.ts";
+import { contacts, type Link, origin, person, type Project, profiles, projects } from "./site.ts";
 import { themeColor, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
 import { Figures, type Style, ui, untranslated } from "./ui.tsx";
@@ -197,11 +197,18 @@ export function Main({
   );
 }
 
-/** Site name, or on inner pages a breadcrumb back to it. */
+/**
+ * Site name, or on inner pages a breadcrumb back to it. The name links to gildrb.com by its full
+ * URL: product pages live on their own hosts, where `/` is the product page itself.
+ */
 export function Name({ current }: { current?: string }) {
   return current ? (
     <p {...stylex.props(ui.heading, styles.name, styles.caseName)}>
-      <a {...stylex.props(ui.target, ui.focusRing, styles.home)} href="/" {...untranslated}>
+      <a
+        {...stylex.props(ui.target, ui.focusRing, styles.home)}
+        href={`${origin}/`}
+        {...untranslated}
+      >
         Gil Rodrigues
       </a>
       <span {...stylex.props(styles.arrow)} aria-hidden="true">

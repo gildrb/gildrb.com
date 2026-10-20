@@ -249,16 +249,26 @@ function toml(source: string): Token[] {
   return tokens;
 }
 
-function Code({ language, title, code }: { language: string; title: string; code: string }) {
+function Code({
+  language,
+  title,
+  code,
+  post,
+}: {
+  language: string;
+  title: string;
+  code: string;
+  post: boolean;
+}) {
   const tokens: Token[] = language === "toml" ? toml(code) : [[null, code]];
   return (
-    <div {...stylex.props(styles.column, styles.codeBlock)}>
+    <div {...stylex.props(styles.column, styles.codeBlock, post && postStyles.codeBlock)}>
       {title && (
         <p {...stylex.props(styles.small, styles.codeLabel)}>
           <Inline text={title} />
         </p>
       )}
-      <pre {...stylex.props(ui.mono, styles.pre)}>
+      <pre {...stylex.props(ui.mono, styles.pre, post && postStyles.pre)}>
         <code>
           {tokens.map(([kind, text]) =>
             text
@@ -293,15 +303,22 @@ function group(blocks: Block[]): Group[] {
   return groups;
 }
 
-/** `nested` is true inside a `##` section, where `###` becomes an h3; before any section it is an h2. */
+/**
+ * `nested` is true inside a `##` section, where `###` becomes an h3; before any section it is an
+ * h2. `lede` sets the group's first paragraph larger: a post's opening sentence.
+ */
 function Prose({
   blocks,
   after,
   nested,
+  post,
+  lede,
 }: {
   blocks: Block[];
   after: Group | undefined;
   nested: boolean;
+  post: boolean;
+  lede: boolean;
 }) {
   const Subheading = nested ? "h3" : "h2";
   const spacing =
@@ -312,17 +329,44 @@ function Prose({
     <div {...stylex.props(styles.column, spacing)}>
       {blocks.map((block, index) =>
         block.type === "h2" ? (
-          <h2 {...stylex.props(ui.prose, styles.prose, styles.heading, styles.h2)}>
+          <h2
+            {...stylex.props(
+              ui.prose,
+              styles.prose,
+              styles.heading,
+              styles.h2,
+              post && postStyles.heading,
+              post && postStyles.h2,
+            )}
+          >
             <Inline text={block.text} />
           </h2>
         ) : block.type === "h3" ? (
-          <Subheading {...stylex.props(ui.prose, styles.prose, styles.heading, styles.h3)}>
+          <Subheading
+            {...stylex.props(
+              ui.prose,
+              styles.prose,
+              styles.heading,
+              styles.h3,
+              post && postStyles.heading,
+              post && postStyles.h3,
+              post && index === 0 && postStyles.first,
+            )}
+          >
             <Inline text={block.text} />
           </Subheading>
         ) : block.type === "list" ? (
-          <ul {...stylex.props(styles.list)}>
+          <ul {...stylex.props(styles.list, post && postStyles.list)}>
             {block.items.map((item, itemIndex) => (
-              <li {...stylex.props(ui.prose, styles.prose, itemIndex > 0 && styles.nextItem)}>
+              <li
+                {...stylex.props(
+                  ui.prose,
+                  styles.prose,
+                  post && postStyles.text,
+                  itemIndex > 0 && styles.nextItem,
+                  itemIndex > 0 && post && postStyles.nextItem,
+                )}
+              >
                 <Inline text={item} />
               </li>
             ))}
@@ -333,7 +377,12 @@ function Prose({
               {...stylex.props(
                 ui.prose,
                 styles.prose,
+                post && postStyles.text,
+                lede && index === 0 && postStyles.lede,
                 ["p", "list"].includes(blocks[index - 1]?.type ?? "") && styles.nextParagraph,
+                ["p", "list"].includes(blocks[index - 1]?.type ?? "") &&
+                  post &&
+                  postStyles.nextParagraph,
               )}
             >
               <Inline text={block.text} />
@@ -346,20 +395,27 @@ function Prose({
 }
 
 /**
- * Renders a case study; `eager` gives its first image high fetch priority. `showTitle` is false
- * where the breadcrumb already names the page: the heading stays for screen readers only.
- * Headings keep the document outline but read as body text; only the site name is set larger.
+ * How a page reads. `Index` (case studies, plain pages): the breadcrumb names the page, its
+ * heading stays for screen readers only, and headings read as body text, like the homepage index.
+ * `Post` (product pages): a written article, with a visible title, a byline, a larger opening
+ * sentence, sized headings and comfortable reading measure; `tool` follows the opening.
  */
+export type ArticleVariant =
+  | { $: "Index" }
+  | { $: "Post"; byline: ComponentChildren; tool: ComponentChildren | null };
+
+/** Renders a page's Markdown; `eager` gives its first image high fetch priority. */
 export function Article({
   markdown,
   eager,
-  showTitle,
+  variant,
 }: {
   markdown: string;
   eager: boolean;
-  showTitle: boolean;
+  variant: ArticleVariant;
 }) {
   const { title, blocks } = parse(markdown);
+  const post = variant.$ === "Post";
   const firstMedia = blocks.find((block) => block.type === "media");
   // Each ## opens a section with a chapter-sized gap; content before the first ## is not wrapped.
   const sections: Block[][] = [[]];
@@ -376,6 +432,8 @@ export function Article({
           blocks={item}
           after={groups[index - 1]}
           nested={nested}
+          post={post}
+          lede={post && !nested && index === 0}
         />
       ) : item.type === "media" ? (
         <Figures
@@ -384,31 +442,86 @@ export function Article({
           eager={eager && item === firstMedia}
         />
       ) : (
-        <Code key={`code:${item.title}:${item.code.length}`} {...item} />
+        <Code key={`code:${item.title}:${item.code.length}`} {...item} post={post} />
       ),
     );
   const [intro = [], ...chapters] = sections;
-  return (
+  const body = (
     <>
-      <header {...stylex.props(styles.column)}>
-        <h1
-          {...stylex.props(
-            ui.prose,
-            styles.prose,
-            styles.heading,
-            showTitle ? styles.title : ui.srOnly,
-          )}
-        >
-          <Inline text={title} />
-        </h1>
-      </header>
       {render(group(intro), false)}
+      {variant.$ === "Post" && variant.tool !== null && (
+        <div {...stylex.props(styles.column, postStyles.tool)}>{variant.tool}</div>
+      )}
       {chapters.map((chapter) => (
-        <section {...stylex.props(styles.section)}>{render(group(chapter), true)}</section>
+        <section {...stylex.props(styles.section, post && postStyles.section)}>
+          {render(group(chapter), true)}
+        </section>
       ))}
     </>
   );
+  switch (variant.$) {
+    case "Index":
+      return (
+        <>
+          <header {...stylex.props(styles.column)}>
+            <h1 {...stylex.props(ui.prose, styles.prose, styles.heading, ui.srOnly)}>
+              <Inline text={title} />
+            </h1>
+          </header>
+          {body}
+        </>
+      );
+    case "Post":
+      return (
+        <>
+          <header {...stylex.props(styles.column, postStyles.header)}>
+            <h1 {...stylex.props(ui.prose, postStyles.title)}>
+              <Inline text={title} />
+            </h1>
+            <p {...stylex.props(styles.small, postStyles.byline)}>{variant.byline}</p>
+          </header>
+          {body}
+        </>
+      );
+    default: {
+      const _: never = variant;
+      return _;
+    }
+  }
 }
+
+/** A product page reads as an article: measured type, sized headings, code in a panel. */
+const postStyles = stylex.create({
+  header: { marginBottom: "32px" },
+  title: {
+    margin: 0,
+    color: colors.primary,
+    fontSize: { default: "30px", "@media (min-width: 769px)": "38px" },
+    lineHeight: 1.12,
+    fontWeight: 500,
+    letterSpacing: "-0.025em",
+    textWrap: "balance",
+  },
+  byline: { margin: "16px 0 0" },
+  text: { fontSize: "17px", lineHeight: "28px" },
+  lede: { fontSize: "20px", lineHeight: "30px", letterSpacing: "-0.01em", color: colors.primary },
+  nextParagraph: { marginTop: "20px" },
+  heading: { color: colors.primary, fontWeight: 500, letterSpacing: "-0.015em" },
+  h2: { fontSize: "24px", lineHeight: "30px", marginBottom: "16px" },
+  h3: { fontSize: "18px", lineHeight: "26px", margin: "36px 0 8px" },
+  first: { marginTop: 0 },
+  section: { marginTop: "64px" },
+  list: { margin: "16px 0 0", paddingLeft: "22px", listStyleType: "disc" },
+  nextItem: { marginTop: "10px" },
+  codeBlock: {
+    marginTop: "24px",
+    padding: "16px 20px",
+    borderRadius: "12px",
+    backgroundColor: colors.codeBg,
+  },
+  pre: { lineHeight: "22px" },
+  tool: { marginTop: "40px" },
+});
 
 export const styles = stylex.create({
   column: { width: `min(100%, ${space.contentColumn})`, marginInline: "auto" },

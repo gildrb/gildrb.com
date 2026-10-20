@@ -2,7 +2,8 @@ import * as stylex from "@stylexjs/stylex";
 import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
-import { Article, parse, singleSizes, sources } from "../markdown.tsx";
+import { Article, styles as article, parse, singleSizes, sources } from "../markdown.tsx";
+import { ui } from "../ui.tsx";
 import {
   type Assets,
   Document,
@@ -69,10 +70,10 @@ function Frame({
   head: preact.ComponentChildren;
   mono: boolean;
   /**
-   * Wide screens' third column: the archive beside the text, or the page's own content spanning
-   * it (the archive page).
+   * Wide screens' third column: the archive beside the text, the page's own content spanning it
+   * (the archive page), or nothing, so an article reads alone (product pages).
    */
-  third: { $: "Archive"; work: readonly Work[] } | { $: "Content" };
+  third: { $: "Archive"; work: readonly Work[] } | { $: "Content" } | { $: "Empty" };
   children: preact.ComponentChildren;
 }) {
   return (
@@ -212,7 +213,7 @@ export function CasePage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager showTitle={false} />
+        <Article markdown={markdown} eager variant={{ $: "Index" }} />
       </article>
       <Next projects={others} />
     </Frame>
@@ -277,8 +278,6 @@ const styles = stylex.create({
       "@media (min-width: 769px)": `calc(${space.toggleSize} / 2 - 12px)`,
     },
   },
-  /** The text under Archetypon's converter. */
-  below: { marginTop: "48px" },
   nextList: {
     display: "grid",
     gridTemplateColumns: space.tableColumns,
@@ -314,26 +313,24 @@ export function DocPage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager showTitle={false} />
+        <Article markdown={markdown} eager variant={{ $: "Index" }} />
       </article>
     </Frame>
   );
 }
 
 /**
- * A product, served on its own host (see `worker/products.ts`): what it solves, in Markdown, and
- * for Archetypon the converter itself above the text.
+ * A product, served on its own host (see `worker/products.ts`): an article on what it solves,
+ * with Archetypon's converter right after the opening.
  */
 export function ProductPage({
   assets,
   item,
   markdown,
-  work,
 }: {
   assets: Assets;
   item: Product;
   markdown: string;
-  work: readonly Work[];
 }) {
   const url = `${item.home}/`;
   const others = next(url);
@@ -347,7 +344,7 @@ export function ProductPage({
       current={item.name}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Archive", work }}
+      third={{ $: "Empty" }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -377,13 +374,42 @@ export function ProductPage({
         </>
       }
     >
-      {item.converter && (
-        <div {...stylex.props(styles.column, styles.phoneItem)}>
-          <Island name="archetypon" component={Converter} props={{}} />
-        </div>
-      )}
-      <article {...stylex.props(styles.column, styles.phoneItem, item.converter && styles.below)}>
-        <Article markdown={markdown} eager showTitle={false} />
+      <article {...stylex.props(styles.column, styles.phoneItem)}>
+        <Article
+          markdown={markdown}
+          eager
+          variant={{
+            $: "Post",
+            byline: (
+              <>
+                <a {...stylex.props(article.link, ui.focusRing)} href={`${origin}/`}>
+                  {person.name}
+                </a>
+                {" · "}
+                <time dateTime={item.date}>
+                  {new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })}
+                </time>
+                {" · "}
+                <a
+                  {...stylex.props(article.link, ui.focusRing)}
+                  href={item.repository}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Source on GitHub
+                </a>
+              </>
+            ),
+            tool: item.converter ? (
+              <Island name="archetypon" component={Converter} props={{}} />
+            ) : null,
+          }}
+        />
       </article>
       <Next projects={others} />
     </Frame>

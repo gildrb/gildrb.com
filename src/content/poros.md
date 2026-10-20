@@ -1,6 +1,6 @@
 # Poros: open a dev server that runs on your server, on your Mac or phone
 
-Your code builds on a server, a desktop or a VM, but you want to see the page on your laptop or phone. Poros gives the dev server a private HTTPS link on your Tailscale network. No port forwarding, no SSH tunnel, no public URL. [GitHub](https://github.com/gildrb/poros)
+Your code builds on a server, a desktop or a VM, but you want to see the page on your laptop or phone. Poros gives the dev server a private HTTPS link on your Tailscale network. No port forwarding, no SSH tunnel, no public URL.
 
 ```sh title="Run your usual dev command through Poros"
 poros vp dev

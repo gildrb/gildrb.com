@@ -1,6 +1,6 @@
 # Archetypon: convert SVG to PNG, ICO, WebP, JPEG and PDF
 
-Archetypon is free and open source. [GitHub](https://github.com/gildrb/archetypon)
+One SVG in, every file a logo or icon needs out: favicons, app icons, PNG, WebP, JPEG and a vector PDF. Free and open source.
 
 ## The problem
 

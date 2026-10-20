@@ -61,7 +61,7 @@ export function render(assets: Assets): Record<string, string> {
     ...Object.fromEntries(
       products.map((item) => [
         `${item.slug}.html`,
-        html(<ProductPage assets={assets} item={item} markdown={text(item.slug)} work={work} />),
+        html(<ProductPage assets={assets} item={item} markdown={text(item.slug)} />),
       ]),
     ),
     ...Object.fromEntries(
