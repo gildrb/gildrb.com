@@ -1,32 +1,46 @@
 # Archetypon: convert SVG to PNG, ICO, WebP, JPEG and PDF
 
-One SVG in, every file a logo or icon needs out: favicons, app icons, PNG, WebP, JPEG and a vector PDF. Free and open source.
+Drop one SVG. Get every file that a logo or an icon needs: favicons, app icons, PNG, WebP, JPEG and a vector PDF. Archetypon is free and open source.
 
 ## The problem
 
-A logo or icon needs many files: favicons, app icons, PNGs for slides, a PDF for print, WebP for the web. Exporting each size by hand from a design tool takes time, and each export is a chance to get a size or a background wrong.
+A logo needs many files: favicons, app icons, PNG for slides, PDF for print and WebP for the web. To export each size by hand takes time. Each export can get a size or a background wrong.
 
 ## What you get
 
 - Optimized SVG.
-- PNG, WebP and JPEG at every size you choose, from 16 to 4096 pixels.
-- A multi-size ICO favicon.
+- PNG, WebP and JPEG at each size that you select, from 16 to 4096 pixels.
+- One ICO favicon that holds many sizes.
 - A vector PDF.
-- A transparent or an opaque background, and the JPEG quality you set.
+- A transparent or an opaque background. You set the JPEG quality.
 
-Text in the SVG renders with the fonts you drop beside it (`.ttf`, `.otf`, `.ttc`).
+If the SVG has text, add its font files: `.ttf`, `.otf` or `.ttc`.
 
 ## Command line
 
-The same engine runs as a command, for scripts and builds. It is written in Rust. Each line below converts SVGs: every format and size, only PNG and ICO at two sizes, or a whole folder into `assets`.
+The `typ` command uses the same engine. Use it in scripts and builds.
+
+Make every format at every size:
 
 ```sh
 typ logo.svg
+```
+
+Make only PNG and ICO, at 64 and 512 pixels:
+
+```sh
 typ -f png,ico -s 64,512 logo.svg
+```
+
+Convert all SVGs of a folder into `assets`:
+
+```sh
 typ -o assets *.svg
 ```
 
-To install it, build it from source:
+## Install
+
+Build the command from source:
 
 ```sh
 git clone https://github.com/gildrb/archetypon
@@ -35,12 +49,14 @@ make
 sudo make install
 ```
 
+The source code is on [GitHub](https://github.com/gildrb/archetypon).
+
 ## Questions
 
 ### How do I make a favicon from an SVG?
 
-Drop the SVG on this page and download the ZIP. It holds `.ico` and the PNG sizes that browsers and phones ask for.
+Drop the SVG on this page. Download the ZIP. It holds the `.ico` file and the PNG sizes that browsers and phones use.
 
 ### Are my files uploaded?
 
-No. Archetypon is compiled to WebAssembly and runs on your device.
+No. Archetypon runs on your device, in WebAssembly.

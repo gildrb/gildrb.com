@@ -4,30 +4,44 @@ import { announce } from "../announce.ts";
 import { colors } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
-/** One shell command in a pill, with a button that copies it (product pages). */
-export function Command({ command }: { command: string }) {
+/**
+ * One shell block (product pages): each line a command after a `$`, and one button that copies
+ * them all, so a paste runs them in order.
+ */
+export function Command({ commands }: { commands: readonly string[] }) {
+  const text = commands.join("\n");
+  const single = commands.length === 1;
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef(0);
   async function copy() {
-    const copied = await navigator.clipboard.writeText(command).then(
+    const copied = await navigator.clipboard.writeText(text).then(
       () => true,
       () => false,
     );
     setState(copied ? "copied" : "failed");
-    announce(copied ? "Command copied to clipboard" : "Command could not be copied");
+    const what = single ? "Command" : "Commands";
+    announce(copied ? `${what} copied to clipboard` : `${what} could not be copied`);
     clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setState("idle"), 1200);
   }
   return (
-    <div {...stylex.props(styles.pill)}>
-      <span {...stylex.props(ui.mono, styles.prompt)} aria-hidden="true">
-        $
-      </span>
-      <code {...stylex.props(ui.mono, styles.command)}>{command}</code>
+    <div {...stylex.props(styles.block, single ? styles.pill : styles.box)}>
+      <code {...stylex.props(ui.mono, styles.lines)}>
+        {commands.map((command) => (
+          <span key={command} {...stylex.props(styles.line)}>
+            <span {...stylex.props(styles.prompt)} aria-hidden="true">
+              ${" "}
+            </span>
+            {command}
+          </span>
+        ))}
+      </code>
       <button
         {...stylex.props(ui.reset, ui.focusRing, styles.copy, state === "copied" && styles.done)}
         type="button"
-        aria-label={state === "failed" ? "Copy failed" : `Copy ${command}`}
+        aria-label={
+          state === "failed" ? "Copy failed" : single ? `Copy ${text}` : "Copy the commands"
+        }
         onClick={() => void copy()}
       >
         {state === "copied" ? (
@@ -46,31 +60,33 @@ export function Command({ command }: { command: string }) {
 }
 
 const styles = stylex.create({
-  pill: {
+  block: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: "10px",
     width: "fit-content",
     maxWidth: "100%",
-    minHeight: "40px",
     paddingBlock: "4px",
     paddingLeft: "16px",
     paddingRight: "4px",
     borderWidth: "1px",
     borderStyle: "solid",
-    borderColor: colors.hairline,
-    borderRadius: "999px",
+    borderColor: colors.codeBorder,
   },
-  prompt: { flexShrink: 0, color: colors.tertiary, fontSize: "14px", lineHeight: "20px" },
-  command: {
+  pill: { borderRadius: "999px" },
+  box: { borderRadius: "12px", paddingBlock: "8px", paddingRight: "8px" },
+  lines: {
+    display: "grid",
     minWidth: 0,
+    paddingBlock: "6px",
     overflowX: "auto",
-    whiteSpace: "pre",
     scrollbarWidth: "none",
     color: colors.primary,
     fontSize: "14px",
     lineHeight: "20px",
   },
+  line: { whiteSpace: "pre" },
+  prompt: { color: colors.tertiary, userSelect: "none" },
   copy: {
     flexShrink: 0,
     display: "grid",

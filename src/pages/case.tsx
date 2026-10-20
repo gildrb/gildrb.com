@@ -3,7 +3,6 @@ import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { Article, parse, singleSizes, sources } from "../markdown.tsx";
-import { ui } from "../ui.tsx";
 import {
   type Assets,
   Document,
@@ -419,24 +418,14 @@ export function ProductPage({
           variant={{
             $: "Post",
             byline: (
-              <>
-                <time dateTime={item.date}>
-                  {new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                    timeZone: "UTC",
-                  })}
-                </time>
-                <a
-                  {...stylex.props(ui.quiet, ui.outbound, ui.focusRing)}
-                  href={item.repository}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Source
-                </a>
-              </>
+              <time dateTime={item.date}>
+                {new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  timeZone: "UTC",
+                })}
+              </time>
             ),
             tool: item.converter ? (
               <Island name="archetypon" component={Converter} props={{}} />

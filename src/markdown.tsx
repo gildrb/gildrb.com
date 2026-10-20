@@ -261,7 +261,7 @@ function Code({
   code: string;
   post: boolean;
 }) {
-  // A post's shell block is a list of commands: each line gets its own pill with a copy button.
+  // A post's shell block is commands to run in order: one block, one copy button for all of them.
   if (post && language === "sh")
     return (
       <div {...stylex.props(styles.column, postStyles.commands)}>
@@ -270,12 +270,11 @@ function Code({
             <Inline text={title} />
           </p>
         )}
-        {code
-          .split("\n")
-          .filter((line) => line.trim() !== "")
-          .map((command) => (
-            <Island key={command} name="command" component={Command} props={{ command }} />
-          ))}
+        <Island
+          name="command"
+          component={Command}
+          props={{ commands: code.split("\n").filter((line) => line.trim() !== "") }}
+        />
       </div>
     );
   const tokens: Token[] = language === "toml" ? toml(code) : [[null, code]];
@@ -535,6 +534,9 @@ const postStyles = stylex.create({
     marginTop: "24px",
     padding: "16px 20px",
     borderRadius: "12px",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: colors.codeBorder,
     backgroundColor: colors.codeBg,
   },
   pre: { lineHeight: "22px" },
@@ -570,6 +572,9 @@ export const styles = stylex.create({
     lineHeight: "18px",
     padding: "1px 5px",
     borderRadius: "4px",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: colors.codeBorder,
     backgroundColor: colors.codeBg,
     color: colors.primary,
   },
