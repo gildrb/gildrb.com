@@ -199,11 +199,13 @@ export function Main({
 
 /**
  * Site name, or on inner pages a breadcrumb back to it. The name links to gildrb.com by its full
- * URL: product pages live on their own hosts, where `/` is the product page itself.
+ * URL: product pages live on their own hosts, where `/` is the product page itself. A page with no
+ * heading of its own (the archive) makes the breadcrumb its `<h1>`.
  */
-export function Name({ current }: { current?: string }) {
+export function Name({ current, heading = false }: { current?: string; heading?: boolean }) {
+  const Tag = heading ? "h1" : "p";
   return current ? (
-    <p {...stylex.props(ui.heading, styles.name, styles.caseName)}>
+    <Tag {...stylex.props(ui.heading, styles.name, styles.caseName)}>
       <a
         {...stylex.props(ui.target, ui.focusRing, styles.home)}
         href={`${origin}/`}
@@ -217,7 +219,7 @@ export function Name({ current }: { current?: string }) {
       <a {...stylex.props(ui.target, ui.focusRing, styles.current)} href="#top">
         {current}
       </a>
-    </p>
+    </Tag>
   ) : (
     <h1
       {...stylex.props(ui.heading, styles.name, styles.homeName)}

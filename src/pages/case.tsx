@@ -17,6 +17,7 @@ import {
 import { Row } from "../row.tsx";
 import {
   type Case,
+  cases,
   caseWork,
   origin,
   pages,
@@ -108,7 +109,7 @@ function Frame({
             "aria-label": `${current} navigation`,
           }}
         >
-          <Name current={current} />
+          <Name current={current} heading={third.$ === "Content"} />
           <PageLinks phone={false} />
         </Sidebar>
         <Main wide={third.$ === "Content"}>{children}</Main>
@@ -259,7 +260,24 @@ export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[
       current="Archive"
       mono={false}
       third={{ $: "Content" }}
-      head={<Alternates />}
+      head={
+        <>
+          <Alternates />
+          <JsonLd
+            value={{
+              "@context": "https://schema.org",
+              "@type": "CollectionPage",
+              "@id": `${origin}/all#page`,
+              url: `${origin}/all`,
+              name: `Archive of work by ${person.name}`,
+              isPartOf: { "@id": `${origin}/#website` },
+              about: { "@id": `${origin}/#person` },
+              author: { "@id": `${origin}/#person` },
+              hasPart: cases.map(({ slug }) => ({ "@id": `${origin}/${slug}#case-study` })),
+            }}
+          />
+        </>
+      }
     >
       <ArchiveGrid work={work} />
     </Frame>
@@ -311,6 +329,23 @@ export function DocPage({
       head={
         <>
           <Alternates slug={page.slug} name={page.name} />
+          <JsonLd
+            value={{
+              "@context": "https://schema.org",
+              "@type": page.kind,
+              "@id": `${origin}/${page.slug}#page`,
+              url: `${origin}/${page.slug}`,
+              name: parse(markdown).title,
+              description: page.description,
+              inLanguage: "en",
+              isPartOf: { "@id": `${origin}/#website` },
+              author: { "@id": `${origin}/#person` },
+              // About and contact pages are about the person; the others about the site.
+              ...(page.kind === "WebPage"
+                ? { about: { "@id": `${origin}/#website` } }
+                : { mainEntity: { "@id": `${origin}/#person` } }),
+            }}
+          />
         </>
       }
     >

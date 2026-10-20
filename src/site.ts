@@ -273,16 +273,27 @@ export const developers = {
   description: "Public read-only API, MCP server and Markdown access for gildrb.com.",
 } as const;
 
-/** Plain pages written in `src/content/<slug>.md`. */
+/** Plain pages written in `src/content/<slug>.md`; `kind` is their schema.org page type. */
 export const pages = [
   {
     slug: "about",
     name: "About",
+    kind: "AboutPage",
     description: "About Gil Rodrigues (gildrb), a Founding Designer based in Germany.",
   },
-  { slug: "contact", name: "Contact", description: "How to contact Gil Rodrigues (gildrb)." },
-  { slug: "privacy", name: "Privacy", description: "Privacy statement for gildrb.com." },
-  developers,
+  {
+    slug: "contact",
+    name: "Contact",
+    kind: "ContactPage",
+    description: "How to contact Gil Rodrigues (gildrb): email, Signal or X.",
+  },
+  {
+    slug: "privacy",
+    name: "Privacy",
+    kind: "WebPage",
+    description: "Privacy statement for gildrb.com: no cookies, analytics or tracking scripts.",
+  },
+  { ...developers, kind: "WebPage" },
 ] as const;
 
 export type SortKey = "date" | "title" | "scope";
