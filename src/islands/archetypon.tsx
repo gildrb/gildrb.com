@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { TargetedEvent } from "preact";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { colors, media, space } from "../tokens.stylex.ts";
+import { colors, media, space, underline } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
 /**
@@ -1000,6 +1000,7 @@ const styles = stylex.create({
     width: "fit-content",
     color: { default: colors.article, ":focus-visible": colors.primary },
     textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
     textDecorationColor: {
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.article },

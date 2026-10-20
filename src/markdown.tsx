@@ -4,7 +4,7 @@ import type { ComponentChildren } from "preact";
 import { Island } from "./island.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
-import { colors, space } from "./tokens.stylex.ts";
+import { colors, space, underline } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -425,6 +425,7 @@ export const styles = stylex.create({
   link: {
     color: { default: colors.article, ":focus-visible": colors.primary },
     textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
     textDecorationColor: {
       default: colors.tertiary,
       ":hover": { "@media (hover: hover)": colors.article },

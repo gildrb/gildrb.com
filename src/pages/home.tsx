@@ -16,7 +16,7 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { developers, origin, person, profiles } from "../site.ts";
-import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
+import { colors, media, rootMarker, space, underline } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
@@ -118,6 +118,7 @@ const styles = stylex.create({
   link: {
     color: "inherit",
     textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
     textDecorationColor: {
       default: colors.tertiary,
       ":hover": { [media.hover]: "currentColor" },
