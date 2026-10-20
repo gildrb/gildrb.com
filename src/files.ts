@@ -1,5 +1,6 @@
 import {
   cases,
+  caseWork,
   contacts,
   email,
   origin,
@@ -75,6 +76,7 @@ export const profile = {
       name: item.name,
       description: item.description,
       ...(item.ogImage && { image: url(versioned(`/images/optimized/${item.ogImage}`)) }),
+      about: caseWork(item),
       inLanguage: "en",
       author: { "@id": url("/#person") },
       isPartOf: { "@id": url("/#website") },

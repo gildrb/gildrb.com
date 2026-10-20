@@ -17,6 +17,7 @@ import {
 import { Row } from "../row.tsx";
 import {
   type Case,
+  caseWork,
   origin,
   pages,
   person,
@@ -198,7 +199,8 @@ export function CasePage({
               url,
               headline: parse(markdown).title,
               description: item.description,
-              ...(image && { image }),
+              ...(image && { image: `${origin}${image}` }),
+              about: caseWork(item),
               author: {
                 "@type": "Person",
                 "@id": `${origin}/#person`,

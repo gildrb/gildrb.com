@@ -155,6 +155,20 @@ export const cases: readonly Case[] = [
   },
 ];
 
+/**
+ * The work a case study is about, for its JSON-LD `about`. `date` is when the work was made, so it
+ * is the work's `dateCreated`, not the page's publication date.
+ */
+export function caseWork(item: Case) {
+  return {
+    "@type": "CreativeWork",
+    name: item.title,
+    dateCreated: item.date,
+    genre: item.scope,
+    creator: { "@id": `${origin}/#person` },
+  } as const;
+}
+
 /** Software I make. Each has its own host; `gildrb.com/<slug>` redirects there. */
 export type Product = Row & {
   slug: string;
