@@ -106,6 +106,14 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
       },
     });
   }
+  // Pages answers `/filen/` with the HTML page; send Markdown clients where HTML clients go.
+  const slashless = pathname.length > 1 ? pathname.replace(/\/$/, "") : pathname;
+  if (wantsMarkdown(request) && slashless !== pathname && markdown.has(slashless)) {
+    return new Response(null, {
+      status: 308,
+      headers: { Location: `${slashless}${url.search}`, Vary: "Accept" },
+    });
+  }
   const source = wantsMarkdown(request) ? markdown.get(pathname) : undefined;
   url.pathname = source ?? aliases.get(pathname) ?? pathname;
   url.search = "";
