@@ -21,6 +21,20 @@ const text = (body: string, type: string) =>
     headers: { "Content-Type": `${type}; charset=utf-8`, "Cache-Control": "public, max-age=3600" },
   });
 
+/** The product's own llms.txt; gildrb.com's describes the person, not this host. */
+const llms = (product: Product) => `# ${product.name}
+
+> ${product.description}
+
+${product.name} is made by [Gil Rodrigues (gildrb)](${origin}/). Request ${product.home}/ with \`Accept: text/markdown\` for the whole page as Markdown.
+
+## Links
+
+- [${product.headline}](${product.home}/)
+- [Source code](${product.repository})
+${product.installer.$ === "Script" ? `- [Install script](${product.installer.url})\n` : ""}- [About the author](${origin}/llms.txt)
+`;
+
 function serve(request: Request, url: URL, product: Product): Promise<Response> | Response {
   const { pathname } = url;
   const installer = product.installer;
@@ -42,6 +56,8 @@ function serve(request: Request, url: URL, product: Product): Promise<Response> 
       `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${product.home}/</loc></url>\n</urlset>\n`,
       "application/xml",
     );
+  if (pathname === "/llms.txt" || pathname === "/.well-known/llms.txt")
+    return text(llms(product), "text/markdown");
   // The page itself, and the files it loads (scripts, fonts, images, the converter's engine).
   const last = pathname.slice(pathname.lastIndexOf("/") + 1);
   if (pathname === "/" || last.includes(".")) {
