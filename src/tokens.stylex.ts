@@ -47,9 +47,14 @@ export const fontFeatures = stylex.defineConsts({
   prose: '"liga" 1, "calt" 1',
 });
 
-/** Underlined links: thinner than Inter's own underline (140/2048 em, about 1.1px at 16px). */
+/**
+ * Underlined links: thinner than Inter's own underline (140/2048 em, about 1.1px at 16px), set
+ * at Inter's underline position (348/2048 em below the baseline) so it keeps its gap below the
+ * letters; a thin line at the `auto` offset touches them.
+ */
 export const underline = stylex.defineConsts({
   thickness: "0.5px",
+  offset: "0.17em",
 });
 
 export const colors = stylex.defineVars({

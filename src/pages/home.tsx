@@ -119,6 +119,7 @@ const styles = stylex.create({
     color: "inherit",
     textDecorationLine: "underline",
     textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
     textDecorationColor: {
       default: colors.tertiary,
       ":hover": { [media.hover]: "currentColor" },

@@ -426,6 +426,7 @@ export const styles = stylex.create({
     color: { default: colors.article, ":focus-visible": colors.primary },
     textDecorationLine: "underline",
     textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
     textDecorationColor: {
       default: colors.tertiary,
       ":hover": { "@media (hover: hover)": colors.article },
