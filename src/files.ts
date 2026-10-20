@@ -1,4 +1,14 @@
-import { cases, email, origin, pages, person, products, profiles, projects } from "./site.ts";
+import {
+  cases,
+  contacts,
+  email,
+  origin,
+  pages,
+  person,
+  products,
+  profiles,
+  projects,
+} from "./site.ts";
 import { versioned } from "./versioned.ts";
 
 /**
@@ -52,6 +62,7 @@ export const profile = {
       alternateName: person.alternateNames,
       description: person.summary,
       jobTitle: person.role,
+      worksFor: { "@type": "Organization", name: person.employer.name, url: person.employer.href },
       url: url("/"),
       email: `mailto:${email}`,
       mainEntityOfPage: { "@id": url("/#profile") },
@@ -121,6 +132,12 @@ const machineReadable = list([
   ["humans.txt", "/humans.txt"],
 ]);
 
+const contactList = [
+  `- Email: [${email}](mailto:${email})`,
+  ...contacts.map(({ label, href }) => `- ${label}: ${href}`),
+  `- [Contact page](${url("/contact")})`,
+].join("\n");
+
 const llms = `# ${person.name} (${person.handle})
 
 > ${person.summary} Canonical LLM reference for ${url("/")}.
@@ -138,6 +155,10 @@ ${work.join("\n")}
 ## Pages
 
 ${trust}
+
+## Contact
+
+${contactList}
 
 ## Profiles
 
