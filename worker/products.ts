@@ -25,10 +25,15 @@ function serve(request: Request, url: URL, product: Product): Promise<Response> 
   const { pathname } = url;
   const installer = product.installer;
   if (installer.$ === "Script") {
-    // `curl … | sh` sends `Accept: */*`; a browser asks for HTML and gets the page.
-    const html = request.headers.get("Accept")?.includes("text/html") ?? false;
-    if (pathname === "/install" || (pathname === "/" && !html))
-      return Response.redirect(installer.url, 302);
+    // `curl … | sh` sends `Accept: */*`; a browser asks for HTML and an agent for Markdown, and
+    // both get the page.
+    const accept = request.headers.get("Accept") ?? "";
+    const page = accept.includes("text/html") || accept.includes("text/markdown");
+    if (pathname === "/install" || (pathname === "/" && !page))
+      return new Response(null, {
+        status: 302,
+        headers: { Location: installer.url, Vary: "Accept" },
+      });
   }
   if (pathname === "/robots.txt")
     return text(`User-agent: *\nAllow: /\n\nSitemap: ${product.home}/sitemap.xml\n`, "text/plain");
