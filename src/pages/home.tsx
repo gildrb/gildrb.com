@@ -87,7 +87,13 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
             <h2 {...stylex.props(ui.text, styles.heading)} id="profile-summary-title">
               About
             </h2>
-            <p {...stylex.props(ui.text)}>{person.summary}</p>
+            <p {...stylex.props(ui.text)}>
+              {person.role} at{" "}
+              <a {...stylex.props(ui.focusRing, styles.link)} href={person.employer.href}>
+                {person.employer.name}
+              </a>
+              .
+            </p>
           </section>
           <Island name="portfolio" component={Portfolio} props={{}} />
           <Metadata style={styles.footer} />
@@ -108,6 +114,15 @@ const styles = stylex.create({
     marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
   },
   heading: { color: colors.secondary, marginBottom: space.sectionContentGap },
+  /** Set like the article links (`markdown.tsx`): hover turns the underline the text color. */
+  link: {
+    color: "inherit",
+    textDecorationLine: "underline",
+    textDecorationColor: {
+      default: colors.tertiary,
+      ":hover": { [media.hover]: "currentColor" },
+    },
+  },
   footer: {
     display: {
       default: null,
