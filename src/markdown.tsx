@@ -2,6 +2,7 @@ import { readdirSync } from "node:fs";
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
 import { Island } from "./island.tsx";
+import { Command } from "./islands/command.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
 import { colors, space, underline } from "./tokens.stylex.ts";
@@ -260,6 +261,23 @@ function Code({
   code: string;
   post: boolean;
 }) {
+  // A post's shell block is a list of commands: each line gets its own pill with a copy button.
+  if (post && language === "sh")
+    return (
+      <div {...stylex.props(styles.column, postStyles.commands)}>
+        {title && (
+          <p {...stylex.props(styles.small, styles.codeLabel)}>
+            <Inline text={title} />
+          </p>
+        )}
+        {code
+          .split("\n")
+          .filter((line) => line.trim() !== "")
+          .map((command) => (
+            <Island key={command} name="command" component={Command} props={{ command }} />
+          ))}
+      </div>
+    );
   const tokens: Token[] = language === "toml" ? toml(code) : [[null, code]];
   return (
     <div {...stylex.props(styles.column, styles.codeBlock, post && postStyles.codeBlock)}>
@@ -502,7 +520,7 @@ const postStyles = stylex.create({
     letterSpacing: "-0.025em",
     textWrap: "balance",
   },
-  byline: { margin: "16px 0 0" },
+  byline: { display: "flex", flexWrap: "wrap", columnGap: "20px", margin: "16px 0 0" },
   text: { fontSize: "17px", lineHeight: "28px" },
   lede: { fontSize: "20px", lineHeight: "30px", letterSpacing: "-0.01em", color: colors.primary },
   nextParagraph: { marginTop: "20px" },
@@ -521,6 +539,7 @@ const postStyles = stylex.create({
   },
   pre: { lineHeight: "22px" },
   tool: { marginTop: "40px" },
+  commands: { display: "flex", flexDirection: "column", gap: "8px", marginTop: "24px" },
 });
 
 export const styles = stylex.create({

@@ -2,7 +2,7 @@
 
 Coding agents forget. Each new session starts empty, and a long session loses its start when the context fills up. Eukhe keeps one endless chat as its memory: every turn starts from a compact view of everything you did together.
 
-```sh title="Install on macOS (Apple Silicon) or Linux"
+```sh
 curl -fsSL https://eukhe.com/install | sh
 ```
 

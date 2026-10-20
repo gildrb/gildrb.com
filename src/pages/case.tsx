@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
-import { Article, styles as article, parse, singleSizes, sources } from "../markdown.tsx";
+import { Article, parse, singleSizes, sources } from "../markdown.tsx";
 import { ui } from "../ui.tsx";
 import {
   type Assets,
@@ -382,10 +382,6 @@ export function ProductPage({
             $: "Post",
             byline: (
               <>
-                <a {...stylex.props(article.link, ui.focusRing)} href={`${origin}/`}>
-                  {person.name}
-                </a>
-                {" · "}
                 <time dateTime={item.date}>
                   {new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB", {
                     day: "numeric",
@@ -394,14 +390,13 @@ export function ProductPage({
                     timeZone: "UTC",
                   })}
                 </time>
-                {" · "}
                 <a
-                  {...stylex.props(article.link, ui.focusRing)}
+                  {...stylex.props(ui.quiet, ui.outbound, ui.focusRing)}
                   href={item.repository}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Source on GitHub
+                  Source
                 </a>
               </>
             ),

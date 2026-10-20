@@ -2,8 +2,8 @@
 
 Your code builds on a server, a desktop or a VM, but you want to see the page on your laptop or phone. Poros gives the dev server a private HTTPS link on your Tailscale network. No port forwarding, no SSH tunnel, no public URL.
 
-```sh title="Run your usual dev command through Poros"
-poros vp dev
+```sh
+curl -fsSL https://poros.gildrb.com/install | bash
 ```
 
 ## The problem
@@ -20,13 +20,17 @@ Frontend work on a remote machine is slow to set up. The dev server listens on `
 
 Open the link on any device of your tailnet: Mac, iPhone, iPad or another computer. Your code, builds and dev server stay on the development machine.
 
-## Install
+## Use
+
+Put `poros` in front of the dev command you already use:
 
 ```sh
-curl -fsSL https://poros.gildrb.com/install | bash
+poros vp dev
 ```
 
-With Nix: `nix profile install github:gildrb/poros`. The flake also has NixOS, nix-darwin and Home Manager modules. Poros runs on macOS and Linux.
+## Install
+
+Poros runs on macOS and Linux. Install it with the command at the top of this page, or with Nix: `nix profile install github:gildrb/poros`. The flake also has NixOS, nix-darwin and Home Manager modules.
 
 ## Requirements
 

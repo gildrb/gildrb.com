@@ -18,15 +18,17 @@ Text in the SVG renders with the fonts you drop beside it (`.ttf`, `.otf`, `.ttc
 
 ## Command line
 
-The same engine runs as a command, for scripts and builds. It is written in Rust.
+The same engine runs as a command, for scripts and builds. It is written in Rust. Each line below converts SVGs: every format and size, only PNG and ICO at two sizes, or a whole folder into `assets`.
 
-```sh title="Every format and size of each SVG"
+```sh
 typ logo.svg
 typ -f png,ico -s 64,512 logo.svg
 typ -o assets *.svg
 ```
 
-```sh title="Install"
+To install it, build it from source:
+
+```sh
 git clone https://github.com/gildrb/archetypon
 cd archetypon
 make

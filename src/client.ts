@@ -22,6 +22,8 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   heph: () => import("./islands/heph.tsx").then((module) => module.Terminal),
   // Only Archetypon's page (archetypon.gildrb.com) runs the converter; its engine loads once files arrive.
   archetypon: () => import("./islands/archetypon.tsx").then((module) => module.Converter),
+  // Only product pages show copyable commands.
+  command: () => import("./islands/command.tsx").then((module) => module.Command),
 };
 
 function isIslandName(value: string | undefined): value is keyof Islands {
@@ -33,7 +35,29 @@ function isIslandName(value: string | undefined): value is keyof Islands {
 function hydrateIsland(element: HTMLElement) {
   const name = element.dataset.island;
   if (!isIslandName(name)) throw new Error(`Unknown island: ${name}`);
-  void Promise.resolve(islands[name]()).then((component) => mount(component, element));
+  void hydrateNamed(name, element);
+}
+
+/** One case per island, so each component meets the props type it was rendered with. */
+async function hydrateNamed(name: keyof Islands, element: HTMLElement): Promise<void> {
+  switch (name) {
+    case "theme":
+      return mount(await islands.theme(), element);
+    case "email":
+      return mount(await islands.email(), element);
+    case "portfolio":
+      return mount(await islands.portfolio(), element);
+    case "heph":
+      return mount(await islands.heph(), element);
+    case "archetypon":
+      return mount(await islands.archetypon(), element);
+    case "command":
+      return mount(await islands.command(), element);
+    default: {
+      const _: never = name;
+      return _;
+    }
+  }
 }
 
 /** `Island` serialized these props from the same component's props on the server. */
