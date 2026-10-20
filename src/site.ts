@@ -99,7 +99,7 @@ export const cases: readonly Case[] = [
   {
     slug: "heph",
     date: "2026-04-21",
-    title: "Heph-Agent",
+    title: "Heph",
     name: "Heph",
     scope: "Engineering, Product",
     description:
