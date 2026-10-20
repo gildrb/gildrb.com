@@ -35,6 +35,17 @@ ${product.name} is made by [Gil Rodrigues (gildrb)](${origin}/). Request ${produ
 ${product.installer.$ === "Script" ? `- [Install script](${product.installer.url})\n` : ""}- [About the author](${origin}/llms.txt)
 `;
 
+/** Path prefixes of the files a product page loads; see `serve`. */
+const pageFiles = [
+  "/assets/",
+  "/fonts/",
+  "/images/",
+  "/videos/",
+  "/tools/",
+  "/favicon.svg",
+  "/preview-favicon.svg",
+];
+
 function serve(request: Request, url: URL, product: Product): Promise<Response> | Response {
   const { pathname } = url;
   const installer = product.installer;
@@ -59,13 +70,13 @@ function serve(request: Request, url: URL, product: Product): Promise<Response> 
   if (pathname === "/llms.txt" || pathname === "/.well-known/llms.txt")
     return text(llms(product), "text/markdown");
   // The page itself, and the files it loads (scripts, fonts, images, the converter's engine).
-  const last = pathname.slice(pathname.lastIndexOf("/") + 1);
-  if (pathname === "/" || last.includes(".")) {
+  if (pathname === "/" || pageFiles.some((prefix) => pathname.startsWith(prefix))) {
     const target = new URL(pathname === "/" ? `/${product.slug}` : pathname, upstream);
     target.search = url.search;
     return fetch(new Request(target, request));
   }
-  // Every other path is a gildrb.com page: the breadcrumb, the nav and the "next" rows.
+  // Everything else is gildrb.com's: its pages (the breadcrumb, the nav and the "next" rows) and
+  // its files (llms-full.txt, profile.json, …), which would otherwise be copies on this host.
   return Response.redirect(`${origin}${pathname}${url.search}`, 301);
 }
 
