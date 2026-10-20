@@ -97,7 +97,7 @@ export function Document({
         {/* The browser chrome takes the page color; `themeScript` sets it to the shown theme. */}
         <meta name="theme-color" content={themeColor.dark} />
         <title>{title}</title>
-        <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+        <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preload" href={interUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         {mono && (
