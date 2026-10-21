@@ -5,7 +5,7 @@ import { Island } from "./island.tsx";
 import { Command } from "./islands/command.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
-import { colors, space, underline } from "./tokens.stylex.ts";
+import { colors, media as screens, space, underline } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -118,6 +118,7 @@ function Image({ id, grid, eager }: { id: string; grid: boolean; eager: boolean 
         {...(eager ? { fetchpriority: "high" } : { loading: "lazy" })}
         src={src}
         {...(srcset && { srcset, sizes: grid ? gridSizes : singleSizes })}
+        data-arrive=""
       />
     </button>
   );
@@ -143,6 +144,7 @@ function Video({ id }: { id: string }) {
       preload="none"
       aria-label={item.alt}
       data-autoplay
+      data-arrive=""
     />
   );
 }
@@ -348,16 +350,19 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
 
 /**
  * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
- * it), the opening sentence, then the parts. `tool` (Archetypon's converter) follows the opening.
- * `eager` gives the first image high fetch priority.
+ * it), the opening sentence, then the parts. `narrow` follows the opening sentence where there is
+ * no third column (the Elsewhere line), then `tool` (Archetypon's converter). `eager` gives the
+ * first image high fetch priority.
  */
 export function Article({
   markdown,
   eager,
+  narrow = null,
   tool = null,
 }: {
   markdown: string;
   eager: boolean;
+  narrow?: ComponentChildren;
   tool?: ComponentChildren;
 }) {
   const { title, blocks } = parse(markdown);
@@ -382,6 +387,8 @@ export function Article({
   };
   for (const [index, block] of blocks.entries()) {
     const anchor = found.get(index);
+    if (index === 1 && narrow !== null)
+      place("text", (spacing) => <div {...stylex.props(spacing, styles.narrow)}>{narrow}</div>);
     if (anchor?.top === true) placeTool();
     switch (block.type) {
       case "h2":
@@ -473,6 +480,8 @@ export const styles = stylex.create({
   prose: { color: colors.article, fontWeight: colors.proseWeight },
   /** The opening sentence: what the work is, at full contrast. */
   lede: { color: colors.primary },
+  /** Shown only where there is no third column: the aside has the same content there. */
+  narrow: { display: { default: null, [screens.wide]: "none" } },
   partGap: { marginTop: "48px" },
   headingGap: { marginTop: "8px" },
   lineGap: { marginTop: "24px" },

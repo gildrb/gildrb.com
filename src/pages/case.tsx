@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
-import { Aside, WorkLinks } from "../aside.tsx";
+import { Aside, ElsewhereLine } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { media as artwork } from "../media.ts";
@@ -236,9 +236,12 @@ export function CasePage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager />
+        <Article
+          markdown={markdown}
+          eager
+          narrow={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
+        />
       </article>
-      {item.links.length > 0 && <WorkLinks links={item.links} style={styles.narrowLinks} />}
       <Next projects={others} />
     </Frame>
   );
@@ -323,13 +326,6 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: space.tableColumns,
     columnGap: { default: space.tableGap, "@media (max-width: 768px)": space.mobileTableGap },
-  },
-  /** Where there is no third column, the project's links follow its text. */
-  narrowLinks: {
-    display: { default: null, [media.wide]: "none" },
-    marginTop: "48px",
-    gridColumn: { default: null, [media.mobile]: "1 / -1" },
-    order: { default: null, [media.mobile]: 5 },
   },
 });
 
@@ -444,12 +440,12 @@ export function ProductPage({
         <Article
           markdown={markdown}
           eager
+          narrow={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
           }
         />
       </article>
-      {item.links.length > 0 && <WorkLinks links={item.links} style={styles.narrowLinks} />}
       <Next projects={others} />
     </Frame>
   );

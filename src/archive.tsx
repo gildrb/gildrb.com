@@ -122,6 +122,7 @@ function Tile({ work, load }: { work: Work; load: Load }) {
       preload="none"
       aria-label={item.alt}
       data-autoplay
+      data-arrive=""
     />
   ) : (
     <img
@@ -134,6 +135,7 @@ function Tile({ work, load }: { work: Work; load: Load }) {
       {...(load === "lazy" && { loading: "lazy" })}
       src={src}
       {...(srcset && { srcset, sizes: tileSizes })}
+      data-arrive=""
     />
   );
   return (

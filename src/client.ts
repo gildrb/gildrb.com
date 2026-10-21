@@ -7,7 +7,6 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { compareRows, origin, products, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
 import { trackContents } from "./contents.ts";
-import { revealImages } from "./reveal.ts";
 import { loopScopes } from "./scope.ts";
 import { autoplayVideos } from "./video.ts";
 import { routeWheel } from "./wheel.ts";
@@ -16,7 +15,6 @@ import { enableZoom } from "./zoom.ts";
 enableZoom();
 autoplayVideos();
 routeWheel();
-revealImages();
 trackContents();
 loopScopes();
 

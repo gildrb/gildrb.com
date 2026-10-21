@@ -939,6 +939,7 @@ function ResultList({ results }: { results: readonly Result[] }) {
               alt=""
               width={48}
               height={48}
+              data-arrive=""
             />
           ) : (
             <span {...stylex.props(styles.preview)} />
@@ -1058,21 +1059,47 @@ const styles = stylex.create({
     alignItems: "baseline",
     color: "inherit",
   },
-  /** The sizes for every raster format: a label and one wrapping line of figures. */
+  /**
+   * The sizes for every raster format: a label and one line of figures. Desktop: on the table's
+   * columns, like a row. Phones: the label above and the ten figures spread across the full width
+   * on one line, so no figure is left alone on a second line.
+   */
   sizes: {
     display: "grid",
-    gridTemplateColumns: space.tableColumns,
+    gridTemplateColumns: { default: space.tableColumns, [media.mobile]: "minmax(0, 1fr)" },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     alignItems: "baseline",
   },
   sizesLabel: { gridColumn: 1, color: colors.secondary },
   sizeList: {
-    gridColumn: "2 / -1",
+    gridColumn: { default: "2 / -1", [media.mobile]: 1 },
     display: "flex",
-    flexWrap: "wrap",
-    columnGap: { default: "12px", [media.mobile]: "10px" },
+    flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
+    columnGap: { default: "12px", [media.mobile]: 0 },
   },
-  size: { minHeight: { default: "24px", [media.mobile]: space.touchTarget } },
+  /**
+   * Phones: each figure takes an equal share of the line and centers in it (the first starts at
+   * the edge, the last ends at it), so the touch targets meet with no gap between them.
+   */
+  size: {
+    minHeight: { default: "24px", [media.mobile]: space.touchTarget },
+    // Each takes its width plus an equal share of what is left, the first and last half a share:
+    // centered in its share, every figure stands the same distance from the next.
+    flexGrow: {
+      default: 0,
+      [media.mobile]: { default: 1, ":first-child": 0.5, ":last-child": 0.5 },
+    },
+    display: { default: null, [media.mobile]: "flex" },
+    alignItems: "center",
+    justifyContent: {
+      default: null,
+      [media.mobile]: {
+        default: "center",
+        ":first-child": "flex-start",
+        ":last-child": "flex-end",
+      },
+    },
+  },
   /** The field over its zero padding; both are set in the same three tabular columns. */
   digits: { position: "relative", display: "inline-block" },
   padding: { color: colors.tertiary, whiteSpace: "pre" },

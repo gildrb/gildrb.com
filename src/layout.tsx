@@ -5,6 +5,7 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
+import { arriveCss, arriveScript } from "./arrive.ts";
 import { contacts, type Link, origin, person, type Project, profiles, projects } from "./site.ts";
 import { themeColor, themeCss, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
@@ -45,6 +46,7 @@ const globalCss = [
   // another click during it cannot cancel it and shows a flash. The browser swaps pages at once,
   // and the sidebar, the same on every page, stays as it is.
   "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
+  arriveCss,
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
@@ -111,6 +113,7 @@ export function Document({
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: fontGate }} />
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: arriveScript }} />
         {/* Low priority keeps the island code out of the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
         <script

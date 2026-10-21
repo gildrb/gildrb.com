@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { Heading } from "./markdown.tsx";
 import type { Link } from "./site.ts";
-import { colors, media, space } from "./tokens.stylex.ts";
+import { colors, media, space, underline } from "./tokens.stylex.ts";
 import { type Style, ui } from "./ui.tsx";
 
 /**
@@ -54,6 +54,39 @@ export function WorkLinks({ links, style }: { links: readonly Link[]; style?: St
   );
 }
 
+/** Where a link goes, as people read an address: no scheme, no `www.`, no trailing slash. */
+function destination(href: string): string {
+  const url = new URL(href);
+  const path = url.pathname === "/" ? "" : url.pathname.replace(/\/$/, "");
+  return `${url.hostname.replace(/^www\./, "")}${path}`;
+}
+
+/**
+ * Narrow screens, where there is no third column: one line right under the opening sentence,
+ * naming the address each link goes to, so it is seen first instead of at the end of the page.
+ */
+export function ElsewhereLine({ links, style }: { links: readonly Link[]; style?: Style }) {
+  return (
+    <p {...stylex.props(ui.prose, styles.line, style)}>
+      <span {...stylex.props(styles.label)}>Elsewhere: </span>
+      {links.map(({ label, href }, index) => (
+        <>
+          {index > 0 && ", "}
+          <a
+            {...stylex.props(ui.focusRing, ui.outbound, styles.address)}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${label}: ${destination(href)}`}
+          >
+            {destination(href)}
+          </a>
+        </>
+      ))}
+    </p>
+  );
+}
+
 /**
  * Wide screens' third column on a project or plain page: its contents and its links, set like the
  * sidebar's lists and held in view while the text scrolls beside it.
@@ -89,6 +122,19 @@ const styles = stylex.create({
   group: { display: "flex", flexDirection: "column", rowGap: space.linkGap },
   /** As the sidebar's "Contact" and "Links". */
   label: { color: colors.secondary },
+  /** The narrow screens' line: running text, an address may break anywhere rather than overflow. */
+  line: { margin: 0, color: colors.article, overflowWrap: "anywhere" },
+  /** Set like the article links (`markdown.tsx`). */
+  address: {
+    color: { default: colors.article, ":focus-visible": colors.primary },
+    textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
+    textDecorationColor: {
+      default: colors.tertiary,
+      ":hover": { [media.hover]: colors.article },
+    },
+  },
   track: { position: "relative" },
   list: {
     margin: 0,
