@@ -494,7 +494,7 @@ export const styles = stylex.create({
     fontWeight: 400,
     lineHeight: "18px",
     padding: "1px 5px",
-    borderRadius: "4px",
+    borderRadius: "2px",
     borderWidth: "1px",
     borderStyle: "solid",
     borderColor: colors.codeBorder,
@@ -534,7 +534,7 @@ export const styles = stylex.create({
   pre: {
     overflowX: "auto",
     padding: "12px 16px",
-    borderRadius: "12px",
+    borderRadius: "4px",
     borderWidth: "1px",
     borderStyle: "solid",
     borderColor: colors.codeBorder,

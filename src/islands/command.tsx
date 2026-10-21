@@ -73,8 +73,9 @@ const styles = stylex.create({
     borderStyle: "solid",
     borderColor: colors.codeBorder,
   },
-  pill: { borderRadius: "999px" },
-  box: { borderRadius: "12px", paddingBlock: "8px", paddingRight: "8px" },
+  /** Square-ish like the rest of the site: a 4px corner, one line or many. */
+  pill: { borderRadius: "4px" },
+  box: { borderRadius: "4px", paddingBlock: "8px", paddingRight: "8px" },
   lines: {
     display: "grid",
     minWidth: 0,
@@ -93,7 +94,7 @@ const styles = stylex.create({
     placeItems: "center",
     width: "32px",
     height: "32px",
-    borderRadius: "999px",
+    borderRadius: "2px",
     color: { default: colors.tertiary, ":hover": { "@media (hover: hover)": colors.primary } },
     backgroundColor: {
       default: "transparent",
