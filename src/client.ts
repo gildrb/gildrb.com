@@ -196,6 +196,25 @@ if (document.getElementById("site-title")) {
   });
 }
 
+// Other pages: inside a list of links (Contact, Links, Contents, Elsewhere), ↑ and ↓ step through
+// that list; anywhere else the keys scroll the page as usual.
+if (!document.getElementById("site-title")) {
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+    const active = document.activeElement;
+    const list = active instanceof HTMLAnchorElement ? active.closest("nav") : null;
+    if (!list) return;
+    const links = [...list.querySelectorAll<HTMLElement>("a[href], button")].filter(
+      (item) => item.getClientRects().length > 0,
+    );
+    const at = links.indexOf(active instanceof HTMLElement ? active : list);
+    if (at === -1) return;
+    event.preventDefault();
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    links[(at + step + links.length) % links.length]?.focus();
+  });
+}
+
 // /all?sort=…&direction=… mirrors the order chosen in the homepage table.
 const allCases = document.querySelector<HTMLElement>("[data-all-cases]");
 const params = new URLSearchParams(location.search);

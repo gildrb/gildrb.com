@@ -769,6 +769,7 @@ function OptionsPanel({
               inputMode="numeric"
               maxLength={3}
               autoComplete="off"
+              spellcheck={false}
               aria-describedby="archetypon-quality"
               onInput={typeQuality}
               onBlur={() => (quality === "" || quality === "0") && onQualityChange("100")}
@@ -860,7 +861,7 @@ const styles = stylex.create({
     // A ring drawn inside, so the surface never changes size while files hover over it.
     boxShadow: "inset 0 0 0 1px transparent",
     transitionProperty: "box-shadow",
-    transitionDuration: { default: "0s", [media.motion]: "330ms" },
+    transitionDuration: { default: "0s", [media.motion]: "200ms" },
   },
   dragging: { boxShadow: `inset 0 0 0 1px ${colors.tertiary}` },
   dropTitle: { color: colors.primary },
@@ -1037,7 +1038,7 @@ const styles = stylex.create({
   },
   step: {
     transitionProperty: "color",
-    transitionDuration: { default: "0s", [media.motion]: "330ms" },
+    transitionDuration: { default: "0s", [media.motion]: "200ms" },
   },
   pending: { color: colors.tertiary },
   running: { color: colors.secondary },

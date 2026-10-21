@@ -3,8 +3,9 @@
 export const spring =
   "linear(0, 0.078, 0.235, 0.401, 0.549, 0.669, 0.762, 0.831, 0.882, 0.918, 0.944, 0.962, 0.974, 0.982, 0.988, 0.992, 0.995, 0.996, 0.998, 0.998, 1)";
 
-// The length of an image's enlargement, which travels far and so must not linger.
-export const fadeDuration = 330;
+// The length of an image's enlargement: at most 200ms, so the interaction feels immediate
+// (interfaces.rauno.me), and the spring carries the distance.
+export const fadeDuration = 200;
 
 /**
  * Runs in every page's `<head>`, right after the stylesheet: on the first page of a visit, until

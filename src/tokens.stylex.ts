@@ -69,9 +69,8 @@ export const colors = stylex.defineVars({
   /**
    * One more step down the text ladder. Dark: article → secondary is 11.85 points of lightness,
    * and tertiary takes the same step again (APCA Lc 42 on black, up from 30). Light is not a
-   * mirror: gray on white reads fainter than on black, the reason light prose is heavier
-   * (`proseWeight`). Light tertiary is the darkest gray WCAG allows text to be lighter than:
-   * 4.54:1 on white (APCA Lc 72).
+   * mirror: gray on white reads fainter than on black. Light tertiary is the darkest gray WCAG
+   * allows text to be lighter than: 4.54:1 on white (APCA Lc 72).
    */
   tertiary: { default: "oklch(64.83% 0 0)", [light]: "oklch(56.58% 0 0)" },
   article: { default: "oklch(88.53% 0 0)", [light]: "oklch(27.07% 0 0)" },
@@ -84,7 +83,6 @@ export const colors = stylex.defineVars({
   terminalFrameBg: { default: "oklch(19.3% 0 0)", [light]: "oklch(93.89% 0 0)" },
   /** Muted text on terminal surfaces, kept at 4.5:1 contrast or better. */
   terminalMuted: { default: "oklch(58.63% 0 0)", [light]: "oklch(53.13% 0 0)" },
-  proseWeight: { default: "380", [light]: "400" },
   artworkFilter: { default: "none", [light]: "brightness(0)" },
   sunDisplay: { default: "block", [light]: "none" },
   moonDisplay: { default: "none", [light]: "block" },
@@ -104,7 +102,6 @@ export const dark = stylex.createTheme(colors, {
   terminalRowBg: "oklch(16.98% 0 0)",
   terminalFrameBg: "oklch(19.3% 0 0)",
   terminalMuted: "oklch(58.63% 0 0)",
-  proseWeight: "380",
   artworkFilter: "none",
   sunDisplay: "block",
   moonDisplay: "none",
@@ -124,7 +121,6 @@ export const lightTheme = stylex.createTheme(colors, {
   terminalRowBg: "oklch(95.42% 0 0)",
   terminalFrameBg: "oklch(93.89% 0 0)",
   terminalMuted: "oklch(53.13% 0 0)",
-  proseWeight: "400",
   artworkFilter: "brightness(0)",
   sunDisplay: "none",
   moonDisplay: "block",

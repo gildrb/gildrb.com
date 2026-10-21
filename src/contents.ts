@@ -46,7 +46,9 @@ export function trackContents(): void {
       index = at;
       const next = starts[at + 1];
       progress =
-        next === undefined || next <= start ? 0 : Math.min(1, (scrollY - start) / (next - start));
+        next === undefined || next <= start
+          ? 0
+          : Math.min(1, Math.max(0, (scrollY - start) / (next - start)));
     }
     const from = parts[index]?.link.offsetTop ?? 0;
     const to = parts[index + 1]?.link.offsetTop ?? from;

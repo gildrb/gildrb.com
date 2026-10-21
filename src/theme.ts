@@ -12,13 +12,22 @@ export const themeClass: Record<Theme, string> = {
 /** The browser chrome's color: each theme's page background, `colors.bg`. */
 export const themeColor: Record<Theme, string> = { dark: "#000000", light: "#ffffff" };
 
-/** Shows `theme` and points the `theme-color` tag at it. */
+/**
+ * Shows `theme` and points the `theme-color` tag at it. Transitions are off for the switch, so
+ * nothing that animates on hover or drag animates its color change (interfaces.rauno.me).
+ */
 export function applyTheme(theme: Theme) {
   const root = document.documentElement;
+  const still = document.createElement("style");
+  still.textContent = "*,*::before,*::after{transition:none!important}";
+  document.head.append(still);
   root.classList.remove(...`${themeClass.dark} ${themeClass.light}`.split(" "));
   root.classList.add(...themeClass[theme].split(" "));
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (meta) meta.content = themeColor[theme];
+  // Apply the new colors while transitions are off, then allow them again.
+  void getComputedStyle(root).color;
+  requestAnimationFrame(() => still.remove());
 }
 
 /**

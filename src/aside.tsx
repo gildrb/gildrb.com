@@ -17,7 +17,7 @@ function Contents({ parts }: { parts: readonly Heading[] }) {
         <ol {...stylex.props(styles.list)}>
           {parts.map(({ id, text }) => (
             <li {...stylex.props(styles.item)}>
-              <a {...stylex.props(ui.focusRing, styles.part)} href={`#${id}`}>
+              <a {...stylex.props(ui.focusRing, styles.link, styles.part)} href={`#${id}`}>
                 {text}
               </a>
             </li>
@@ -40,7 +40,7 @@ export function WorkLinks({ links, style }: { links: readonly Link[]; style?: St
         {links.map(({ label, href }) => (
           <li {...stylex.props(styles.item)}>
             <a
-              {...stylex.props(ui.quiet, ui.focusRing, ui.outbound)}
+              {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link)}
               href={href}
               target="_blank"
               rel="noopener noreferrer"
@@ -99,17 +99,28 @@ const styles = stylex.create({
   },
   item: { display: "block" },
   /**
+   * Each link pads into half the gap on both sides, so neighbouring hit areas meet with no dead
+   * space between them, as in the sidebar's lists.
+   */
+  link: {
+    display: "block",
+    width: "fit-content",
+    paddingBlock: `calc(${space.linkGap} / 2)`,
+    marginBlock: `calc(${space.linkGap} / -2)`,
+  },
+  /**
    * The square for the part being read, in the gutter between the text and this list: beside the
-   * content it marks. `contents.ts` moves it.
+   * content it marks. `contents.ts` moves it. Decorative, so it never takes a pointer.
    */
   marker: {
     position: "absolute",
-    // Centered on a link's first line (24px); `contents.ts` moves it down to the link.
-    top: "9px",
+    // Centered on a link's first line (24px, below its padding); `contents.ts` moves it to the link.
+    top: `calc(${space.linkGap} / 2 + 9px)`,
     left: "-20px",
     width: "6px",
     height: "6px",
     backgroundColor: colors.primary,
+    pointerEvents: "none",
   },
   part: {
     display: "block",
