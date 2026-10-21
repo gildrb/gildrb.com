@@ -63,7 +63,6 @@ export const profile = {
       alternateName: person.alternateNames,
       description: person.summary,
       jobTitle: person.role,
-      worksFor: { "@type": "Organization", name: person.employer.name, url: person.employer.href },
       url: url("/"),
       email: `mailto:${email}`,
       mainEntityOfPage: { "@id": url("/#profile") },

@@ -16,7 +16,7 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { developers, origin, person, products, profiles } from "../site.ts";
-import { colors, media, rootMarker, space, underline } from "../tokens.stylex.ts";
+import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
@@ -92,13 +92,7 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
             <h2 {...stylex.props(ui.text, styles.heading)} id="profile-summary-title">
               About
             </h2>
-            <p {...stylex.props(ui.text)}>
-              {person.role} at{" "}
-              <a {...stylex.props(ui.focusRing, styles.link)} href={person.employer.href}>
-                {person.employer.name}
-              </a>
-              .
-            </p>
+            <p {...stylex.props(ui.text)}>{person.summary}</p>
           </section>
           <Island name="portfolio" component={Portfolio} props={{}} />
           <Metadata style={styles.footer} />
@@ -119,17 +113,6 @@ const styles = stylex.create({
     marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
   },
   heading: { color: colors.secondary, marginBottom: space.sectionContentGap },
-  /** Set like the article links (`markdown.tsx`): hover turns the underline the text color. */
-  link: {
-    color: "inherit",
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      ":hover": { [media.hover]: "currentColor" },
-    },
-  },
   footer: {
     display: {
       default: null,

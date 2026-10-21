@@ -1,9 +1,6 @@
 export const origin = "https://gildrb.com";
 export const email = "mail@gildrb.com";
 
-const role = "Founding Designer";
-const employer = { name: "Introspectum", href: "https://introspectum.eu/" } as const;
-
 /**
  * Who this site is about. Keep it to facts that stay true: every page, feed and identity
  * file (profile.json, llms.txt, humans.txt, WebFinger) is generated from it.
@@ -15,9 +12,8 @@ export const person = {
   familyName: "Rodrigues Barbosa",
   handle: "gildrb",
   alternateNames: ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
-  role,
-  employer,
-  summary: `${role} at ${employer.name}.`,
+  role: "Designer",
+  summary: "Designer based in Germany.",
 } as const;
 
 export type Link = { label: string; href: string };
@@ -289,7 +285,7 @@ export const pages = [
     slug: "about",
     name: "About",
     kind: "AboutPage",
-    description: "About Gil Rodrigues (gildrb), a Founding Designer based in Germany.",
+    description: "About Gil Rodrigues (gildrb), a designer based in Germany.",
   },
   {
     slug: "contact",

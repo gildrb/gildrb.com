@@ -1,6 +1,6 @@
 # About Gil Rodrigues (gildrb)
 
-Gil Rodrigues is a Founding Designer at [Introspectum](https://introspectum.eu/), based in Germany. Online he goes by gildrb; his full name is Gil Domingos Rodrigues Barbosa, and Gil Rodrigues Barbosa refers to the same person.
+Gil Rodrigues is a designer based in Germany. Online he goes by gildrb; his full name is Gil Domingos Rodrigues Barbosa, and Gil Rodrigues Barbosa refers to the same person.
 
 He designs logos, brands, typefaces and websites, and builds open-source tools: [Eukhe](https://eukhe.com/), [Archetypon](https://archetypon.gildrb.com/) and [Poros](https://poros.gildrb.com/). Each project on the [homepage](/) has a page on what he made and how; the [archive](/all) shows all of it at once.
 
