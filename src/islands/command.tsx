@@ -123,14 +123,19 @@ const styles = stylex.create({
   },
   done: { color: colors.primary },
   icon: {
-    blockSize: "1cap",
+    // Sized in cap heights, so it follows the text at any size: 1.65cap is the old 16px at the
+    // commands' 14px. Its bottom sits on the baseline; shifted down by half the extra height, it
+    // reaches past the capitals equally above and below, centered on them.
+    blockSize: "1.65cap",
     inlineSize: "auto",
+    transform: "translateY(0.325cap)",
+    // Its part above the capitals takes no room, so the 20px line and the 32px button keep their
+    // height.
+    marginBlockStart: "-0.65cap",
     overflow: "visible",
     fill: "none",
     stroke: "currentColor",
-    // Drawn on a 16-unit grid and shown at cap height (about 10px): a heavier stroke keeps the
-    // line as thick as the text's strokes.
-    strokeWidth: 1.75,
+    strokeWidth: 1.25,
     strokeLinecap: "round",
     strokeLinejoin: "round",
   },
