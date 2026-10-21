@@ -37,7 +37,13 @@ export function Command({ commands }: { commands: readonly string[] }) {
         ))}
       </code>
       <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.copy, state === "copied" && styles.done)}
+        {...stylex.props(
+          ui.reset,
+          ui.mono,
+          ui.focusRing,
+          styles.copy,
+          state === "copied" && styles.done,
+        )}
         type="button"
         aria-label={
           state === "failed" ? "Copy failed" : single ? `Copy ${text}` : "Copy the commands"
@@ -62,7 +68,8 @@ export function Command({ commands }: { commands: readonly string[] }) {
 const styles = stylex.create({
   block: {
     display: "flex",
-    alignItems: "flex-start",
+    // The copy icon sits on the first command's baseline (see `copy`).
+    alignItems: "baseline",
     gap: "10px",
     width: "fit-content",
     maxWidth: "100%",
@@ -88,26 +95,35 @@ const styles = stylex.create({
   },
   line: { whiteSpace: "pre" },
   prompt: { color: colors.tertiary, userSelect: "none" },
+  /**
+   * A 32px target set in the commands' own type, line and padding, so its baseline is the first
+   * command's: an empty text line (`::before`) gives it one. The icon is one cap height tall on
+   * that baseline: it spans the capitals and follows the text at any size.
+   */
   copy: {
     flexShrink: 0,
-    display: "grid",
-    placeItems: "center",
-    width: "32px",
-    height: "32px",
-    borderRadius: "2px",
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "center",
+    minWidth: "32px",
+    fontSize: "14px",
+    lineHeight: "20px",
+    // A shorthand, so it wins over the reset's own `padding: 0`.
+    padding: "6px 8px",
+    "::before": { content: '"\\200b"' },
+    // Hover raises the icon to full contrast; no plate behind it, which would sit square in the
+    // block's rounded corner.
     color: { default: colors.tertiary, ":hover": { "@media (hover: hover)": colors.primary } },
-    backgroundColor: {
-      default: "transparent",
-      ":hover": { "@media (hover: hover)": colors.codeBg },
-    },
   },
   done: { color: colors.primary },
   icon: {
-    width: "16px",
-    height: "16px",
+    blockSize: "1cap",
+    inlineSize: "auto",
+    overflow: "visible",
     fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.25,
+    // Drawn on a 16-unit grid and shown at cap height (about 10px): a heavier stroke keeps the
+    // line as thick as the text's strokes.
+    strokeWidth: 1.75,
     strokeLinecap: "round",
     strokeLinejoin: "round",
   },

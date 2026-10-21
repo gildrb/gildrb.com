@@ -574,23 +574,31 @@ export function Converter() {
 
 type DropZoneProps = { dragging: boolean; onFiles: (files: readonly File[]) => void };
 
-/** The drop target, which also opens the file picker. */
+/**
+ * The whole page takes dropped files (`Converter`); this line says so and opens the file picker.
+ * While files hover over the page, it says where they go.
+ */
 function DropZone({ dragging, onFiles }: DropZoneProps) {
   const picker = useRef<HTMLInputElement>(null);
   return (
     <>
-      <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.drop, dragging && styles.dragging)}
-        type="button"
-        onClick={() => picker.current?.click()}
-      >
-        <span {...stylex.props(styles.dropTitle)}>
-          {dragging ? "Drop to add them" : "Drop SVG files here"}
-        </span>
-        <span {...stylex.props(styles.dropNote)}>
-          or click to choose. Add the .ttf, .otf or .ttc fonts their text uses.
-        </span>
-      </button>
+      <p {...stylex.props(ui.prose, styles.intake, dragging && styles.dragging)}>
+        {dragging ? (
+          "Drop the files to add them."
+        ) : (
+          <>
+            Drop SVG files on this page, or{" "}
+            <button
+              {...stylex.props(ui.reset, ui.focusRing, styles.choose)}
+              type="button"
+              onClick={() => picker.current?.click()}
+            >
+              choose them
+            </button>
+            . Add the .ttf, .otf or .ttc fonts that their text uses.
+          </>
+        )}
+      </p>
       <input
         ref={picker}
         {...stylex.props(ui.srOnly)}
@@ -624,34 +632,10 @@ function OptionsPanel({
   onFilledChange,
   onQualityChange,
 }: OptionsPanelProps) {
-  const sizeRow = useRef<HTMLDivElement>(null);
-  const [sizeEdges, setSizeEdges] = useState({ start: false, end: false });
-
-  // Phones keep the sizes on one row that scrolls sideways between edge fades, like the project
-  // table. Browsers with scroll-driven animations tie the fades to the scroll position in CSS;
-  // this fallback only serves the others.
-  useEffect(() => {
-    const element = sizeRow.current;
-    if (!element || CSS.supports("animation-timeline: scroll()")) return undefined;
-    const update = () =>
-      setSizeEdges({
-        start: element.scrollLeft > 1,
-        end: element.scrollWidth - element.clientWidth - element.scrollLeft > 1,
-      });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    element.addEventListener("scroll", update, { passive: true });
-    return () => {
-      observer.disconnect();
-      element.removeEventListener("scroll", update);
-    };
-  }, []);
-
   // Like selecting in Photos: press one toggle and drag across the others in its row to give
   // them all the state the first one took.
   const painting = useRef<{ group: Key["group"]; on: boolean } | null>(null);
-  // A finger on a row that scrolls may be dragging it, so it picks on release (click) instead.
+  // A finger picks on release (click), so dragging across the table still scrolls the page.
   const tapping = useRef(false);
   useEffect(() => {
     const move = (event: PointerEvent) => {
@@ -672,25 +656,25 @@ function OptionsPanel({
     };
   }, [onPaint]);
 
-  function toggle(key: Key, label: string, on: boolean) {
+  function toggle(key: Key, label: string, on: boolean, row: number) {
     return (
       <button
         {...stylex.props(ui.reset, ui.focusRing, styles.toggle, on && styles.on)}
+        // Its cell in the table: formats in the first column, sizes in the second.
+        style={{ gridRow: String(row), gridColumn: key.group === "format" ? "1" : "2" }}
         type="button"
         data-toggle={`${key.group}:${key.value}`}
         aria-pressed={on}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
-          const row = event.currentTarget.parentElement;
-          tapping.current =
-            event.pointerType !== "mouse" && row !== null && row.scrollWidth - row.clientWidth > 1;
+          tapping.current = event.pointerType === "touch";
           if (tapping.current) return;
           // No focus or text selection from a pointer; the press itself picks.
           event.preventDefault();
           painting.current = { group: key.group, on: !on };
           onPaint(key, !on);
         }}
-        // Keyboard, or a tap on a row that scrolls: any other pointer already picked on press.
+        // Keyboard, or a finger: a mouse or pen already picked on press.
         onClick={(event) => {
           if (event.detail !== 0 && !tapping.current) return;
           tapping.current = false;
@@ -710,75 +694,86 @@ function OptionsPanel({
     onQualityChange(value);
   }
 
+  // A table like the homepage's: the options are its columns, each value a row below its name.
+  // The rows' hairlines run under all four columns.
   return (
-    <div {...stylex.props(styles.options)} role="group" aria-label="Options">
-      <div {...stylex.props(styles.option)} role="group" aria-labelledby="archetypon-formats">
-        <span {...stylex.props(styles.label)} id="archetypon-formats">
-          Formats
-        </span>
-        <div {...stylex.props(styles.toggles)}>
-          {formats.map((format) =>
-            toggle({ group: "format", value: format }, labels[format], selected.has(format)),
-          )}
-        </div>
+    <div {...stylex.props(ui.text, styles.options)} role="group" aria-label="Options">
+      <span {...stylex.props(styles.head, styles.formatColumn)} id="archetypon-formats">
+        Format
+      </span>
+      <span {...stylex.props(styles.head, styles.sizeColumn)} id="archetypon-sizes">
+        Size
+      </span>
+      <span {...stylex.props(styles.head, styles.backgroundColumn)} id="archetypon-background">
+        Background
+      </span>
+      <span {...stylex.props(styles.head, styles.qualityColumn)} id="archetypon-quality-name">
+        Quality
+      </span>
+      {sizeOptions.map((size, index) => (
+        <span
+          key={size}
+          {...stylex.props(styles.rule)}
+          style={{ gridRow: String(index + 2) }}
+          aria-hidden="true"
+        />
+      ))}
+      <div
+        {...stylex.props(styles.column, styles.formatColumn)}
+        role="group"
+        aria-labelledby="archetypon-formats"
+      >
+        {formats.map((format, index) =>
+          toggle(
+            { group: "format", value: format },
+            labels[format],
+            selected.has(format),
+            index + 2,
+          ),
+        )}
       </div>
-      <div {...stylex.props(styles.option)} role="group" aria-labelledby="archetypon-sizes">
-        <span {...stylex.props(styles.label)} id="archetypon-sizes">
-          Sizes
-        </span>
-        <div
-          {...stylex.props(
-            styles.sizes,
-            sizeEdges.start && styles.fadeStart,
-            sizeEdges.end && styles.fadeEnd,
-          )}
-        >
-          <div ref={sizeRow} {...stylex.props(styles.toggles, styles.sizeRow)}>
-            {sizeOptions.map((size) =>
-              toggle({ group: "size", value: size }, String(size), sizes.has(size)),
-            )}
-          </div>
-        </div>
+      <div
+        {...stylex.props(styles.column, styles.sizeColumn)}
+        role="group"
+        aria-labelledby="archetypon-sizes"
+      >
+        {sizeOptions.map((size, index) =>
+          toggle({ group: "size", value: size }, String(size), sizes.has(size), index + 2),
+        )}
       </div>
-      <div {...stylex.props(styles.option)}>
-        <span {...stylex.props(styles.label)} id="archetypon-background">
-          Background
-        </span>
-        <button
-          {...stylex.props(ui.reset, ui.focusRing, styles.toggle, styles.on, styles.single)}
-          type="button"
-          aria-labelledby="archetypon-background archetypon-background-value"
-          onClick={() => onFilledChange(!filled)}
-        >
-          <span id="archetypon-background-value">{filled ? "Opaque" : "Transparent"}</span>
-        </button>
-      </div>
-      <label {...stylex.props(styles.option)}>
-        <span {...stylex.props(styles.label)}>JPEG quality</span>
-        <span {...stylex.props(styles.percent)}>
-          <span {...stylex.props(styles.digits)}>
-            {/* The empty columns show dark grey zeros (010%, 000%); the typed digits'
-                columns stay blank here, covered by the field's own text. */}
-            <span {...stylex.props(ui.figures, styles.padding)} aria-hidden="true">
-              {"0".repeat(3 - quality.length)}
-              <span {...stylex.props(styles.typed)}>{quality}</span>
-            </span>
-            <input
-              {...stylex.props(ui.figures, styles.input)}
-              value={quality}
-              inputMode="numeric"
-              maxLength={3}
-              autoComplete="off"
-              spellcheck={false}
-              aria-describedby="archetypon-quality"
-              onInput={typeQuality}
-              onBlur={() => (quality === "" || quality === "0") && onQualityChange("100")}
-            />
+      <button
+        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, styles.on, styles.backgroundColumn)}
+        style={{ gridRow: "2" }}
+        type="button"
+        aria-labelledby="archetypon-background archetypon-background-value"
+        onClick={() => onFilledChange(!filled)}
+      >
+        <span id="archetypon-background-value">{filled ? "Opaque" : "Transparent"}</span>
+      </button>
+      <label {...stylex.props(styles.percent, styles.qualityColumn)} style={{ gridRow: "2" }}>
+        <span {...stylex.props(styles.digits)}>
+          {/* The empty columns show dark grey zeros (010%, 000%); the typed digits'
+              columns stay blank here, covered by the field's own text. */}
+          <span {...stylex.props(ui.figures, styles.padding)} aria-hidden="true">
+            {"0".repeat(3 - quality.length)}
+            <span {...stylex.props(styles.typed)}>{quality}</span>
           </span>
-          <span aria-hidden="true">%</span>
+          <input
+            {...stylex.props(ui.figures, styles.input)}
+            value={quality}
+            inputMode="numeric"
+            maxLength={3}
+            autoComplete="off"
+            spellcheck={false}
+            aria-labelledby="archetypon-quality-name"
+            aria-describedby="archetypon-quality"
+            onInput={typeQuality}
+            onBlur={() => (quality === "" || quality === "0") && onQualityChange("100")}
+          />
         </span>
+        <span aria-hidden="true">%</span>
         <span {...stylex.props(ui.srOnly)} id="archetypon-quality">
-          Percent, from 1 to 100
+          JPEG quality, in percent, from 1 to 100
         </span>
       </label>
     </div>
@@ -838,122 +833,72 @@ function ResultList({ results }: { results: readonly Result[] }) {
   );
 }
 
-const scrollDriven = "@supports (animation-timeline: scroll())";
-
-// Scroll-linked, as on the project table: the start fade appears once the sizes scroll, the end
-// one leaves at the end.
-const revealStart = stylex.keyframes({ "0%": { opacity: 0 }, "4%, 100%": { opacity: 1 } });
-const hideEnd = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opacity: 0 } });
-
 const styles = stylex.create({
   tool: { display: "flex", flexDirection: "column", gap: space.sectionGap },
-  drop: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "4px",
-    minHeight: { default: "240px", [media.mobile]: "180px" },
-    padding: space.sectionGap,
-    borderRadius: space.mediaRadius,
-    backgroundColor: colors.codeBg,
-    textAlign: "center",
-    // A ring drawn inside, so the surface never changes size while files hover over it.
-    boxShadow: "inset 0 0 0 1px transparent",
-    transitionProperty: "box-shadow",
-    transitionDuration: { default: "0s", [media.motion]: "200ms" },
+  /** The line that takes files; the whole page takes dropped ones. */
+  intake: { margin: 0, color: colors.article, fontWeight: colors.proseWeight },
+  /** Files hover over the page: the line says where they go, at full contrast. */
+  dragging: { color: colors.primary },
+  /** Set like the article links (`markdown.tsx`), inside the sentence. */
+  choose: {
+    display: "inline",
+    color: { default: colors.article, ":focus-visible": colors.primary },
+    textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
+    textDecorationColor: {
+      default: colors.tertiary,
+      ":hover": { [media.hover]: colors.article },
+    },
   },
-  dragging: { boxShadow: `inset 0 0 0 1px ${colors.tertiary}` },
-  dropTitle: { color: colors.primary },
-  dropNote: { color: colors.tertiary, fontSize: "14px", lineHeight: "20px" },
   /**
-   * The project table's spacing: the labels take the width of the longest, and the values
-   * start one table gap after it.
+   * The homepage table's grid (`space.tableColumns`): a header row of names, then rows at the
+   * table's pitch with a hairline above each.
    */
   options: {
     display: "grid",
-    gridTemplateColumns: "max-content minmax(0, 1fr)",
+    gridTemplateColumns: space.tableColumns,
+    gridTemplateRows: "auto",
+    gridAutoRows: { default: "40px", [media.mobile]: space.touchTarget },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
-  },
-  option: {
-    display: "grid",
-    gridColumn: "1 / -1",
-    gridTemplateColumns: "subgrid",
     alignItems: "center",
-    minHeight: { default: "40px", [media.mobile]: space.touchTarget },
-    boxShadow: `inset 0 -1px ${colors.hairline}`,
   },
-  label: { color: colors.secondary },
-  toggles: {
-    display: "flex",
-    flexWrap: "wrap",
-    columnGap: { default: "12px", [media.mobile]: "8px" },
-    // A finger dragging across the toggles picks them instead of scrolling the page.
-    touchAction: "none",
+  head: {
+    gridRow: 1,
+    alignSelf: "start",
+    color: colors.secondary,
+    paddingBottom: { default: space.portfolioRowPadding, [media.mobile]: space.touchInset },
   },
-  /** Phones: the sizes stay on one row and scroll sideways, between fades at the edges. */
-  sizes: {
-    minWidth: 0,
-    position: { default: null, [media.mobile]: "relative" },
-    timelineScope: "--sizes",
-    "::before": {
-      content: { default: null, [media.mobile]: '""' },
-      left: 0,
-      backgroundImage: `linear-gradient(to right, ${colors.bg}, transparent)`,
-      opacity: 0,
-      animationName: { default: null, [scrollDriven]: revealStart },
-      position: "absolute",
-      insetBlock: 0,
-      zIndex: 1,
-      width: "48px",
-      pointerEvents: "none",
-      animationTimeline: "--sizes",
-      animationTimingFunction: "linear",
-      animationFillMode: "both",
-    },
-    "::after": {
-      content: { default: null, [media.mobile]: '""' },
-      right: 0,
-      backgroundImage: `linear-gradient(to left, ${colors.bg}, transparent)`,
-      opacity: 0,
-      animationName: { default: null, [scrollDriven]: hideEnd },
-      position: "absolute",
-      insetBlock: 0,
-      zIndex: 1,
-      width: "48px",
-      pointerEvents: "none",
-      animationTimeline: "--sizes",
-      animationTimingFunction: "linear",
-      animationFillMode: "both",
-    },
-  },
-  fadeStart: { "::before": { opacity: 1 } },
-  fadeEnd: { "::after": { opacity: 1 } },
-  sizeRow: {
-    flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
-    overflowX: { default: null, [media.mobile]: "auto" },
-    // A finger drags the row sideways; on desktop it wraps and paints like the formats.
-    touchAction: { default: "none", [media.mobile]: "pan-x" },
-    scrollbarWidth: "none",
-    // Reaching the row's end must not drag the page.
-    overscrollBehaviorX: "contain",
-    scrollTimeline: "--sizes x",
-    "::-webkit-scrollbar": { display: "none" },
+  formatColumn: { gridColumn: 1 },
+  sizeColumn: { gridColumn: 2 },
+  backgroundColumn: { gridColumn: 3 },
+  qualityColumn: { gridColumn: 4, justifySelf: "end" },
+  /** A column's toggles take no box, so each sits in its own row of the table's grid. */
+  column: { display: "contents" },
+  /** A body row's hairline, across all four columns; the first one closes the header. */
+  rule: {
+    gridColumn: "1 / -1",
+    alignSelf: "stretch",
+    boxShadow: `inset 0 1px ${colors.hairline}`,
+    pointerEvents: "none",
   },
   // White is picked, dark grey is not. Nothing else changes color, hover included, so the
   // color always means one thing.
   toggle: {
+    alignSelf: "stretch",
+    justifySelf: "start",
+    display: "flex",
+    alignItems: "center",
     color: colors.tertiary,
-    minHeight: { default: "40px", [media.mobile]: space.touchTarget },
+    // A finger scrolls the page across the table and picks on release.
+    touchAction: "manipulation",
   },
   on: { color: colors.primary },
-  /** A toggle alone in its row: it names its state instead of dimming. */
-  single: { justifySelf: "start" },
   percent: {
+    alignSelf: "stretch",
     display: "flex",
     alignItems: "center",
     color: colors.primary,
-    minHeight: { default: "40px", [media.mobile]: space.touchTarget },
   },
   /** The field over its zero padding; both are set in the same three tabular columns. */
   digits: { position: "relative", display: "inline-block" },
@@ -1022,7 +967,7 @@ const styles = stylex.create({
     width: "48px",
     height: "48px",
     objectFit: "contain",
-    borderRadius: "8px",
+    borderRadius: "2px",
     backgroundColor: colors.codeBg,
   },
   body: { minWidth: 0 },
