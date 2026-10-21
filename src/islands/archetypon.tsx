@@ -27,10 +27,7 @@ const raster: readonly Format[] = ["png", "webp", "jpeg"];
 const noFonts = 2;
 /** The raster sizes on offer, in pixels; all picked to start with. */
 const sizeOptions = [16, 32, 48, 64, 128, 256, 512, 1024, 2048, 4096] as const;
-/**
- * What fills behind the artwork. One setting for the whole conversion: the engine takes its
- * options once, before the first SVG.
- */
+/** What fills behind the artwork of a raster format or the ICO. */
 type Background = "transparent" | "white" | "black";
 const fills: Record<Background, string> = { transparent: "", white: "#ffffff", black: "#000000" };
 const backgroundLabels: Record<Background, string> = {
@@ -38,15 +35,24 @@ const backgroundLabels: Record<Background, string> = {
   white: "White",
   black: "Black",
 };
-/** The order a click steps through. */
-const nextBackground: Record<Background, Background> = {
-  transparent: "white",
-  white: "black",
-  black: "transparent",
+/** The formats with a background; SVG and PDF stay vector. */
+type Filled = "png" | "webp" | "jpeg" | "ico";
+const isFilled = (format: Format): format is Filled =>
+  format === "png" || format === "webp" || format === "jpeg" || format === "ico";
+/**
+ * What a click on a format's background steps to. JPEG has no transparency, so it only switches
+ * between white and black.
+ */
+function nextBackground(format: Filled, background: Background): Background {
+  if (format === "jpeg") return background === "black" ? "white" : "black";
+  return background === "transparent" ? "white" : background === "white" ? "black" : "transparent";
+}
+const startBackgrounds: Readonly<Record<Filled, Background>> = {
+  png: "transparent",
+  webp: "transparent",
+  jpeg: "white",
+  ico: "transparent",
 };
-/** JPEG has no transparency: without a fill the engine sets it on white. */
-const jpegBackground = (background: Background): Background =>
-  background === "black" ? "black" : "white";
 
 /** One toggle: a format, or a size. Its `data-toggle` reads `group:value`. */
 type Key = { group: "format"; value: Format } | { group: "size"; value: number };
@@ -192,17 +198,23 @@ async function preview(file: File): Promise<string> {
   return `data:image/svg+xml;base64,${btoa(binary)}`;
 }
 
-type Options = { formats: Format[]; config: string } | { errors: string[] };
+/**
+ * One run of the engine: the formats that share a background, and the options for them. The
+ * engine takes its options once, before the first SVG, so each background is its own pass; their
+ * archives are merged into one (`mergeZips`).
+ */
+type Pass = { formats: Format[]; config: string };
+type Options = { formats: Format[]; passes: Pass[] } | { errors: string[] };
 
 /** The options as picked; a new object whenever one of them changes. */
 type Settings = {
   selected: ReadonlySet<Format>;
   sizes: ReadonlySet<number>;
-  background: Background;
+  backgrounds: Readonly<Record<Filled, Background>>;
   quality: string;
 };
 
-function readOptions({ selected, sizes, background, quality }: Settings): Options {
+function readOptions({ selected, sizes, backgrounds, quality }: Settings): Options {
   const chosen = formats.filter((format) => selected.has(format));
   const errors: string[] = [];
   if (sizes.size === 0 && chosen.some((f) => raster.includes(f))) {
@@ -214,8 +226,21 @@ function readOptions({ selected, sizes, background, quality }: Settings): Option
   if (chosen.length === 0) errors.push("Pick at least one format.");
   if (errors.length > 0) return { errors };
   const picked = sizeOptions.filter((size) => sizes.has(size));
-  const config = `sizes=${picked.join(",")}\nbackground=${fills[background]}\njpeg-quality=${quality || "100"}\n`;
-  return { formats: chosen, config };
+  // Formats grouped by their fill; SVG and PDF have none and join the first pass.
+  const groups = new Map<string, Format[]>();
+  for (const format of chosen) {
+    if (!isFilled(format)) continue;
+    const fill = fills[backgrounds[format]];
+    groups.set(fill, [...(groups.get(fill) ?? []), format]);
+  }
+  const vector = chosen.filter((format) => !isFilled(format));
+  const [firstFill, firstFormats] = [...groups][0] ?? ["", []];
+  groups.set(firstFill, [...vector, ...firstFormats]);
+  const passes = [...groups].map(([fill, group]) => ({
+    formats: group,
+    config: `sizes=${picked.join(",")}\nbackground=${fill}\njpeg-quality=${quality || "100"}\n`,
+  }));
+  return { formats: chosen, passes };
 }
 
 const hasFiles = (event: DragEvent) => event.dataTransfer?.types.includes("Files") === true;
@@ -226,14 +251,69 @@ const cleanQuality = (text: string) => {
   return digits === "" ? "" : String(Math.min(Number(digits), 100));
 };
 
-/** One conversion: the files, and the options already read for the engine. */
+/** One conversion: the files, and the engine passes already read from the options. */
 type Job = {
   files: readonly File[];
   fonts: readonly File[];
-  formats: Format[];
-  config: string;
+  passes: readonly Pass[];
   note: string;
 };
+
+/**
+ * Joins the engine's ZIP archives into one. Each archive's file data is copied as it is; their
+ * central directories are joined, with each entry's offset moved to where its data now starts.
+ * An entry whose name an earlier archive already has (the folder of an SVG) is left out.
+ */
+function mergeZips(zips: readonly ArrayBuffer[]): Uint8Array<ArrayBuffer> {
+  const bodies: Uint8Array[] = [];
+  const entries: Uint8Array[] = [];
+  const names = new Set<string>();
+  let offset = 0;
+  for (const zip of zips) {
+    const bytes = new Uint8Array(zip);
+    const view = new DataView(zip);
+    let end = bytes.length - 22;
+    while (end >= 0 && view.getUint32(end, true) !== 0x06054b50) end -= 1;
+    if (end < 0) throw new Error("an archive has no end record");
+    const total = view.getUint16(end + 10, true);
+    const start = view.getUint32(end + 16, true);
+    if (start === 0xffffffff) throw new Error("an archive is too large to join");
+    bodies.push(bytes.subarray(0, start));
+    let at = start;
+    for (let index = 0; index < total; index += 1) {
+      if (view.getUint32(at, true) !== 0x02014b50) throw new Error("an archive entry is broken");
+      const length =
+        46 +
+        view.getUint16(at + 28, true) +
+        view.getUint16(at + 30, true) +
+        view.getUint16(at + 32, true);
+      const entry = bytes.slice(at, at + length);
+      const name = new TextDecoder().decode(entry.subarray(46, 46 + view.getUint16(at + 28, true)));
+      if (!names.has(name)) {
+        names.add(name);
+        const fields = new DataView(entry.buffer);
+        fields.setUint32(42, fields.getUint32(42, true) + offset, true);
+        entries.push(entry);
+      }
+      at += length;
+    }
+    offset += start;
+  }
+  const directory = entries.reduce((sum, entry) => sum + entry.length, 0);
+  const merged = new Uint8Array(offset + directory + 22);
+  let at = 0;
+  for (const part of [...bodies, ...entries]) {
+    merged.set(part, at);
+    at += part.length;
+  }
+  const record = new DataView(merged.buffer, at, 22);
+  record.setUint32(0, 0x06054b50, true);
+  record.setUint16(8, entries.length, true);
+  record.setUint16(10, entries.length, true);
+  record.setUint32(12, directory, true);
+  record.setUint32(16, offset, true);
+  return merged;
+}
 
 /** Where a running conversion reports to. */
 type Sink = {
@@ -246,27 +326,95 @@ type Sink = {
   setDownload: (download: Download) => void;
 };
 
-/** Sends a job to a fresh engine and reports what it says until it is done. */
+/**
+ * Runs a job's passes one after another on one worker, each on a fresh engine, reports what they
+ * say, and joins their archives when the last is done. An SVG counts as converted when every pass
+ * converted it.
+ */
 function run(current: Worker, job: Job, sink: Sink): void {
-  const { files, note } = job;
-  const failures: string[] = [];
-  const converted = new Set<number>();
+  const { files, note, passes } = job;
+  const failures = new Set<string>();
+  const converted = new Map<number, number>();
+  const zips: ArrayBuffer[] = [];
+  let pass = 0;
+  let ms = 0;
+
+  const fail = (text: string) => {
+    sink.stop();
+    sink.setStatus({ text, error: true });
+  };
+
+  const send = (index: number) => {
+    const next = passes[index];
+    if (next === undefined) return;
+    void Promise.all([
+      Promise.all(
+        files.map(async (file) => ({ stem: stem(file.name), data: await file.arrayBuffer() })),
+      ),
+      Promise.all(
+        job.fonts.map(async (file) => ({ name: file.name, data: await file.arrayBuffer() })),
+      ),
+    ]).then(
+      ([svgData, fontData]) => {
+        if (!sink.live()) return;
+        current.postMessage(
+          { svgs: svgData, fonts: fontData, formats: next.formats, options: next.config },
+          [...svgData, ...fontData].map((item) => item.data),
+        );
+      },
+      (error: unknown) => {
+        if (!sink.live()) return;
+        fail(
+          `The files could not be read: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      },
+    );
+  };
+
+  const finish = () => {
+    sink.stop();
+    const done = [...converted.values()].filter((times) => times === passes.length).length;
+    if (zips.length === 0) {
+      fail("Nothing was converted. The problems are listed below.");
+      return;
+    }
+    let zip: Uint8Array<ArrayBuffer>;
+    try {
+      zip = mergeZips(zips);
+    } catch (error) {
+      fail(`The archive could not be made: ${error instanceof Error ? error.message : ""}`);
+      return;
+    }
+    const first = files[0];
+    const name = files.length === 1 && first ? `${stem(first.name)}.zip` : "archetypon.zip";
+    const url = URL.createObjectURL(new Blob([zip], { type: "application/zip" }));
+    sink.setDownload({ url, name, bytes: zip.byteLength });
+    const seconds = (ms / 1000).toFixed(1);
+    const problems = failures.size === 0 ? "" : ` ${count(failures.size, "problem")} below.`;
+    sink.setStatus({
+      text: `Converted ${done} of ${count(files.length, "SVG")} in ${seconds} s.${problems}${note}`,
+      error: failures.size > 0,
+    });
+  };
 
   current.addEventListener("message", ({ data }: MessageEvent<unknown>) => {
     if (!sink.live()) return;
     const message = decode(data);
     if (!message) {
-      sink.stop();
-      sink.setStatus({ text: "The converter sent something it should not have.", error: true });
+      fail("The converter sent something it should not have.");
       return;
     }
     switch (message.type) {
+      // Every pass reads the fonts again; the first reports them.
       case "font":
-        sink.addFont({ text: message.families.join(", ") || message.name, error: false });
+        if (pass === 0)
+          sink.addFont({ text: message.families.join(", ") || message.name, error: false });
         return;
       case "font-error":
-        failures.push(`${message.name}: ${message.message}`);
-        sink.addFont({ text: `${message.name}: ${message.message}`, error: true });
+        if (pass === 0) {
+          failures.add(`${message.name}: ${message.message}`);
+          sink.addFont({ text: `${message.name}: ${message.message}`, error: true });
+        }
         return;
       case "open": {
         const size = `${message.width} × ${message.height}`;
@@ -283,7 +431,7 @@ function run(current: Worker, job: Job, sink: Sink): void {
         }));
         return;
       case "converted":
-        converted.add(message.index);
+        converted.set(message.index, (converted.get(message.index) ?? 0) + 1);
         return;
       case "failed": {
         const name = files[message.index]?.name ?? "An SVG";
@@ -291,7 +439,7 @@ function run(current: Worker, job: Job, sink: Sink): void {
           message.code === noFonts
             ? `${name} has text but no fonts. Drop the .ttf, .otf or .ttc files it uses, or convert its text to outlines.`
             : message.message;
-        failures.push(`${name}: ${text}`);
+        failures.add(`${name}: ${text}`);
         sink.update(message.index, (result) => ({
           ...result,
           steps: result.steps.map(({ format }) => ({ format, state: "pending" as const })),
@@ -300,68 +448,25 @@ function run(current: Worker, job: Job, sink: Sink): void {
         }));
         return;
       }
-      case "done": {
-        sink.stop();
-        if (message.zip === null) {
-          sink.setStatus({
-            text: "Nothing was converted. The problems are listed below.",
-            error: true,
-          });
-          return;
-        }
-        const first = files[0];
-        const name = files.length === 1 && first ? `${stem(first.name)}.zip` : "archetypon.zip";
-        const url = URL.createObjectURL(new Blob([message.zip], { type: "application/zip" }));
-        sink.setDownload({ url, name, bytes: message.zip.byteLength });
-        const seconds = (message.ms / 1000).toFixed(1);
-        const problems =
-          failures.length === 0 ? "" : ` ${count(failures.length, "problem")} below.`;
-        sink.setStatus({
-          text: `Converted ${converted.size} of ${count(files.length, "SVG")} in ${seconds} s.${problems}${note}`,
-          error: failures.length > 0,
-        });
+      case "done":
+        if (message.zip !== null) zips.push(message.zip);
+        ms += message.ms;
+        pass += 1;
+        if (pass < passes.length) send(pass);
+        else finish();
         return;
-      }
       case "error":
-        sink.stop();
-        sink.setStatus({ text: `Conversion failed: ${message.message}`, error: true });
+        fail(`Conversion failed: ${message.message}`);
         return;
     }
   });
   current.addEventListener("error", (event) => {
     event.preventDefault();
     if (!sink.live()) return;
-    sink.stop();
-    sink.setStatus({
-      text: `The converter could not start${event.message ? `: ${event.message}` : "."}`,
-      error: true,
-    });
+    fail(`The converter could not start${event.message ? `: ${event.message}` : "."}`);
   });
 
-  void Promise.all([
-    Promise.all(
-      files.map(async (file) => ({ stem: stem(file.name), data: await file.arrayBuffer() })),
-    ),
-    Promise.all(
-      job.fonts.map(async (file) => ({ name: file.name, data: await file.arrayBuffer() })),
-    ),
-  ]).then(
-    ([svgData, fontData]) => {
-      if (!sink.live()) return;
-      current.postMessage(
-        { svgs: svgData, fonts: fontData, formats: job.formats, options: job.config },
-        [...svgData, ...fontData].map((item) => item.data),
-      );
-    },
-    (error: unknown) => {
-      if (!sink.live()) return;
-      sink.stop();
-      sink.setStatus({
-        text: `The files could not be read: ${error instanceof Error ? error.message : String(error)}`,
-        error: true,
-      });
-    },
-  );
+  send(0);
 }
 
 export function Converter() {
@@ -369,7 +474,7 @@ export function Converter() {
   const [fonts, setFonts] = useState<File[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<Format>>(() => new Set(formats));
   const [sizes, setSizes] = useState<ReadonlySet<number>>(() => new Set(sizeOptions));
-  const [background, setBackground] = useState<Background>("transparent");
+  const [backgrounds, setBackgrounds] = useState(startBackgrounds);
   const [quality, setQuality] = useState("100");
   const [results, setResults] = useState<Result[]>([]);
   const [fontList, setFontList] = useState<Font[]>([]);
@@ -378,8 +483,8 @@ export function Converter() {
   const [dragging, setDragging] = useState(false);
   const worker = useRef<Worker | null>(null);
   const settings = useMemo<Settings>(
-    () => ({ selected, sizes, background, quality }),
-    [selected, sizes, background, quality],
+    () => ({ selected, sizes, backgrounds, quality }),
+    [selected, sizes, backgrounds, quality],
   );
   // The settings of the last conversion: once they differ, the options have changed since.
   const [applied, setApplied] = useState(settings);
@@ -429,7 +534,7 @@ export function Converter() {
       worker.current = current;
       run(
         current,
-        { files, fonts: fontFiles, formats: options.formats, config: options.config, note },
+        { files, fonts: fontFiles, passes: options.passes, note },
         {
           live: () => worker.current === current,
           stop,
@@ -549,10 +654,12 @@ export function Converter() {
       <OptionsPanel
         selected={selected}
         sizes={sizes}
-        background={background}
+        backgrounds={backgrounds}
         quality={quality}
         onPaint={paint}
-        onBackgroundChange={setBackground}
+        onBackgroundChange={(format, value) =>
+          setBackgrounds((current) => ({ ...current, [format]: value }))
+        }
         onQualityChange={setQuality}
       />
 
@@ -637,14 +744,14 @@ function DropZone({ dragging, onFiles }: DropZoneProps) {
 
 type OptionsPanelProps = Settings & {
   onPaint: (key: Key, on: boolean) => void;
-  onBackgroundChange: (background: Background) => void;
+  onBackgroundChange: (format: Filled, background: Background) => void;
   onQualityChange: (quality: string) => void;
 };
 
 function OptionsPanel({
   selected,
   sizes,
-  background,
+  backgrounds,
   quality,
   onPaint,
   onBackgroundChange,
@@ -737,10 +844,9 @@ function OptionsPanel({
   );
 
   // A table like the homepage's: one row per file type, its settings beside it. A cell that does
-  // not apply to the format shows a dash. The background is one setting for the conversion
-  // (see `Background`): PNG, WebP and ICO show it as it is; JPEG has no transparency, so it is
-  // set on white unless the setting is black. The sizes apply to every raster format at once,
-  // so they are one line below.
+  // not apply to the format shows a dash. Each format has its own background; JPEG has no
+  // transparency, so it is white or black. The sizes apply to every raster format at once, so
+  // they are one line below.
   return (
     <div {...stylex.props(ui.text, styles.panel)} role="group" aria-label="Options">
       <div {...stylex.props(styles.options)}>
@@ -752,7 +858,6 @@ function OptionsPanel({
         </div>
         {formats.map((format, index) => {
           const on = selected.has(format);
-          const hasBackground = format !== "svg" && format !== "pdf";
           return (
             <div
               key={format}
@@ -762,26 +867,18 @@ function OptionsPanel({
             >
               {toggle({ group: "format", value: format }, labels[format], on, styles.formatName)}
               <span>{raster.includes(format) ? rasterSizes : sizeText[format]}</span>
-              {!hasBackground ? (
+              {!isFilled(format) ? (
                 empty
               ) : (
                 <button
                   {...stylex.props(ui.reset, ui.focusRing, styles.setting)}
                   type="button"
-                  aria-label={`Background: ${
-                    backgroundLabels[format === "jpeg" ? jpegBackground(background) : background]
-                  }. The background is one setting for PNG, WebP, JPEG and ICO.`}
+                  aria-label={`${labels[format]} background: ${backgroundLabels[backgrounds[format]]}`}
                   onClick={() =>
-                    onBackgroundChange(
-                      format === "jpeg"
-                        ? jpegBackground(background) === "black"
-                          ? "white"
-                          : "black"
-                        : nextBackground[background],
-                    )
+                    onBackgroundChange(format, nextBackground(format, backgrounds[format]))
                   }
                 >
-                  {backgroundLabels[format === "jpeg" ? jpegBackground(background) : background]}
+                  {backgroundLabels[backgrounds[format]]}
                 </button>
               )}
               {format === "jpeg" ? (

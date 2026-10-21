@@ -111,9 +111,15 @@ const styles = stylex.create({
     // A shorthand, so it wins over the reset's own `padding: 0`.
     padding: "6px 8px",
     "::before": { content: '"\\200b"' },
-    // Hover raises the icon to full contrast; no plate behind it, which would sit square in the
-    // block's rounded corner.
+    // A plate behind the icon on hover shows the button's whole 32px target; its corner follows
+    // the block's.
+    borderRadius: "4px",
     color: { default: colors.tertiary, ":hover": { "@media (hover: hover)": colors.primary } },
+    backgroundColor: {
+      default: "transparent",
+      ":hover": { "@media (hover: hover)": colors.codeBg },
+      ":focus-visible": colors.codeBg,
+    },
   },
   done: { color: colors.primary },
   icon: {
@@ -121,6 +127,7 @@ const styles = stylex.create({
     inlineSize: "auto",
     overflow: "visible",
     fill: "none",
+    stroke: "currentColor",
     // Drawn on a 16-unit grid and shown at cap height (about 10px): a heavier stroke keeps the
     // line as thick as the text's strokes.
     strokeWidth: 1.75,
