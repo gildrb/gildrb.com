@@ -656,12 +656,10 @@ function OptionsPanel({
     };
   }, [onPaint]);
 
-  function toggle(key: Key, label: string, on: boolean, row: number) {
+  function toggle(key: Key, label: string, on: boolean, style: stylex.StyleXStyles) {
     return (
       <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, on && styles.on)}
-        // Its cell in the table: formats in the first column, sizes in the second.
-        style={{ gridRow: String(row), gridColumn: key.group === "format" ? "1" : "2" }}
+        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, style, on && styles.on)}
         type="button"
         data-toggle={`${key.group}:${key.value}`}
         aria-pressed={on}
@@ -694,88 +692,105 @@ function OptionsPanel({
     onQualityChange(value);
   }
 
-  // A table like the homepage's: the options are its columns, each value a row below its name.
-  // The rows' hairlines run under all four columns.
+  const ranged = sizeOptions.filter((size) => sizes.has(size));
+  const first = ranged[0];
+  const last = ranged.at(-1);
+  // What each format's file is made of, as the engine makes it (archetypon `lib.rs`): SVG and PDF
+  // stay vector; PNG, WebP and JPEG take the picked sizes; ICO always packs 16, 32 and 48.
+  const sizeText: Record<Format, string> = {
+    svg: "Vector",
+    pdf: "Vector",
+    png: "",
+    webp: "",
+    jpeg: "",
+    ico: "16, 32, 48",
+  };
+  const rasterSizes =
+    first === undefined || last === undefined
+      ? "None"
+      : first === last
+        ? `${first} px`
+        : `${first}–${last} px`;
+  const background = filled ? "White" : "Transparent";
+
+  // A table like the homepage's: one row per file type, its settings beside it. The background is
+  // one setting for every format that has one; JPEG has no transparency, so the engine sets it on
+  // white either way. The sizes apply to every raster format at once, so they are one line below.
   return (
-    <div {...stylex.props(ui.text, styles.options)} role="group" aria-label="Options">
-      <span {...stylex.props(styles.head, styles.formatColumn)} id="archetypon-formats">
-        Format
-      </span>
-      <span {...stylex.props(styles.head, styles.sizeColumn)} id="archetypon-sizes">
-        Size
-      </span>
-      <span {...stylex.props(styles.head, styles.backgroundColumn)} id="archetypon-background">
-        Background
-      </span>
-      <span {...stylex.props(styles.head, styles.qualityColumn)} id="archetypon-quality-name">
-        Quality
-      </span>
-      {sizeOptions.map((size, index) => (
-        <span
-          key={size}
-          {...stylex.props(styles.rule)}
-          style={{ gridRow: String(index + 2) }}
-          aria-hidden="true"
-        />
-      ))}
-      <div
-        {...stylex.props(styles.column, styles.formatColumn)}
-        role="group"
-        aria-labelledby="archetypon-formats"
-      >
-        {formats.map((format, index) =>
-          toggle(
-            { group: "format", value: format },
-            labels[format],
-            selected.has(format),
-            index + 2,
-          ),
-        )}
+    <div {...stylex.props(ui.text, styles.panel)} role="group" aria-label="Options">
+      <div {...stylex.props(styles.options)}>
+        <div {...stylex.props(styles.row, styles.header)} aria-hidden="true">
+          <span>Format</span>
+          <span>Size</span>
+          <span>Background</span>
+          <span {...stylex.props(styles.end)}>Quality</span>
+        </div>
+        {formats.map((format, index) => {
+          const on = selected.has(format);
+          const hasBackground = format !== "svg" && format !== "pdf";
+          return (
+            <div
+              key={format}
+              {...stylex.props(styles.row, index > 0 && styles.divided, !on && styles.off)}
+              role="group"
+              aria-label={labels[format]}
+            >
+              {toggle({ group: "format", value: format }, labels[format], on, styles.formatName)}
+              <span>{raster.includes(format) ? rasterSizes : sizeText[format]}</span>
+              {format === "jpeg" ? (
+                <span>White</span>
+              ) : hasBackground ? (
+                <button
+                  {...stylex.props(ui.reset, ui.focusRing, styles.setting)}
+                  type="button"
+                  aria-label={`Background: ${background}, for PNG, WebP and ICO`}
+                  onClick={() => onFilledChange(!filled)}
+                >
+                  {background}
+                </button>
+              ) : (
+                <span />
+              )}
+              {format === "jpeg" ? (
+                <label {...stylex.props(styles.percent, styles.end)}>
+                  <span {...stylex.props(styles.digits)}>
+                    {/* The empty columns show dark grey zeros (010%, 000%); the typed digits'
+                        columns stay blank here, covered by the field's own text. */}
+                    <span {...stylex.props(ui.figures, styles.padding)} aria-hidden="true">
+                      {"0".repeat(3 - quality.length)}
+                      <span {...stylex.props(styles.typed)}>{quality}</span>
+                    </span>
+                    <input
+                      {...stylex.props(ui.figures, styles.input)}
+                      value={quality}
+                      inputMode="numeric"
+                      maxLength={3}
+                      autoComplete="off"
+                      spellcheck={false}
+                      aria-label="JPEG quality, in percent, from 1 to 100"
+                      onInput={typeQuality}
+                      onBlur={() => (quality === "" || quality === "0") && onQualityChange("100")}
+                    />
+                  </span>
+                  <span aria-hidden="true">%</span>
+                </label>
+              ) : (
+                <span />
+              )}
+            </div>
+          );
+        })}
       </div>
-      <div
-        {...stylex.props(styles.column, styles.sizeColumn)}
-        role="group"
-        aria-labelledby="archetypon-sizes"
-      >
-        {sizeOptions.map((size, index) =>
-          toggle({ group: "size", value: size }, String(size), sizes.has(size), index + 2),
-        )}
+      <div {...stylex.props(styles.sizes)} role="group" aria-labelledby="archetypon-sizes">
+        <span {...stylex.props(styles.sizesLabel)} id="archetypon-sizes">
+          Sizes
+        </span>
+        <div {...stylex.props(styles.sizeList)}>
+          {sizeOptions.map((size) =>
+            toggle({ group: "size", value: size }, String(size), sizes.has(size), styles.size),
+          )}
+        </div>
       </div>
-      <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, styles.on, styles.backgroundColumn)}
-        style={{ gridRow: "2" }}
-        type="button"
-        aria-labelledby="archetypon-background archetypon-background-value"
-        onClick={() => onFilledChange(!filled)}
-      >
-        <span id="archetypon-background-value">{filled ? "Opaque" : "Transparent"}</span>
-      </button>
-      <label {...stylex.props(styles.percent, styles.qualityColumn)} style={{ gridRow: "2" }}>
-        <span {...stylex.props(styles.digits)}>
-          {/* The empty columns show dark grey zeros (010%, 000%); the typed digits'
-              columns stay blank here, covered by the field's own text. */}
-          <span {...stylex.props(ui.figures, styles.padding)} aria-hidden="true">
-            {"0".repeat(3 - quality.length)}
-            <span {...stylex.props(styles.typed)}>{quality}</span>
-          </span>
-          <input
-            {...stylex.props(ui.figures, styles.input)}
-            value={quality}
-            inputMode="numeric"
-            maxLength={3}
-            autoComplete="off"
-            spellcheck={false}
-            aria-labelledby="archetypon-quality-name"
-            aria-describedby="archetypon-quality"
-            onInput={typeQuality}
-            onBlur={() => (quality === "" || quality === "0") && onQualityChange("100")}
-          />
-        </span>
-        <span aria-hidden="true">%</span>
-        <span {...stylex.props(ui.srOnly)} id="archetypon-quality">
-          JPEG quality, in percent, from 1 to 100
-        </span>
-      </label>
     </div>
   );
 }
@@ -851,55 +866,79 @@ const styles = stylex.create({
       ":hover": { [media.hover]: colors.article },
     },
   },
-  /**
-   * The homepage table's grid (`space.tableColumns`): a header row of names, then rows at the
-   * table's pitch with a hairline above each.
-   */
+  panel: { display: "flex", flexDirection: "column", gap: space.sectionGap },
+  /** The homepage table's grid (`space.tableColumns`): a header over a hairline, then one row per format. */
   options: {
     display: "grid",
     gridTemplateColumns: space.tableColumns,
-    gridTemplateRows: "auto",
-    gridAutoRows: { default: "40px", [media.mobile]: space.touchTarget },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
-    alignItems: "center",
   },
-  head: {
-    gridRow: 1,
-    alignSelf: "start",
-    color: colors.secondary,
-    paddingBottom: { default: space.portfolioRowPadding, [media.mobile]: space.touchInset },
-  },
-  formatColumn: { gridColumn: 1 },
-  sizeColumn: { gridColumn: 2 },
-  backgroundColumn: { gridColumn: 3 },
-  qualityColumn: { gridColumn: 4, justifySelf: "end" },
-  /** A column's toggles take no box, so each sits in its own row of the table's grid. */
-  column: { display: "contents" },
-  /** A body row's hairline, across all four columns; the first one closes the header. */
-  rule: {
+  /** A row on the table's columns and pitch, as the homepage's (`row.tsx`). */
+  row: {
+    display: "grid",
     gridColumn: "1 / -1",
-    alignSelf: "stretch",
-    boxShadow: `inset 0 1px ${colors.hairline}`,
-    pointerEvents: "none",
+    gridTemplateColumns: "subgrid",
+    // Centered, as the name is: it fills the row's height to be easy to hit.
+    alignItems: "center",
+    minHeight: { default: "40px", [media.mobile]: space.touchTarget },
+    color: colors.secondary,
   },
+  header: {
+    alignItems: "start",
+    minHeight: 0,
+    paddingBottom: { default: space.portfolioRowPadding, [media.mobile]: space.touchInset },
+    boxShadow: `inset 0 -1px ${colors.hairline}`,
+  },
+  /** A format that is off: its whole row goes dark grey, settings included. */
+  off: { color: colors.tertiary },
+  end: { justifySelf: "end" },
   // White is picked, dark grey is not. Nothing else changes color, hover included, so the
   // color always means one thing.
   toggle: {
-    alignSelf: "stretch",
-    justifySelf: "start",
-    display: "flex",
-    alignItems: "center",
     color: colors.tertiary,
     // A finger scrolls the page across the table and picks on release.
     touchAction: "manipulation",
   },
   on: { color: colors.primary },
-  percent: {
+  /** The format's name: the row's switch, as tall as the row so it is easy to hit. */
+  formatName: {
     alignSelf: "stretch",
+    justifySelf: "start",
     display: "flex",
     alignItems: "center",
-    color: colors.primary,
   },
+  /** A setting in a row, named by its value; pressing it switches to the other value. */
+  setting: {
+    justifySelf: "start",
+    color: "inherit",
+    textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
+    textDecorationColor: {
+      default: colors.tertiary,
+      ":hover": { [media.hover]: "currentColor" },
+    },
+  },
+  percent: {
+    display: "flex",
+    alignItems: "baseline",
+    color: "inherit",
+  },
+  /** The sizes for every raster format: a label and one wrapping line of figures. */
+  sizes: {
+    display: "grid",
+    gridTemplateColumns: space.tableColumns,
+    columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
+    alignItems: "baseline",
+  },
+  sizesLabel: { gridColumn: 1, color: colors.secondary },
+  sizeList: {
+    gridColumn: "2 / -1",
+    display: "flex",
+    flexWrap: "wrap",
+    columnGap: { default: "12px", [media.mobile]: "10px" },
+  },
+  size: { minHeight: { default: "24px", [media.mobile]: space.touchTarget } },
   /** The field over its zero padding; both are set in the same three tabular columns. */
   digits: { position: "relative", display: "inline-block" },
   padding: { color: colors.tertiary, whiteSpace: "pre" },
