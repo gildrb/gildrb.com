@@ -1,33 +1,45 @@
 # Filen
 
-A self-initiated identity for Filen, the cloud storage app I use.
+A self-initiated identity for Filen, the cloud storage app that I use.
 
 ![](media:filen-wordmark)
 
-### I started wide: symbols, wordmarks, a pangolin.
+## The brief
+
+I use Filen every day. The product works well, but its logo did not. Filen did not commission this work. My brief was a mark, a wordmark, an app icon, a pattern and campaign copy.
+
+## Wide first
+
+I tried a block that reads as an F, a folder in perspective, stairs and stacked blocks. I also tried a pangolin. Its scales stand for protection.
 
 ![](media:filen-exploration-board)
 
 ![](media:filen-pangolin-exploration)
 
-### The pangolin went. Its scales stayed.
+## The scales
+
+The face of the pangolin made the mark hard to read. The repeated scales became vertical panels that hide and show the mark as light crosses them.
 
 ![](media:filen-pattern-exploration)
 
-### A folder first, an F second.
+## The folder mark
+
+The angled folder reads as storage. The F shows on a second look. I tested it at small sizes and made an app icon in Icon Composer.
 
 ![](media:filen-logo-scale)
 ![](media:filen-app-icon)
 
-### I tried it with light.
+## Light studies
+
+The light studies made the panels into an image system. Red made the campaigns read as a warning, so I removed it.
 
 ![](media:filen-light-study)
 
-### Red read like a warning, so it went.
-
 ![](media:filen-identity-system-overview)
 
-### I made campaign graphics with it.
+## The campaign
+
+The copy states the privacy benefit. The panels show concealment and controlled access. I shared the concept with the Filen community in February 2026.
 
 ![](media:filen-zero-knowledge-campaign)
 ![](media:filen-storage-message)

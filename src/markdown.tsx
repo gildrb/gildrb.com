@@ -356,18 +356,16 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
 
 /**
  * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
- * it), the opening sentence, then the parts. `facts` follow the opening sentence, then `tool`
- * (Archetypon's converter). `eager` gives the first image high fetch priority.
+ * it), the opening sentence, then the parts. `tool` (Archetypon's converter) follows the opening.
+ * `eager` gives the first image high fetch priority.
  */
 export function Article({
   markdown,
   eager,
-  facts = null,
   tool = null,
 }: {
   markdown: string;
   eager: boolean;
-  facts?: ComponentChildren;
   tool?: ComponentChildren;
 }) {
   const { title, blocks } = parse(markdown);
@@ -392,8 +390,6 @@ export function Article({
   };
   for (const [index, block] of blocks.entries()) {
     const anchor = found.get(index);
-    if (index === 1 && facts !== null)
-      place("text", (spacing) => <div {...stylex.props(spacing)}>{facts}</div>);
     if (anchor?.top === true) placeTool();
     switch (block.type) {
       case "h2":
@@ -401,7 +397,15 @@ export function Article({
         const top = anchor?.top === true;
         const Tag = top ? "h2" : "h3";
         place(top ? "part" : "subheading", (spacing) => (
-          <Tag {...stylex.props(ui.prose, styles.heading, spacing)} id={anchor?.id}>
+          <Tag
+            {...stylex.props(
+              ui.prose,
+              styles.heading,
+              top ? [ui.heading, styles.part] : styles.subheading,
+              spacing,
+            )}
+            id={anchor?.id}
+          >
             <Inline text={block.text} />
           </Tag>
         ));
@@ -452,8 +456,6 @@ export function Article({
       }
     }
   }
-  if (blocks.length < 2 && facts !== null)
-    place("text", (spacing) => <div {...stylex.props(spacing)}>{facts}</div>);
   placeTool();
   return (
     <>
@@ -466,14 +468,16 @@ export function Article({
 }
 
 export const styles = stylex.create({
-  /** A part's heading: running-text size, set apart by weight and space, never larger than the name. */
+  /** Every heading: on the page's 24px line, clear of the top when jumped to. */
   heading: {
     color: colors.primary,
-    fontSize: "16px",
     lineHeight: "24px",
-    fontWeight: 500,
     scrollMarginTop: { default: space.pageInset, "@media (max-width: 767px)": "72px" },
   },
+  /** A part (Problem, Solution, Proof): as large as the name and the breadcrumb, never larger. */
+  part: { fontWeight: 400 },
+  /** A step inside a part: running-text size, set apart by weight. */
+  subheading: { fontSize: "16px", fontWeight: 500 },
   prose: { color: colors.article, fontWeight: colors.proseWeight },
   /** The opening sentence: what the work is, at full contrast. */
   lede: { color: colors.primary },

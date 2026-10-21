@@ -38,30 +38,15 @@ const projectsBySlug = new Map<string, Case | Product>(
 );
 
 /**
- * The Markdown a reader or agent receives: a project's page with its facts, as the HTML page shows
- * them, right after its opening sentence. Plain pages are served as written.
+ * The Markdown a reader or agent receives: a project's page as written, then its links, as the
+ * HTML page lists them beside the text. Plain pages are served as written.
  */
 function published(slug: string): string {
   const body = text(slug);
-  const item = projectsBySlug.get(slug);
-  if (item === undefined) return body;
-  const { credit, links } = item;
-  const facts = [
-    `- Year: ${item.date.slice(0, 4)}`,
-    `- For: ${
-      credit.$ === "Self"
-        ? "Self-initiated"
-        : credit.href === undefined
-          ? credit.name
-          : `[${credit.name}](${credit.href})`
-    }`,
-    `- Scope: ${item.scope}`,
-    ...(links.length > 0
-      ? [`- Links: ${links.map(({ label, href }) => `[${label}](${href})`).join(", ")}`]
-      : []),
-  ].join("\n");
-  const [title = "", opening = "", ...rest] = body.trim().split("\n\n");
-  return `${[title, opening, facts, ...rest].join("\n\n")}\n`;
+  const links = projectsBySlug.get(slug)?.links ?? [];
+  if (links.length === 0) return body;
+  const list = links.map(({ label, href }) => `- [${label}](${href})`).join("\n");
+  return `${body.trimEnd()}\n\n## Elsewhere\n\n${list}\n`;
 }
 
 // Cloudflare email obfuscation would rewrite the visible address, so opt the copy button out.

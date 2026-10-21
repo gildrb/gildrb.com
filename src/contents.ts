@@ -1,13 +1,9 @@
-// The browser's own animations (WAAPI) through Motion's small build: no animation engine to load.
-import { animate } from "motion/mini";
-
-/** Fast enough to feel immediate, long enough to read as a move (see interfaces.rauno.me). */
-const move = { duration: 0.18, ease: [0.2, 0, 0, 1] } as const;
-
 /**
- * Marks the part of the page being read in its contents list (`Contents` in `aside.tsx`): its link
- * turns to full contrast and the square glides beside it. A part is being read once its heading
- * has passed the top third of the viewport; at the end of the page the last part is.
+ * Marks the part of the page being read in its contents list (`aside.tsx`). The square follows the
+ * scroll itself: between two headings it stands as far from one link to the next as the reading
+ * line has come from one heading to the next, so it never lags and never jumps. The link of the
+ * part the line is in turns to full contrast. A click scrolls to its part without adding a history
+ * entry, so Back leaves the page.
  */
 export function trackContents(): void {
   const nav = document.querySelector<HTMLElement>("[data-contents]");
@@ -22,33 +18,38 @@ export function trackContents(): void {
   let current = -1;
   let queued = false;
 
+  for (const { link, heading } of parts)
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      heading.scrollIntoView({ behavior: still.matches ? "instant" : "smooth" });
+      history.replaceState(history.state, "", link.hash);
+    });
+
   const update = () => {
     queued = false;
-    const line = innerHeight / 3;
+    // The reading line, a quarter down the viewport: high enough that a part counts once its
+    // heading is read, low enough that the square keeps up with the eye instead of trailing it.
+    const line = innerHeight / 4;
+    const tops = parts.map(({ heading }) => heading.getBoundingClientRect().top);
     const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
-    let index = atEnd ? parts.length - 1 : -1;
-    if (!atEnd)
-      for (const [at, { heading }] of parts.entries())
-        if (heading.getBoundingClientRect().top <= line) index = at;
+    let index = 0;
+    let progress = 0;
+    if (atEnd) index = parts.length - 1;
+    else
+      for (const [at, top] of tops.entries()) {
+        if (top > line) break;
+        index = at;
+        const next = tops[at + 1];
+        progress = next === undefined ? 0 : Math.min(1, (line - top) / (next - top));
+      }
+    const from = parts[index]?.link.offsetTop ?? 0;
+    const to = parts[index + 1]?.link.offsetTop ?? from;
+    marker.style.transform = `translateY(${from + (to - from) * progress}px)`;
     if (index === current) return;
-    const before = current;
     current = index;
     for (const [at, { link }] of parts.entries()) {
       if (at === index) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
-    }
-    const part = parts[index];
-    if (!part) {
-      animate(marker, { opacity: 0 }, { duration: still.matches ? 0 : 0.12 });
-      return;
-    }
-    // Centered on the link's first line (24px), whatever the list's own offsets are.
-    const y = part.link.offsetTop + (24 - marker.offsetHeight) / 2;
-    if (before === -1 || still.matches) {
-      marker.style.transform = `translateY(${y}px)`;
-      animate(marker, { opacity: 1 }, { duration: still.matches ? 0 : 0.12 });
-    } else {
-      animate(marker, { transform: `translateY(${y}px)`, opacity: 1 }, move);
     }
   };
 

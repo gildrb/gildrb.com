@@ -6,11 +6,11 @@ Open the dev server of your server on your Mac or phone, through a private HTTPS
 curl -fsSL https://poros.gildrb.com/install | bash
 ```
 
-## The problem
+## Out of reach
 
 You build on a server, a desktop or a VM, and you want to see the page on your laptop or phone. The dev server listens on `localhost` of the server. Your browser cannot reach it. An SSH tunnel stops when the connection drops. A public tunnel puts unfinished work on the internet. Vite and other dev servers refuse unknown hosts. Phones need HTTPS for many browser features.
 
-## What Poros does
+## One command
 
 - It starts your command, for example `vp dev`, `bun dev`, `npm run dev` or `next dev`.
 - It finds the port of the dev server.
@@ -38,7 +38,7 @@ Poros runs on macOS and Linux. Use the command at the top of this page, or Nix:
 nix profile install github:gildrb/poros
 ```
 
-The flake also has NixOS, nix-darwin and Home Manager modules. The source code is on [GitHub](https://github.com/gildrb/poros).
+The flake also has NixOS, nix-darwin and Home Manager modules.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ The flake also has NixOS, nix-darwin and Home Manager modules. The source code i
 
 ## Questions
 
-### How do I open localhost of a remote server on my phone?
+### Localhost on a phone?
 
 On the server, run the dev command through Poros, for example `poros vp dev`. It shows an HTTPS link. Open the link on the phone. The phone must be on the same tailnet.
 
@@ -56,6 +56,6 @@ On the server, run the dev command through Poros, for example `poros vp dev`. It
 
 No. Only devices of your tailnet that its access rules allow can open it. Tailscale writes the certificate names to public Certificate Transparency logs. The site stays private.
 
-### How is Poros different from an SSH tunnel or ngrok?
+### Why not an SSH tunnel?
 
 An SSH tunnel needs one open SSH session for each port and each device. ngrok and Tailscale Funnel put the site on the internet. Poros needs no session and puts nothing on the internet.

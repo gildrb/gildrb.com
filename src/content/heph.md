@@ -6,16 +6,26 @@ Ask your own files a question. Heph answers and shows the passages that it used,
 
 ![](media:heph-demo)
 
-### One folder per subject. Every answer shows where it came from.
+## Unchecked answers
+
+I studied with general AI assistants. Their mistakes looked plausible. To find a mistake took longer than the answer saved.
+
+## Files as the source
+
+Heph runs on your computer. You put the files for one subject in one folder. Heph answers from those files and shows the passages beside the answer.
 
 ![](media:heph-interface)
 
-### I drew the typeface too.
+## Lexical retrieval
+
+Retrieval uses BM25 and TF-IDF. It needs no machine-learning runtime. The install is about 46 MB. With a local model, your questions and files stay on the computer.
+
+## The typeface
+
+I drew a typeface for Heph in Glyphs, and a symbol to go with it.
 
 ![](media:heph-typeface-early)
 
 ![](media:heph-typeface-refinement)
-
-### With the symbol.
 
 ![](media:heph-lockup)

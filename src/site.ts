@@ -43,15 +43,9 @@ type Row = {
   scope: Scope | `${Scope}, ${Scope}`;
   /** One sentence; homepage and "View next" rows carry it as the link's description. */
   description: string;
-  /** Who the work is for: Gil's own initiative, or a named person or company. */
-  credit: Credit;
-  /** Where the work lives or was posted, shown with the page's facts. */
+  /** Where the work lives or was posted: the page's Links list. */
   links: readonly Link[];
 };
-
-export type Credit = { $: "Self" } | { $: "For"; name: string; href?: `https://${string}` };
-
-const self: Credit = { $: "Self" };
 
 export type Case = Row & {
   slug: string;
@@ -74,7 +68,6 @@ export const cases: readonly Case[] = [
     name: "Local Studio",
     headline: "Local Studio: brand and website for private AI on your Mac",
     scope: "Brand, Engineering",
-    credit: { $: "For", name: "Local Studio" },
     links: [{ label: "Site", href: "https://localstudio.gildrb.com/" }],
     description:
       "The brand and website Gil Rodrigues designed and built for Local Studio, private AI that runs on your Mac.",
@@ -88,7 +81,6 @@ export const cases: readonly Case[] = [
     name: "T3",
     headline: "T3: a self-initiated logomark exploration by Gil Rodrigues",
     scope: "Logo",
-    credit: self,
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2080990301208952994" }],
     description:
       "A self-initiated T3 logomark exploration built across products, icons, and a family of rejected directions.",
@@ -103,9 +95,9 @@ export const cases: readonly Case[] = [
     name: "Ben Davis",
     headline: "Ben Davis: a db monogram and the davis7.sh website",
     scope: "Engineering, Logo",
-    credit: { $: "For", name: "Ben Davis", href: "https://x.com/davis7" },
     links: [
       { label: "Site", href: "https://davis7.gildrb.com/" },
+      { label: "Ben Davis", href: "https://x.com/davis7" },
       { label: "X", href: "https://x.com/gildrb_/status/2074468837781639301" },
     ],
     description:
@@ -121,7 +113,6 @@ export const cases: readonly Case[] = [
     name: "Heph",
     headline: "Heph: ask your own files and see where each answer came from",
     scope: "Engineering, Product",
-    credit: self,
     links: [{ label: "Source", href: "https://github.com/gildrb/heph" }],
     description:
       "Heph answers questions from your own files and shows where each answer came from.",
@@ -134,7 +125,6 @@ export const cases: readonly Case[] = [
     name: "Filen",
     headline: "Filen: a self-initiated identity concept by Gil Rodrigues",
     scope: "Brand",
-    credit: self,
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2021242178727452998" }],
     description:
       "How Gil Rodrigues developed a self-initiated identity concept for Filen, from rejected marks to an app icon and campaign system.",
@@ -149,8 +139,7 @@ export const cases: readonly Case[] = [
     name: "n0thing",
     headline: "n0thing: a pixel wordmark for Jordan “n0thing” Gilbert",
     scope: "Logo",
-    credit: { $: "For", name: "Jordan “n0thing” Gilbert", href: "https://www.n0thing.gg/" },
-    links: [],
+    links: [{ label: "n0thing", href: "https://www.n0thing.gg/" }],
     description:
       "How Gil Rodrigues developed Jordan “n0thing” Gilbert's commissioned pixel wordmark through a rejected typewriter study, final exports, and motion.",
     ogDescription:
@@ -164,7 +153,6 @@ export const cases: readonly Case[] = [
     name: "CURVES",
     headline: "CURVES: a free geometric display typeface by Gil Rodrigues",
     scope: "Type",
-    credit: self,
     links: [
       { label: "DaFont", href: "https://www.dafont.com/curves.font" },
       { label: "Behance", href: "https://www.behance.net/gallery/75409663/CURVES-Free-Font" },
@@ -182,8 +170,7 @@ export const cases: readonly Case[] = [
     name: "mL7",
     headline: "mL7: a compact channel logo by Gil Rodrigues",
     scope: "Logo",
-    credit: { $: "For", name: "Mihai “mL7” Lupascu", href: "https://www.twitch.tv/ml7support" },
-    links: [],
+    links: [{ label: "Twitch", href: "https://www.twitch.tv/ml7support" }],
     description: "How Gil Rodrigues designed the compact mL7 channel logo in 2018.",
     ogDescription:
       "A compact identity built from a custom black wordmark and an orange directional stroke.",
@@ -235,7 +222,6 @@ export const products: readonly Product[] = [
     title: "Eukhe",
     name: "Eukhe",
     scope: "Engineering, Tool",
-    credit: self,
     links: [{ label: "Source", href: "https://github.com/gildrb/eukhe" }],
     home: "https://eukhe.com",
     aliases: ["eukhe.gildrb.com", "www.eukhe.com"],
@@ -257,7 +243,6 @@ export const products: readonly Product[] = [
     title: "Archetypon",
     name: "Archetypon",
     scope: "Tool",
-    credit: self,
     links: [{ label: "Source", href: "https://github.com/gildrb/archetypon" }],
     home: "https://archetypon.gildrb.com",
     aliases: [],
@@ -276,7 +261,6 @@ export const products: readonly Product[] = [
     title: "Poros",
     name: "Poros",
     scope: "Engineering, Tool",
-    credit: self,
     links: [{ label: "Source", href: "https://github.com/gildrb/poros" }],
     home: "https://poros.gildrb.com",
     aliases: [],

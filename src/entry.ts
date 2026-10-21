@@ -7,10 +7,11 @@ export const spring =
 export const fadeDuration = 330;
 
 /**
- * Runs in every page's `<head>`, right after the stylesheet: until Inter has loaded, the page stays
- * hidden, so the first frame is always the intended one (browsers keep the previous page on screen
- * meanwhile). Capped at one second so a slow or blocked font never hangs the page; the
- * metric-matched fallback then shows and swaps to Inter once it arrives. Without JavaScript nothing
- * is held.
+ * Runs in every page's `<head>`, right after the stylesheet: on the first page of a visit, until
+ * Inter has loaded, the page stays hidden, so the first frame is always the intended one (browsers
+ * keep the previous page on screen meanwhile). Capped at one second so a slow or blocked font
+ * never hangs the page; the metric-matched fallback then shows and swaps to Inter once it arrives.
+ * Later pages of the visit have Inter in the cache and are never hidden: hiding them, even for a
+ * frame, blanks the sidebar between two pages. Without JavaScript nothing is held.
  */
-export const fontGate = `const r=document.documentElement;const inter=[...document.fonts].find(f=>f.family.replace(/"/g,"")==="Inter");if(inter&&inter.status!=="loaded"){r.style.setProperty("--first-paint","hidden");const go=()=>{window.__align?.();r.style.removeProperty("--first-paint")};inter.load().then(go,go);setTimeout(go,1000)}`;
+export const fontGate = `const r=document.documentElement;const inter=[...document.fonts].find(f=>f.family.replace(/"/g,"")==="Inter");let seen=false;try{seen=sessionStorage.getItem("gildrb:inter")==="1"}catch{}if(inter&&inter.status!=="loaded"&&!seen){r.style.setProperty("--first-paint","hidden");const go=()=>{window.__align?.();r.style.removeProperty("--first-paint")};inter.load().then(go,go);setTimeout(go,1000)}if(inter)inter.load().then(()=>{try{sessionStorage.setItem("gildrb:inter","1")}catch{}},()=>{})`;

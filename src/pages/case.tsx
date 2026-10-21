@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
-import { Aside, Facts } from "../aside.tsx";
+import { Aside, WorkLinks } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { media as artwork } from "../media.ts";
@@ -18,6 +18,7 @@ import {
 import { Row } from "../row.tsx";
 import {
   type Case,
+  type Link,
   cases,
   caseWork,
   origin,
@@ -77,7 +78,7 @@ function Frame({
    * beside a plain page without parts, or the page's own content spanning it (the archive page).
    */
   third:
-    | { $: "Aside"; item: Case | Product | null; markdown: string }
+    | { $: "Aside"; links: readonly Link[]; markdown: string }
     | { $: "Archive"; work: readonly Work[] }
     | { $: "Content" };
   children: preact.ComponentChildren;
@@ -123,7 +124,7 @@ function Frame({
             home={false}
           />
         )}
-        {third.$ === "Aside" && <Aside item={third.item} parts={outline(third.markdown)} />}
+        {third.$ === "Aside" && <Aside links={third.links} parts={outline(third.markdown)} />}
         <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
@@ -197,7 +198,7 @@ export function CasePage({
       title={item.headline}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Aside", item, markdown }}
+      third={{ $: "Aside", links: item.links, markdown }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -225,12 +226,9 @@ export function CasePage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article
-          markdown={markdown}
-          eager
-          facts={<Facts item={item} style={styles.narrowFacts} />}
-        />
+        <Article markdown={markdown} eager />
       </article>
+      {item.links.length > 0 && <WorkLinks links={item.links} style={styles.narrowLinks} />}
       <Next projects={others} />
     </Frame>
   );
@@ -316,8 +314,13 @@ const styles = stylex.create({
     gridTemplateColumns: space.tableColumns,
     columnGap: { default: space.tableGap, "@media (max-width: 768px)": space.mobileTableGap },
   },
-  /** Below the opening sentence where there is no third column for the facts. */
-  narrowFacts: { display: { default: null, [media.wide]: "none" } },
+  /** Where there is no third column, the project's links follow its text. */
+  narrowLinks: {
+    display: { default: null, [media.wide]: "none" },
+    marginTop: "48px",
+    gridColumn: { default: null, [media.mobile]: "1 / -1" },
+    order: { default: null, [media.mobile]: 5 },
+  },
 });
 
 /** A plain page (about, contact, …) written in Markdown. */
@@ -341,7 +344,7 @@ export function DocPage({
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}
-      third={parts.length > 0 ? { $: "Aside", item: null, markdown } : { $: "Archive", work }}
+      third={parts.length > 0 ? { $: "Aside", links: [], markdown } : { $: "Archive", work }}
       head={
         <>
           <Alternates slug={page.slug} name={page.name} />
@@ -397,7 +400,7 @@ export function ProductPage({
       current={item.name}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Aside", item, markdown }}
+      third={{ $: "Aside", links: item.links, markdown }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -431,12 +434,12 @@ export function ProductPage({
         <Article
           markdown={markdown}
           eager
-          facts={<Facts item={item} style={styles.narrowFacts} />}
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
           }
         />
       </article>
+      {item.links.length > 0 && <WorkLinks links={item.links} style={styles.narrowLinks} />}
       <Next projects={others} />
     </Frame>
   );

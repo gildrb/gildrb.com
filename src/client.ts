@@ -4,7 +4,7 @@ import type { Islands } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { Portfolio } from "./islands/portfolio.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
-import { compareRows, type SortDirection, type SortKey } from "./site.ts";
+import { compareRows, origin, products, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
 import { trackContents } from "./contents.ts";
 import { revealImages } from "./reveal.ts";
@@ -147,6 +147,26 @@ for (const link of document.querySelectorAll('a[href="#top"]')) {
     scrollTo(0, 0);
     history.replaceState(null, "", location.href.replace(/#.*$/, ""));
   });
+}
+
+// Away from the live hosts (the dev server, a preview deployment), links to gildrb.com and to the
+// product hosts open the same page on this server, so a preview never jumps to the live site.
+const liveHosts = new Set(
+  [origin, ...products.map(({ home }) => home)].map((url) => new URL(url).host),
+);
+if (!liveHosts.has(location.host)) {
+  document.addEventListener(
+    "click",
+    (event) => {
+      const link = event.target instanceof Element ? event.target.closest("a") : null;
+      if (!link?.href) return;
+      const url = new URL(link.href);
+      const product = products.find(({ home }) => home === url.origin);
+      if (url.origin === origin) link.href = `${url.pathname}${url.search}${url.hash}`;
+      else if (product) link.href = url.pathname === "/" ? `/${product.slug}` : url.pathname;
+    },
+    { capture: true },
+  );
 }
 
 // Homepage: arrow keys step through the links, the theme toggle and the table. Only the homepage

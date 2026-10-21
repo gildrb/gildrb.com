@@ -40,9 +40,10 @@ const globalCss = [
   `::selection{color:${colors.bg};background:${colors.primary}}`,
   // A touch shows nothing: no grey tap flash, and no press state takes its place.
   "a,button{-webkit-tap-highlight-color:transparent}",
-  // In-page links (skip to content, contents, back to top) glide unless motion is reduced, and a
-  // move to another page of the site cross-fades in 150ms instead of flashing.
-  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:150ms}}",
+  // In-page links (skip to content, back to top) glide unless motion is reduced. A move to another
+  // page of the site cross-fades its content in 150ms; the sidebar is the same on every page, so
+  // it is its own layer that switches at once and never fades.
+  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:150ms}::view-transition-group(sidebar),::view-transition-new(sidebar){animation:none}::view-transition-old(sidebar){display:none}}",
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
@@ -457,6 +458,8 @@ const styles = stylex.create({
     padding: { default: `${space.pageInset} 0`, [media.mobile]: 0 },
     display: { default: "flex", [media.mobile]: "contents" },
     flexDirection: "column",
+    // Its own layer in page transitions, so it never fades (see `globalCss`).
+    viewTransitionName: "sidebar",
   },
   /** Homepage desktop: sidebar and content share three subgrid rows (intro, lists, footer). */
   homeColumn: {
