@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { useId } from "preact/hooks";
 import type { Project } from "./site.ts";
-import { colors, media, rowMarker, space } from "./tokens.stylex.ts";
+import { colors, media, rowMarker, scopeMarker, space } from "./tokens.stylex.ts";
 import { Figures, ui, untranslated } from "./ui.tsx";
 
 /**
@@ -43,8 +43,13 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       >
         {project.title}
       </Title>
-      <span {...stylex.props(ui.text, styles.scope)} id={`${id}-scope`}>
-        {project.scope}
+      <span {...stylex.props(ui.text, scopeMarker, styles.scope)} id={`${id}-scope`} data-scope>
+        <span {...stylex.props(styles.track)}>
+          <span data-scope-text>{project.scope}</span>
+          <span {...stylex.props(styles.copy)} aria-hidden="true">
+            {project.scope}
+          </span>
+        </span>
       </span>
       <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
         {project.description}
@@ -58,6 +63,12 @@ export function Row({ project, first, home }: { project: Project; first: boolean
 
 const narrowTable = "@container (max-width: 25rem)";
 const phoneNext = "@media (max-width: 768px)";
+
+/** One round: rest a moment, then move left by one text and gap, where the copy takes over. */
+const marquee = stylex.keyframes({
+  "0%, 20%": { transform: "translateX(0)" },
+  "100%": { transform: "translateX(calc(-1 * var(--marquee-distance)))" },
+});
 
 const styles = stylex.create({
   row: {
@@ -115,15 +126,62 @@ const styles = stylex.create({
   scope: {
     gridColumn: 3,
     gridRow: 1,
-    // Phones are too narrow for the longest pair beside a full row; it ellipsizes there.
+    // Phones are too narrow for the longest pair beside a full row. A scope that does not fit
+    // runs past in a loop (`scope.ts`); until then, or with motion reduced, it ellipsizes.
     minWidth: { default: null, [media.mobile]: 0 },
     overflow: { default: null, [media.mobile]: "hidden" },
     whiteSpace: { default: null, [media.mobile]: "nowrap" },
-    textOverflow: { default: null, [media.mobile]: "ellipsis" },
+    textOverflow: {
+      default: null,
+      [media.mobile]: "ellipsis",
+      ":is([data-marquee])": { [media.motion]: "clip" },
+    },
+    // While it loops, the text fades in and out at the cell's right edge instead of being cut.
+    maskImage: {
+      default: null,
+      ":is([data-marquee])": {
+        [media.motion]: "linear-gradient(to right, black calc(100% - 16px), transparent)",
+      },
+    },
     color: {
       default: colors.tertiary,
       [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
       [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
+    },
+  },
+  /**
+   * Phones, a scope wider than its cell (`scope.ts` sets `data-marquee` and the distance): the
+   * text and a copy run left in a loop, one gap apart, resting a moment between rounds, so the
+   * title keeps its room and the scope is read in full by waiting. Motion reduced, it stays
+   * ellipsized.
+   */
+  track: {
+    display: {
+      default: "inline",
+      [stylex.when.ancestor("[data-marquee]", scopeMarker)]: {
+        default: "inline",
+        [media.motion]: "inline-flex",
+      },
+    },
+    columnGap: "var(--marquee-gap, 0px)",
+    animationName: {
+      default: null,
+      [stylex.when.ancestor("[data-marquee]", scopeMarker)]: {
+        default: null,
+        [media.motion]: marquee,
+      },
+    },
+    animationDuration: "var(--marquee-time, 0s)",
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+  },
+  copy: {
+    display: {
+      default: "none",
+      [stylex.when.ancestor("[data-marquee]", scopeMarker)]: {
+        default: "none",
+        [media.motion]: "inline",
+      },
     },
   },
   arrow: {

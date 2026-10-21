@@ -4,11 +4,12 @@ const light = "@media (prefers-color-scheme: light)";
 
 /**
  * The layout's one unit, in px: every desktop width and gap is a whole multiple of it, and a
- * line (24px) is three. The scope column is the remainder, 30 units at full width.
+ * line (24px) is three. The title column takes 14 units, enough for a person's full name
+ * ("Mihai Lupascu" is 109px); the scope column is the remainder, 28 units at full width.
  */
 const unit = 8;
 const dateColumn = `${12 * unit}px`;
-const titleColumn = `${12 * unit}px`;
+const titleColumn = `${14 * unit}px`;
 const arrowColumn = `${8 * unit}px`;
 
 export const media = stylex.defineConsts({
@@ -188,3 +189,6 @@ export const rootMarker = stylex.defineMarker();
 
 /** Put on an archive tile link so its label can react to the tile's hover and focus. */
 export const tileMarker = stylex.defineMarker();
+
+/** Put on a table row's scope cell so its text can loop when it does not fit (`scope.ts`). */
+export const scopeMarker = stylex.defineMarker();

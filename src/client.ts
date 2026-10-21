@@ -8,6 +8,7 @@ import { compareRows, origin, products, type SortDirection, type SortKey } from 
 import { space } from "./tokens.stylex.ts";
 import { trackContents } from "./contents.ts";
 import { revealImages } from "./reveal.ts";
+import { loopScopes } from "./scope.ts";
 import { autoplayVideos } from "./video.ts";
 import { routeWheel } from "./wheel.ts";
 import { enableZoom } from "./zoom.ts";
@@ -17,6 +18,7 @@ autoplayVideos();
 routeWheel();
 revealImages();
 trackContents();
+loopScopes();
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
   theme: () => ThemeToggle,
