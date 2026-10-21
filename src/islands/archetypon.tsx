@@ -217,9 +217,7 @@ type Settings = {
 function readOptions({ selected, sizes, backgrounds, quality }: Settings): Options {
   const chosen = formats.filter((format) => selected.has(format));
   const errors: string[] = [];
-  if (sizes.size === 0 && chosen.some((f) => raster.includes(f))) {
-    errors.push("PNG, WebP and JPEG need at least one size.");
-  }
+  // The sizes are never empty: the last one cannot be turned off (`paint`).
   if (chosen.includes("jpeg") && (quality === "" || Number(quality) < 1)) {
     errors.push("JPEG quality runs from 1% to 100%.");
   }
@@ -642,7 +640,11 @@ export function Converter() {
       return next;
     };
     if (key.group === "format") setSelected((current) => change(current, key.value));
-    else setSizes((current) => change(current, key.value));
+    // An export always has at least one size: the last one picked cannot be turned off.
+    else
+      setSizes((current) =>
+        !on && current.size === 1 && current.has(key.value) ? current : change(current, key.value),
+      );
   }, []);
 
   const empty = svgs.length === 0 && fonts.length === 0;
