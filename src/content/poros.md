@@ -8,19 +8,9 @@ curl -fsSL https://poros.gildrb.com/install | bash
 
 ## Out of reach
 
-You build on a server, a desktop or a VM, and you want to see the page on your laptop or phone. The dev server listens on `localhost` of the server. Your browser cannot reach it. An SSH tunnel stops when the connection drops. A public tunnel puts unfinished work on the internet. Vite and other dev servers refuse unknown hosts. Phones need HTTPS for many browser features.
+The dev server listens on `localhost` of the server, so your laptop and phone cannot reach it. An SSH tunnel stops when the connection drops. A public tunnel puts unfinished work on the internet.
 
 ## One command
-
-- It starts your command, for example `vp dev`, `bun dev`, `npm run dev` or `next dev`.
-- It finds the port of the dev server.
-- It gives that port a private HTTPS address on your tailnet, through Tailscale Serve. It never uses Funnel: nothing goes to the public internet.
-- It forwards requests and WebSockets with the local `Host`. Hot reload works, and Vite needs no configuration.
-- It removes the route when the command stops.
-
-Open the link on a device of your tailnet: Mac, iPhone, iPad or a different computer. You need no port forward, no SSH tunnel and no public URL. Your code and the dev server stay on the development machine.
-
-## Use
 
 Put `poros` before your dev command:
 
@@ -28,34 +18,8 @@ Put `poros` before your dev command:
 poros vp dev
 ```
 
-To see all dev servers, run `poros dashboard`. It shows each TCP server of your user, with its HTTPS link, folder and command. Press `x` to stop a server.
+Poros finds the port and gives it a private HTTPS link on your tailnet, through Tailscale Serve. Hot reload works, and Vite needs no configuration. The link goes away when the command stops. `poros dashboard` shows all your dev servers.
 
-## Install
+## Setup
 
-Poros runs on macOS and Linux. Use the command at the top of this page, or Nix:
-
-```sh
-nix profile install github:gildrb/poros
-```
-
-The flake also has NixOS, nix-darwin and Home Manager modules.
-
-## Requirements
-
-- Tailscale on the development machine and on the device that you view from.
-- MagicDNS and HTTPS certificates on for the tailnet.
-- Access rules that allow the HTTPS port.
-
-## Questions
-
-### Localhost on a phone?
-
-On the server, run the dev command through Poros, for example `poros vp dev`. It shows an HTTPS link. Open the link on the phone. The phone must be on the same tailnet.
-
-### Is the site public?
-
-No. Only devices of your tailnet that its access rules allow can open it. Tailscale writes the certificate names to public Certificate Transparency logs. The site stays private.
-
-### Why not an SSH tunnel?
-
-An SSH tunnel needs one open SSH session for each port and each device. ngrok and Tailscale Funnel put the site on the internet. Poros needs no session and puts nothing on the internet.
+Poros runs on macOS and Linux. It needs Tailscale on both devices, MagicDNS and HTTPS certificates on for the tailnet, and access rules that allow the HTTPS port. Only devices of your tailnet can open the link.

@@ -111,12 +111,13 @@ export const cases: readonly Case[] = [
     date: "2026-04-21",
     title: "Heph",
     name: "Heph",
-    headline: "Heph: ask your own files and see where each answer came from",
+    headline: "Heph: answers from your files, with every quote checked",
     scope: "Engineering, Product",
-    links: [{ label: "Source", href: "https://github.com/gildrb/heph" }],
+    links: [{ label: "Source", href: "https://github.com/gildrb/heph-agent" }],
     description:
-      "Heph answers questions from your own files and shows where each answer came from.",
-    ogDescription: "Ask your own files a question and see the passages behind the answer.",
+      "Heph answers questions from the files in a folder and checks every quote that it cites against the source.",
+    ogDescription: "Ask the files in a folder a question. Every quote in the answer is checked.",
+    ogImage: "gil-rodrigues-heph-answer-1600.webp",
   },
   {
     slug: "filen",

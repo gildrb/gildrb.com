@@ -10,15 +10,11 @@ In 2019 I drew logos from geometric shapes. I wanted to make a full character se
 
 ![](media:curves-wordmark)
 
-## Every letter
+## Every glyph
 
-Each glyph uses flat stems and quarter turns at one radius. Where the rule leaves a gap, the gap stays. The R breaks at the shoulder. The Q keeps an open corner. Uppercase and lowercase use the same drawing, so a headline keeps one texture.
+Each glyph uses flat stems and quarter turns at one radius. Where the rule leaves a gap, the gap stays, so the R breaks at the shoulder and the Q keeps an open corner. Uppercase and lowercase share one drawing. The zero has a slash, so it is different from the O.
 
 ![](media:curves-uppercase)
-
-## Numerals
-
-The 2 and the 7 use a diagonal. The zero has a slash, so it is different from the O. Punctuation, math signs, currency and accented Latin letters make 96 glyphs.
 
 ![](media:curves-numerals)
 

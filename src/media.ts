@@ -195,6 +195,11 @@ export const media: Readonly<Record<string, Media>> = {
     width: 3940,
     height: 2260,
   },
+  "heph-answer": {
+    alt: "Heph answering how to add your own files, with one cited passage and four quotes verified",
+    width: 1682,
+    height: 497,
+  },
   "heph-interface": {
     alt: "Heph terminal interface showing a cited answer, evidence panel, and command menu",
     width: 1600,

@@ -6,22 +6,18 @@ A pixel wordmark that Jordan “n0thing” Gilbert commissioned.
 
 ## The brief
 
-In 2019, the former professional Counter-Strike player Jordan “n0thing” Gilbert needed a logo. He asked for something serious and left the direction open.
+In 2019, the former professional Counter-Strike player Jordan “n0thing” Gilbert asked for a serious logo and left the direction open.
 
 ## A typewriter detour
 
-My first proposal was a pixel wordmark. Jordan wanted to compare it with a typewriter look from the 1980s, so I drew one. Its letter widths pulled the name apart. We dropped it.
+My first proposal was a pixel wordmark. Jordan wanted to compare it with a typewriter look from the 1980s. Its letter widths pulled the name apart, so we dropped it.
 
 ![](media:n0thing-typewriter-direction)
 
 ## Back to pixels
 
-I changed the zero and the letter spacing, and tested black, white and red versions.
+I changed the zero and the spacing and tested black, white and red. Jordan approved the mark, and I delivered AI, PSD and PNG files. In the animation only the underscore moves.
 
 ![](media:n0thing-pixel-variations)
-
-## Delivery
-
-Jordan approved the mark. I delivered the AI and PSD files and six PNG exports. Only the underscore moves in the animated version, so the wordmark keeps its weight and spacing.
 
 ![](media:n0thing-export-folder)

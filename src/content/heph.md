@@ -1,6 +1,6 @@
 # Heph
 
-Ask your own files a question. Heph answers and shows the passages that it used, so you can check it.
+Heph answers questions from the files in a folder and checks every quote that it cites against the source.
 
 ![](media:heph-session)
 
@@ -8,17 +8,15 @@ Ask your own files a question. Heph answers and shows the passages that it used,
 
 ## Unchecked answers
 
-I studied with general AI assistants. Their mistakes looked plausible. To find a mistake took longer than the answer saved.
-
-## Files as the source
-
-Heph runs on your computer. You put the files for one subject in one folder. Heph answers from those files and shows the passages beside the answer.
+I studied with general AI assistants. Their mistakes looked plausible, and a mistake took longer to find than the answer saved. The first Heph, shown above, cited passages, but a ✓ only meant that Heph had retrieved the passage.
 
 ![](media:heph-interface)
 
-## Lexical retrieval
+## Checked quotes
 
-Retrieval uses BM25 and TF-IDF. It needs no machine-learning runtime. The install is about 46 MB. With a local model, your questions and files stay on the computer.
+Now each answer quotes its evidence, and Heph checks each quote against its passage. A small core in Bend ranks the passages and checks the quotes. Nine laws, such as "a quote marked ✓ is byte for byte in its passage", are proven in CI. Heph makes one model call per question instead of up to 27, gives the model no tools, and installs in 19 MiB instead of 46.
+
+![](media:heph-answer)
 
 ## The typeface
 
