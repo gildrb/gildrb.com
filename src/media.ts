@@ -222,6 +222,31 @@ export const media: Readonly<Record<string, Media>> = {
     width: 1600,
     height: 909,
   },
+  "ml7-panel-1": {
+    alt: "mL7's Donate panel, built from the M of the mark in teal",
+    width: 320,
+    height: 100,
+  },
+  "ml7-panel-2": {
+    alt: "mL7's Commands panel, built from the M of the mark in teal",
+    width: 320,
+    height: 100,
+  },
+  "ml7-panel-3": {
+    alt: "mL7's PC Specs panel, built from the M of the mark in teal",
+    width: 320,
+    height: 100,
+  },
+  "ml7-panel-4": {
+    alt: "mL7's Hall of Fame panel, built from the M of the mark in teal",
+    width: 320,
+    height: 100,
+  },
+  "ml7-twitch-banner": {
+    alt: "mL7's Twitch banner: the mark in light gray with a teal brush stroke on black",
+    width: 1200,
+    height: 480,
+  },
   "ml7-logo-system": {
     alt: "mL7 logo with black lettering and an orange directional stroke on white",
     archive: true,

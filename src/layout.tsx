@@ -6,7 +6,7 @@ import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { contacts, type Link, origin, person, type Project, profiles, projects } from "./site.ts";
-import { themeColor, themeScript } from "./theme.ts";
+import { themeColor, themeCss, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
 import { Figures, type Style, ui, untranslated } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
@@ -40,10 +40,11 @@ const globalCss = [
   `::selection{color:${colors.bg};background:${colors.primary}}`,
   // A touch shows nothing: no grey tap flash, and no press state takes its place.
   "a,button{-webkit-tap-highlight-color:transparent}",
-  // In-page links (skip to content, back to top) glide unless motion is reduced. A move to another
-  // page of the site cross-fades its content in 150ms; the sidebar is the same on every page, so
-  // it is its own layer that switches at once and never fades.
-  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:150ms}::view-transition-group(sidebar),::view-transition-new(sidebar){animation:none}::view-transition-old(sidebar){display:none}}",
+  // In-page links (skip to content, back to top) glide unless motion is reduced. Moving between
+  // pages has no transition: a cross-document one freezes the page until it ends, so Back or
+  // another click during it cannot cancel it and shows a flash. The browser swaps pages at once,
+  // and the sidebar, the same on every page, stays as it is.
+  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
@@ -92,15 +93,17 @@ export function Document({
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* The page color first, so no frame shows the browser's white canvas (see `themeCss`).
+            The theme script needs the favicon and theme-color tags, so they come before it. */}
+        <style dangerouslySetInnerHTML={{ __html: themeCss }} />
+        <meta name="theme-color" content={themeColor.dark} />
+        <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Hold the first paint until the whole page is parsed and aligned, so it never arrives
             in pieces or shifts. Preact's typings lack `blocking` on <link>, hence the spread. */}
         <link rel="expect" href="#aligned" {...{ blocking: "render" }} />
         {head}
-        {/* The browser chrome takes the page color; `themeScript` sets it to the shown theme. */}
-        <meta name="theme-color" content={themeColor.dark} />
         <title>{title}</title>
-        <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
-        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="preload" href={interUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
         {mono && (
           <link rel="preload" href={monoUrl} as="font" type="font/woff2" crossOrigin="anonymous" />
@@ -458,8 +461,6 @@ const styles = stylex.create({
     padding: { default: `${space.pageInset} 0`, [media.mobile]: 0 },
     display: { default: "flex", [media.mobile]: "contents" },
     flexDirection: "column",
-    // Its own layer in page transitions, so it never fades (see `globalCss`).
-    viewTransitionName: "sidebar",
   },
   /** Homepage desktop: sidebar and content share three subgrid rows (intro, lists, footer). */
   homeColumn: {

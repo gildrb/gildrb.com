@@ -4,7 +4,7 @@ import { Aside, WorkLinks } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { media as artwork } from "../media.ts";
-import { Article, outline, parse, singleSizes, sources } from "../markdown.tsx";
+import { Article, type Heading, outline, parse, singleSizes, sources } from "../markdown.tsx";
 import {
   type Assets,
   Document,
@@ -38,6 +38,16 @@ const monoBlocks = (markdown: string) =>
       block.type === "code" ||
       (block.type === "media" && block.items.some(({ id }) => id === "heph-demo")),
   );
+
+/**
+ * The parts a page lists to jump to. A page of a screen or two (the product pages, mL7, Local
+ * Studio) is read at once and lists none: its later parts could not even reach the reading line.
+ * Pages with three or more figures run long enough to need the list.
+ */
+function contents(markdown: string): Heading[] {
+  const figures = parse(markdown).blocks.filter((block) => block.type === "media").length;
+  return figures >= 3 ? outline(markdown) : [];
+}
 
 /**
  * Every inner page. Its tab and its link preview read like its breadcrumb ("Gil Rodrigues → T3")
@@ -124,7 +134,7 @@ function Frame({
             home={false}
           />
         )}
-        {third.$ === "Aside" && <Aside links={third.links} parts={outline(third.markdown)} />}
+        {third.$ === "Aside" && <Aside links={third.links} parts={contents(third.markdown)} />}
         <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
@@ -335,7 +345,7 @@ export function DocPage({
   markdown: string;
   work: readonly Work[];
 }) {
-  const parts = outline(markdown);
+  const parts = contents(markdown);
   return (
     <Frame
       assets={assets}

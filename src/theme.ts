@@ -22,6 +22,20 @@ export function applyTheme(theme: Theme) {
 }
 
 /**
+ * The page color before anything else is parsed, for the system scheme and for a forced theme
+ * (`themeScript` adds the class): the browser never shows its own white canvas between pages,
+ * in either theme. Matches `colors.bg`.
+ */
+export const themeCss = [
+  `html{background:${themeColor.dark};color-scheme:dark}`,
+  `@media (prefers-color-scheme:light){html{background:${themeColor.light};color-scheme:light}}`,
+  ...(["dark", "light"] as const).map(
+    (theme) =>
+      `html.${themeClass[theme].split(" ")[0]}{background:${themeColor[theme]};color-scheme:${theme}}`,
+  ),
+].join("");
+
+/**
  * Runs in `<head>` before any CSS, so a saved theme never flashes, in the page or the chrome.
  * It points `theme-color` at the shown theme on load, and again whenever the system scheme
  * changes while no theme is forced; the toggle retargets it itself (`applyTheme`).

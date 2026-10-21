@@ -48,7 +48,7 @@ describe("side archive", () => {
 
 describe("project pages", () => {
   test("link every part from the contents, and every link has its heading", () => {
-    for (const file of ["filen.html", "archetypon.html"]) {
+    for (const file of ["filen.html", "t3.html"]) {
       const html = page(file);
       expect(html, file).not.toContain("data-side-archive");
       const nav = /<nav[^>]*data-contents[\s\S]*?<\/nav>/.exec(html)?.[0] ?? "";
@@ -57,6 +57,11 @@ describe("project pages", () => {
       for (const id of targets)
         expect(html, `${file} #${id}`).toMatch(new RegExp(`<h2[^>]*id="${id}"`));
     }
+  });
+
+  test("a page that fits a screen or two lists no contents", () => {
+    for (const file of ["archetypon.html", "eukhe.html"])
+      expect(page(file), file).not.toContain("data-contents");
   });
 });
 

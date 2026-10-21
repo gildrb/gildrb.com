@@ -10,4 +10,12 @@ In 2018 I learned competitive Overwatch from better players, Mihai among them. I
 
 ## His channel
 
-His manager contacted me, and the mark became the identity of his channel. Mihai paid for work that I did not bill. In July 2026 his Twitch channel still uses the mark.
+His manager contacted me, and the mark became the identity of his channel. Mihai paid for work that I did not bill. In 2026 his Twitch channel, with 965K followers, still uses the mark: in teal on his banner, and its M on every panel.
+
+![](media:ml7-twitch-banner)
+
+![](media:ml7-panel-1)
+![](media:ml7-panel-2)
+
+![](media:ml7-panel-3)
+![](media:ml7-panel-4)
