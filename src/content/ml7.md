@@ -1,4 +1,4 @@
-# mL7
+# Mihai Lupascu
 
 A channel logo for the Overwatch player Mihai “mL7” Lupascu.
 

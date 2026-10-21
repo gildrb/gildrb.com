@@ -2,7 +2,7 @@
 
 A db monogram for the developer Ben Davis, and the site that it lives on.
 
-![](media:ben-davis-site-tour)
+![](media:ben-davis-brandmark)
 
 ## The old mark
 
@@ -20,4 +20,4 @@ A d and a b are mirror images. I kept that symmetry. One diagonal carries the st
 
 I posted the mark in July 2026 and sent it to Ben. He replied, and the mark is his to use. I designed and built davis7.sh around it. On the site, the db turns into the wordmark.
 
-![](media:ben-davis-brandmark)
+![](media:ben-davis-site-tour)

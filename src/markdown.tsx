@@ -60,14 +60,6 @@ export function parse(markdown: string): { title: string; blocks: Block[] } {
       blocks.push({ type: "p", text: text.join(" ") });
     }
   }
-  const ids = blocks
-    .flatMap((block) => (block.type === "media" ? block.items : []))
-    .map(({ id }) => id);
-  const late = ids.find(
-    (id, index) => media[id]?.video && ids.slice(0, index).some((before) => !media[before]?.video),
-  );
-  if (late)
-    throw new Error(`Video media:${late} must come before every image: videos lead the page.`);
   return { title: titleLine.slice(2), blocks };
 }
 
@@ -474,7 +466,7 @@ export const styles = stylex.create({
     lineHeight: "24px",
     scrollMarginTop: { default: space.pageInset, "@media (max-width: 767px)": "72px" },
   },
-  /** A part (Problem, Solution, Proof): as large as the name and the breadcrumb, never larger. */
+  /** A part of the page: as large as the name and the breadcrumb, never larger. */
   part: { fontWeight: 400 },
   /** A step inside a part: running-text size, set apart by weight. */
   subheading: { fontSize: "16px", fontWeight: 500 },

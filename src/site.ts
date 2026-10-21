@@ -136,9 +136,9 @@ export const cases: readonly Case[] = [
   {
     slug: "n0thing",
     date: "2019-11-15",
-    title: "n0thing",
-    name: "n0thing",
-    headline: "n0thing: a pixel wordmark for Jordan “n0thing” Gilbert",
+    title: "Jordan Gilbert",
+    name: "Jordan Gilbert",
+    headline: "Jordan Gilbert: a pixel wordmark for n0thing",
     scope: "Logo",
     links: [{ label: "n0thing", href: "https://www.n0thing.gg/" }],
     description:
@@ -167,9 +167,9 @@ export const cases: readonly Case[] = [
   {
     slug: "ml7",
     date: "2018-11-13",
-    title: "mL7",
-    name: "mL7",
-    headline: "mL7: a compact channel logo by Gil Rodrigues",
+    title: "Mihai Lupascu",
+    name: "Mihai Lupascu",
+    headline: "Mihai Lupascu: a compact channel logo by Gil Rodrigues",
     scope: "Logo",
     links: [{ label: "Twitch", href: "https://www.twitch.tv/ml7support" }],
     description: "How Gil Rodrigues designed the compact mL7 channel logo in 2018.",

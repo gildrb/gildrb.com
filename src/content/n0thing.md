@@ -1,4 +1,4 @@
-# n0thing
+# Jordan Gilbert
 
 A pixel wordmark that Jordan “n0thing” Gilbert commissioned.
 
