@@ -109,14 +109,16 @@ const styles = stylex.create({
     marginBlock: `calc(${space.linkGap} / -2)`,
   },
   /**
-   * The square for the part being read, in the gutter between the text and this list: beside the
-   * content it marks. `contents.ts` moves it. Decorative, so it never takes a pointer.
+   * The square for the part being read, just left of its link, in the gutter between the text and
+   * this list. `contents.ts` measures each link and moves it there; the default centers it on the
+   * first link's first line (24px) for pages without JavaScript. Decorative, so it never takes a
+   * pointer.
    */
   marker: {
     position: "absolute",
-    // Centered on a link's first line (24px, below its padding); `contents.ts` moves it to the link.
-    top: `calc(${space.linkGap} / 2 + 9px)`,
-    left: "-20px",
+    top: 0,
+    left: "-14px",
+    transform: "translateY(9px)",
     width: "6px",
     height: "6px",
     backgroundColor: colors.primary,

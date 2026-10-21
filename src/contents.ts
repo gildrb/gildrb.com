@@ -1,9 +1,22 @@
+// The browser's own animations (WAAPI) through Motion's small build, with Motion's spring.
+import { type AnimationPlaybackControlsWithThen, spring } from "motion";
+import { animate } from "motion/mini";
+
 /**
- * Marks the part of the page being read in its contents list (`aside.tsx`). The square follows the
- * scroll itself: between two headings it stands as far from one link to the next as the reading
- * line has come from one heading to the next, so it never lags and never jumps. The link of the
- * part the line is in turns to full contrast. A click scrolls to its part without adding a history
- * entry, so Back leaves the page.
+ * How the square moves to the next part: a quick spring with a little give, done in about the
+ * 200ms an interaction may take (interfaces.rauno.me).
+ */
+const snap = { type: spring, visualDuration: 0.18, bounce: 0.25 } as const;
+
+/** How far the square leans toward the next part before it snaps there: a fifth of the way. */
+const lean = 0.2;
+
+/**
+ * Marks the part of the page being read in its contents list (`aside.tsx`). The square sits on the
+ * part's link and leans a little toward the next one as the reader scrolls through the part; when
+ * the next part begins, it snaps there on a spring, and the link turns to full contrast. Positions
+ * are measured from the links themselves, so the square stays on its line at any font size. A
+ * click scrolls to its part without adding a history entry, so Back leaves the page.
  */
 export function trackContents(): void {
   const nav = document.querySelector<HTMLElement>("[data-contents]");
@@ -17,6 +30,16 @@ export function trackContents(): void {
   const still = matchMedia("(prefers-reduced-motion: reduce)");
   let current = -1;
   let queued = false;
+  let snapping: AnimationPlaybackControlsWithThen | null = null;
+  let target = "";
+
+  /** The square's offset that centers it on the first text line of a part's link. */
+  const place = (link: HTMLAnchorElement) => {
+    const style = getComputedStyle(link);
+    const line = Number.parseFloat(style.lineHeight);
+    const padding = Number.parseFloat(style.paddingTop);
+    return link.offsetTop + padding + (line - marker.offsetHeight) / 2;
+  };
 
   for (const { link, heading } of parts)
     link.addEventListener("click", (event) => {
@@ -50,15 +73,35 @@ export function trackContents(): void {
           ? 0
           : Math.min(1, Math.max(0, (scrollY - start) / (next - start)));
     }
-    const from = parts[index]?.link.offsetTop ?? 0;
-    const to = parts[index + 1]?.link.offsetTop ?? from;
-    marker.style.transform = `translateY(${from + (to - from) * progress}px)`;
-    if (index === current) return;
+    const part = parts[index];
+    if (!part) return;
+    const from = place(part.link);
+    const next = parts[index + 1];
+    const to = next === undefined ? from : place(next.link);
+    target = `translateY(${from + (to - from) * lean * progress}px)`;
+    if (index === current) {
+      if (snapping === null) marker.style.transform = target;
+      return;
+    }
+    const first = current === -1;
     current = index;
     for (const [at, { link }] of parts.entries()) {
       if (at === index) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     }
+    snapping?.stop();
+    snapping = null;
+    if (first || still.matches) {
+      marker.style.transform = target;
+      return;
+    }
+    const run = animate(marker, { transform: target }, snap);
+    snapping = run;
+    void run.finished.then(() => {
+      if (snapping !== run) return;
+      snapping = null;
+      marker.style.transform = target;
+    });
   };
 
   const schedule = () => {
