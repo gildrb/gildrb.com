@@ -53,6 +53,20 @@ const globalCss = [
 const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space.sectionContentGap.slice(4, -1))});window.__align()`;
 
 /**
+ * Chrome prerenders a page of this site once a pointer rests on its link (about 200ms) or presses
+ * it, so the page opens whole, images included. Files (`.md`, `.xml`, downloads) are left alone.
+ * Other browsers ignore this; `ahead.ts` loads the images there.
+ */
+const speculationRules = scriptJson({
+  prerender: [
+    {
+      where: { and: [{ href_matches: "/*" }, { not: { href_matches: "/*.*" } }] },
+      eagerness: "moderate",
+    },
+  ],
+});
+
+/**
  * JSON safe inside a `<script>`: `<`, `>` and `&` cannot close the element or open a comment,
  * and the line separators JavaScript once rejected in strings are escaped too.
  */
@@ -114,6 +128,7 @@ export function Document({
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: fontGate }} />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: arriveScript }} />
+        <script type="speculationrules" dangerouslySetInnerHTML={{ __html: speculationRules }} />
         {/* Low priority keeps the island code out of the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
         <script
