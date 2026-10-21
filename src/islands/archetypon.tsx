@@ -27,8 +27,26 @@ const raster: readonly Format[] = ["png", "webp", "jpeg"];
 const noFonts = 2;
 /** The raster sizes on offer, in pixels; all picked to start with. */
 const sizeOptions = [16, 32, 48, 64, 128, 256, 512, 1024, 2048, 4096] as const;
-/** What "Opaque" fills behind the artwork. */
-const opaque = "#ffffff";
+/**
+ * What fills behind the artwork. One setting for the whole conversion: the engine takes its
+ * options once, before the first SVG.
+ */
+type Background = "transparent" | "white" | "black";
+const fills: Record<Background, string> = { transparent: "", white: "#ffffff", black: "#000000" };
+const backgroundLabels: Record<Background, string> = {
+  transparent: "Transparent",
+  white: "White",
+  black: "Black",
+};
+/** The order a click steps through. */
+const nextBackground: Record<Background, Background> = {
+  transparent: "white",
+  white: "black",
+  black: "transparent",
+};
+/** JPEG has no transparency: without a fill the engine sets it on white. */
+const jpegBackground = (background: Background): Background =>
+  background === "black" ? "black" : "white";
 
 /** One toggle: a format, or a size. Its `data-toggle` reads `group:value`. */
 type Key = { group: "format"; value: Format } | { group: "size"; value: number };
@@ -180,11 +198,11 @@ type Options = { formats: Format[]; config: string } | { errors: string[] };
 type Settings = {
   selected: ReadonlySet<Format>;
   sizes: ReadonlySet<number>;
-  filled: boolean;
+  background: Background;
   quality: string;
 };
 
-function readOptions({ selected, sizes, filled, quality }: Settings): Options {
+function readOptions({ selected, sizes, background, quality }: Settings): Options {
   const chosen = formats.filter((format) => selected.has(format));
   const errors: string[] = [];
   if (sizes.size === 0 && chosen.some((f) => raster.includes(f))) {
@@ -196,7 +214,7 @@ function readOptions({ selected, sizes, filled, quality }: Settings): Options {
   if (chosen.length === 0) errors.push("Pick at least one format.");
   if (errors.length > 0) return { errors };
   const picked = sizeOptions.filter((size) => sizes.has(size));
-  const config = `sizes=${picked.join(",")}\nbackground=${filled ? opaque : ""}\njpeg-quality=${quality || "100"}\n`;
+  const config = `sizes=${picked.join(",")}\nbackground=${fills[background]}\njpeg-quality=${quality || "100"}\n`;
   return { formats: chosen, config };
 }
 
@@ -351,7 +369,7 @@ export function Converter() {
   const [fonts, setFonts] = useState<File[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<Format>>(() => new Set(formats));
   const [sizes, setSizes] = useState<ReadonlySet<number>>(() => new Set(sizeOptions));
-  const [filled, setFilled] = useState(false);
+  const [background, setBackground] = useState<Background>("transparent");
   const [quality, setQuality] = useState("100");
   const [results, setResults] = useState<Result[]>([]);
   const [fontList, setFontList] = useState<Font[]>([]);
@@ -360,8 +378,8 @@ export function Converter() {
   const [dragging, setDragging] = useState(false);
   const worker = useRef<Worker | null>(null);
   const settings = useMemo<Settings>(
-    () => ({ selected, sizes, filled, quality }),
-    [selected, sizes, filled, quality],
+    () => ({ selected, sizes, background, quality }),
+    [selected, sizes, background, quality],
   );
   // The settings of the last conversion: once they differ, the options have changed since.
   const [applied, setApplied] = useState(settings);
@@ -531,10 +549,10 @@ export function Converter() {
       <OptionsPanel
         selected={selected}
         sizes={sizes}
-        filled={filled}
+        background={background}
         quality={quality}
         onPaint={paint}
-        onFilledChange={setFilled}
+        onBackgroundChange={setBackground}
         onQualityChange={setQuality}
       />
 
@@ -619,17 +637,17 @@ function DropZone({ dragging, onFiles }: DropZoneProps) {
 
 type OptionsPanelProps = Settings & {
   onPaint: (key: Key, on: boolean) => void;
-  onFilledChange: (filled: boolean) => void;
+  onBackgroundChange: (background: Background) => void;
   onQualityChange: (quality: string) => void;
 };
 
 function OptionsPanel({
   selected,
   sizes,
-  filled,
+  background,
   quality,
   onPaint,
-  onFilledChange,
+  onBackgroundChange,
   onQualityChange,
 }: OptionsPanelProps) {
   // Like selecting in Photos: press one toggle and drag across the others in its row to give
@@ -711,11 +729,18 @@ function OptionsPanel({
       : first === last
         ? `${first} px`
         : `${first}–${last} px`;
-  const background = filled ? "White" : "Transparent";
+  const empty = (
+    <span {...stylex.props(styles.none)}>
+      <span aria-hidden="true">—</span>
+      <span {...stylex.props(ui.srOnly)}>None</span>
+    </span>
+  );
 
-  // A table like the homepage's: one row per file type, its settings beside it. The background is
-  // one setting for every format that has one; JPEG has no transparency, so the engine sets it on
-  // white either way. The sizes apply to every raster format at once, so they are one line below.
+  // A table like the homepage's: one row per file type, its settings beside it. A cell that does
+  // not apply to the format shows a dash. The background is one setting for the conversion
+  // (see `Background`): PNG, WebP and ICO show it as it is; JPEG has no transparency, so it is
+  // set on white unless the setting is black. The sizes apply to every raster format at once,
+  // so they are one line below.
   return (
     <div {...stylex.props(ui.text, styles.panel)} role="group" aria-label="Options">
       <div {...stylex.props(styles.options)}>
@@ -737,19 +762,27 @@ function OptionsPanel({
             >
               {toggle({ group: "format", value: format }, labels[format], on, styles.formatName)}
               <span>{raster.includes(format) ? rasterSizes : sizeText[format]}</span>
-              {format === "jpeg" ? (
-                <span>White</span>
-              ) : hasBackground ? (
+              {!hasBackground ? (
+                empty
+              ) : (
                 <button
                   {...stylex.props(ui.reset, ui.focusRing, styles.setting)}
                   type="button"
-                  aria-label={`Background: ${background}, for PNG, WebP and ICO`}
-                  onClick={() => onFilledChange(!filled)}
+                  aria-label={`Background: ${
+                    backgroundLabels[format === "jpeg" ? jpegBackground(background) : background]
+                  }. The background is one setting for PNG, WebP, JPEG and ICO.`}
+                  onClick={() =>
+                    onBackgroundChange(
+                      format === "jpeg"
+                        ? jpegBackground(background) === "black"
+                          ? "white"
+                          : "black"
+                        : nextBackground[background],
+                    )
+                  }
                 >
-                  {background}
+                  {backgroundLabels[format === "jpeg" ? jpegBackground(background) : background]}
                 </button>
-              ) : (
-                <span />
               )}
               {format === "jpeg" ? (
                 <label {...stylex.props(styles.percent, styles.end)}>
@@ -775,7 +808,7 @@ function OptionsPanel({
                   <span aria-hidden="true">%</span>
                 </label>
               ) : (
-                <span />
+                <span {...stylex.props(styles.end)}>{empty}</span>
               )}
             </div>
           );
@@ -892,6 +925,8 @@ const styles = stylex.create({
   /** A format that is off: its whole row goes dark grey, settings included. */
   off: { color: colors.tertiary },
   end: { justifySelf: "end" },
+  /** A cell that does not apply to its format: a dark grey dash, nothing to fill in. */
+  none: { color: colors.tertiary, userSelect: "none" },
   // White is picked, dark grey is not. Nothing else changes color, hover included, so the
   // color always means one thing.
   toggle: {
