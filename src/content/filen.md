@@ -1,6 +1,6 @@
 # Filen
 
-Self-initiated identity for the storage app I use, 2026. [Posted on X](https://x.com/gildrb_/status/2021242178727452998)
+A self-initiated identity for Filen, the cloud storage app I use.
 
 ![](media:filen-wordmark)
 

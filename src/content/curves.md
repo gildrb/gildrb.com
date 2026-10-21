@@ -1,6 +1,6 @@
 # CURVES
 
-Free display typeface, 2019. 96 unicase glyphs. On [DaFont](https://www.dafont.com/curves.font) and [Behance](https://www.behance.net/gallery/75409663/CURVES-Free-Font).
+A free display typeface with 96 unicase glyphs, built from geometric forms.
 
 ![](media:curves-letterforms)
 

@@ -35,13 +35,27 @@ describe("homepage without JavaScript", () => {
 });
 
 describe("side archive", () => {
-  test("ships its tiles as data, not markup, on every page beside it", () => {
-    for (const file of ["index.html", "t3.html", "about.html"]) {
+  test("ships its tiles as data, not markup, beside the homepage and plain pages", () => {
+    for (const file of ["index.html", "about.html"]) {
       const html = page(file);
       const column = /<section[^>]*data-side-archive[\s\S]*?<\/section>/.exec(html)?.[0] ?? "";
       expect(column, file).not.toBe("");
       expect(column.replaceAll(/<script[\s\S]*?<\/script>/g, ""), file).not.toContain("<a ");
       expect(column, file).toContain('"href":"/t3"');
+    }
+  });
+});
+
+describe("project pages", () => {
+  test("link every part from the contents, and every link has its heading", () => {
+    for (const file of ["filen.html", "archetypon.html"]) {
+      const html = page(file);
+      expect(html, file).not.toContain("data-side-archive");
+      const nav = /<nav[^>]*data-contents[\s\S]*?<\/nav>/.exec(html)?.[0] ?? "";
+      const targets = [...nav.matchAll(/href="#([^"]+)"/g)].map(([, id]) => id);
+      expect(targets.length, file).toBeGreaterThan(1);
+      for (const id of targets)
+        expect(html, `${file} #${id}`).toMatch(new RegExp(`<h2[^>]*id="${id}"`));
     }
   });
 });

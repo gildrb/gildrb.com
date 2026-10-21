@@ -5,7 +5,7 @@ import { files } from "./files.ts";
 import type { Assets } from "./layout.tsx";
 import { AllPage, CasePage, DocPage, ProductPage } from "./pages/case.tsx";
 import { Home } from "./pages/home.tsx";
-import { cases, origin, pages, products } from "./site.ts";
+import { type Case, cases, origin, pages, type Product, products } from "./site.ts";
 
 // For the build (`vite.config.ts`): the share image comes first, since the pages link it, and the
 // stamped copies of `public/` files last, once rendering has named them all.
@@ -33,6 +33,37 @@ function text(slug: string): string {
   return body;
 }
 
+const projectsBySlug = new Map<string, Case | Product>(
+  [...cases, ...products].map((item) => [item.slug, item]),
+);
+
+/**
+ * The Markdown a reader or agent receives: a project's page with its facts, as the HTML page shows
+ * them, right after its opening sentence. Plain pages are served as written.
+ */
+function published(slug: string): string {
+  const body = text(slug);
+  const item = projectsBySlug.get(slug);
+  if (item === undefined) return body;
+  const { credit, links } = item;
+  const facts = [
+    `- Year: ${item.date.slice(0, 4)}`,
+    `- For: ${
+      credit.$ === "Self"
+        ? "Self-initiated"
+        : credit.href === undefined
+          ? credit.name
+          : `[${credit.name}](${credit.href})`
+    }`,
+    `- Scope: ${item.scope}`,
+    ...(links.length > 0
+      ? [`- Links: ${links.map(({ label, href }) => `[${label}](${href})`).join(", ")}`]
+      : []),
+  ].join("\n");
+  const [title = "", opening = "", ...rest] = body.trim().split("\n\n");
+  return `${[title, opening, facts, ...rest].join("\n\n")}\n`;
+}
+
 // Cloudflare email obfuscation would rewrite the visible address, so opt the copy button out.
 const html = (page: VNode) =>
   `<!doctype html>\n${renderToString(page).replace(
@@ -49,7 +80,7 @@ export function render(assets: Assets): Record<string, string> {
     ...Object.fromEntries(
       cases.map((item) => [
         `${item.slug}.html`,
-        html(<CasePage assets={assets} item={item} markdown={text(item.slug)} work={work} />),
+        html(<CasePage assets={assets} item={item} markdown={text(item.slug)} />),
       ]),
     ),
     ...Object.fromEntries(
@@ -65,7 +96,7 @@ export function render(assets: Assets): Record<string, string> {
       ]),
     ),
     ...Object.fromEntries(
-      Object.entries(markdown).map(([slug, body]) => [`content/${slug}.md`, body]),
+      Object.keys(markdown).map((slug) => [`content/${slug}.md`, published(slug)]),
     ),
     ...files,
     "llms-full.txt": fullText(),
@@ -85,13 +116,13 @@ function fullText(): string {
       heading: name,
       path: `${origin}/${slug}`,
       source: `/content/${slug}.md`,
-      body: text(slug),
+      body: published(slug),
     })),
     ...products.map(({ slug, name, home }) => ({
       heading: name,
       path: `${home}/`,
       source: `/content/${slug}.md`,
-      body: text(slug),
+      body: published(slug),
     })),
   ];
   return `# gildrb.com

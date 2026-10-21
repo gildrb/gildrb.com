@@ -1,6 +1,6 @@
 # Eukhe: a coding agent that remembers every chat
 
-Coding agents forget. Each new session starts empty. A long session loses its start when the context is full. Eukhe keeps one endless chat as its memory. Each turn starts from a short view of all the work that you did together.
+A coding agent with one endless chat as its memory, so it never loses the context of your work.
 
 ```sh
 curl -fsSL https://eukhe.com/install | sh
@@ -8,7 +8,7 @@ curl -fsSL https://eukhe.com/install | sh
 
 ## The problem
 
-You tell an agent about your project, your rules and your decisions. The next day, or after a compaction, it does not know them. You tell it again, or you keep long instruction files up to date by hand.
+Coding agents forget. Each new session starts empty. A long session loses its start when the context is full. You tell an agent about your project, your rules and your decisions. The next day, or after a compaction, it does not know them. You tell it again, or you keep long instruction files up to date by hand.
 
 ## How Eukhe remembers
 

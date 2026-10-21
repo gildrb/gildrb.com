@@ -250,42 +250,29 @@ function toml(source: string): Token[] {
   return tokens;
 }
 
-function Code({
-  language,
-  title,
-  code,
-  post,
-}: {
-  language: string;
-  title: string;
-  code: string;
-  post: boolean;
-}) {
-  // A post's shell block is commands to run in order: one block, one copy button for all of them.
-  if (post && language === "sh")
+function Code({ language, title, code }: { language: string; title: string; code: string }) {
+  const label = title && (
+    <p {...stylex.props(styles.small, styles.codeLabel)}>
+      <Inline text={title} />
+    </p>
+  );
+  // A shell block is commands to run in order: one block, one copy button for all of them.
+  if (language === "sh")
     return (
-      <div {...stylex.props(styles.column, postStyles.commands)}>
-        {title && (
-          <p {...stylex.props(styles.small, styles.codeLabel)}>
-            <Inline text={title} />
-          </p>
-        )}
+      <>
+        {label}
         <Island
           name="command"
           component={Command}
           props={{ commands: code.split("\n").filter((line) => line.trim() !== "") }}
         />
-      </div>
+      </>
     );
   const tokens: Token[] = language === "toml" ? toml(code) : [[null, code]];
   return (
-    <div {...stylex.props(styles.column, styles.codeBlock, post && postStyles.codeBlock)}>
-      {title && (
-        <p {...stylex.props(styles.small, styles.codeLabel)}>
-          <Inline text={title} />
-        </p>
-      )}
-      <pre {...stylex.props(ui.mono, styles.pre, post && postStyles.pre)}>
+    <>
+      {label}
+      <pre {...stylex.props(ui.mono, styles.pre)}>
         <code>
           {tokens.map(([kind, text]) =>
             text
@@ -302,259 +289,199 @@ function Code({
           )}
         </code>
       </pre>
-    </div>
+    </>
   );
 }
 
-type Group = (Block & { type: "media" | "code" }) | Block[];
+/** A heading's text without its inline Markdown, as the contents list shows it. */
+function plain(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[`*]/g, "")
+    .trim();
+}
 
-/** Splits a section into prose runs, which share one copy column, and standalone blocks. */
-function group(blocks: Block[]): Group[] {
-  const groups: Group[] = [];
-  for (const block of blocks) {
-    const previous = groups.at(-1);
-    if (block.type === "media" || block.type === "code") groups.push(block);
-    else if (Array.isArray(previous)) previous.push(block);
-    else groups.push([block]);
-  }
-  return groups;
+export type Heading = { id: string; text: string };
+
+type Anchor = Heading & { top: boolean };
+
+/**
+ * Every heading's anchor, by block index, and whether it opens a part of the page. A `##` always
+ * does; a `###` does before the first `##` (case studies have none) and is a subheading after it.
+ */
+function anchors(blocks: readonly Block[]): Map<number, Anchor> {
+  const found = new Map<number, Anchor>();
+  const used = new Set<string>();
+  let chapter = false;
+  blocks.forEach((block, index) => {
+    if (block.type !== "h2" && block.type !== "h3") return;
+    if (block.type === "h2") chapter = true;
+    const text = plain(block.text);
+    const base =
+      text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "part";
+    let id = base;
+    for (let count = 2; used.has(id); count += 1) id = `${base}-${count}`;
+    used.add(id);
+    found.set(index, { id, text, top: block.type === "h2" || !chapter });
+  });
+  return found;
+}
+
+/** The parts of a page, for its contents list. */
+export function outline(markdown: string): Heading[] {
+  return [...anchors(parse(markdown).blocks).values()]
+    .filter(({ top }) => top)
+    .map(({ id, text }) => ({ id, text }));
+}
+
+/** What a block is, for the space above it. */
+type Kind = "part" | "subheading" | "text" | "figure";
+
+/** The space above a block; see `gap`. */
+type Spacing = "partGap" | "headingGap" | "lineGap";
+
+/**
+ * The page's vertical rhythm, on the 24px line: a part opens two lines below what came before, a
+ * heading sits 8px above its own text, and every other block is one line from the last.
+ */
+function gap(kind: Kind, previous: Kind | null): Spacing | null {
+  if (previous === null) return null;
+  if (kind === "part") return "partGap";
+  if (previous === "part" || previous === "subheading") return "headingGap";
+  return "lineGap";
 }
 
 /**
- * `nested` is true inside a `##` section, where `###` becomes an h3; before any section it is an
- * h2. `lede` sets the group's first paragraph larger: a post's opening sentence.
+ * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
+ * it), the opening sentence, then the parts. `facts` follow the opening sentence, then `tool`
+ * (Archetypon's converter). `eager` gives the first image high fetch priority.
  */
-function Prose({
-  blocks,
-  after,
-  nested,
-  post,
-  lede,
+export function Article({
+  markdown,
+  eager,
+  facts = null,
+  tool = null,
 }: {
-  blocks: Block[];
-  after: Group | undefined;
-  nested: boolean;
-  post: boolean;
-  lede: boolean;
+  markdown: string;
+  eager: boolean;
+  facts?: ComponentChildren;
+  tool?: ComponentChildren;
 }) {
-  const Subheading = nested ? "h3" : "h2";
-  const spacing =
-    after &&
-    !Array.isArray(after) &&
-    (after.type === "media" ? styles.afterMedia : styles.afterCode);
-  return (
-    <div {...stylex.props(styles.column, spacing)}>
-      {blocks.map((block, index) =>
-        block.type === "h2" ? (
-          <h2
-            {...stylex.props(
-              ui.prose,
-              styles.prose,
-              styles.heading,
-              styles.h2,
-              post && postStyles.heading,
-              post && postStyles.h2,
-            )}
-          >
+  const { title, blocks } = parse(markdown);
+  const found = anchors(blocks);
+  const firstMedia = blocks.find((block) => block.type === "media");
+  const nodes: ComponentChildren[] = [];
+  let previous: Kind | null = null;
+  let pendingTool = tool;
+  const place = (
+    kind: Kind,
+    render: (spacing: false | (typeof styles)[Spacing]) => ComponentChildren,
+  ) => {
+    const spacing = gap(kind, previous);
+    nodes.push(render(spacing !== null && styles[spacing]));
+    previous = kind;
+  };
+  const placeTool = () => {
+    if (pendingTool === null || pendingTool === undefined) return;
+    const content = pendingTool;
+    pendingTool = null;
+    place("figure", (spacing) => <div {...stylex.props(spacing)}>{content}</div>);
+  };
+  for (const [index, block] of blocks.entries()) {
+    const anchor = found.get(index);
+    if (index === 1 && facts !== null)
+      place("text", (spacing) => <div {...stylex.props(spacing)}>{facts}</div>);
+    if (anchor?.top === true) placeTool();
+    switch (block.type) {
+      case "h2":
+      case "h3": {
+        const top = anchor?.top === true;
+        const Tag = top ? "h2" : "h3";
+        place(top ? "part" : "subheading", (spacing) => (
+          <Tag {...stylex.props(ui.prose, styles.heading, spacing)} id={anchor?.id}>
             <Inline text={block.text} />
-          </h2>
-        ) : block.type === "h3" ? (
-          <Subheading
-            {...stylex.props(
-              ui.prose,
-              styles.prose,
-              styles.heading,
-              styles.h3,
-              post && postStyles.heading,
-              post && postStyles.h3,
-              post && index === 0 && postStyles.first,
-            )}
-          >
+          </Tag>
+        ));
+        break;
+      }
+      case "p":
+        place("text", (spacing) => (
+          <p {...stylex.props(ui.prose, styles.prose, index === 0 && styles.lede, spacing)}>
             <Inline text={block.text} />
-          </Subheading>
-        ) : block.type === "list" ? (
-          <ul {...stylex.props(styles.list, post && postStyles.list)}>
+          </p>
+        ));
+        break;
+      case "list":
+        place("text", (spacing) => (
+          <ul {...stylex.props(styles.list, spacing)}>
             {block.items.map((item, itemIndex) => (
               <li
                 {...stylex.props(
                   ui.prose,
                   styles.prose,
-                  post && postStyles.text,
+                  styles.item,
                   itemIndex > 0 && styles.nextItem,
-                  itemIndex > 0 && post && postStyles.nextItem,
                 )}
               >
                 <Inline text={item} />
               </li>
             ))}
           </ul>
-        ) : (
-          block.type === "p" && (
-            <p
-              {...stylex.props(
-                ui.prose,
-                styles.prose,
-                post && postStyles.text,
-                lede && index === 0 && postStyles.lede,
-                ["p", "list"].includes(blocks[index - 1]?.type ?? "") && styles.nextParagraph,
-                ["p", "list"].includes(blocks[index - 1]?.type ?? "") &&
-                  post &&
-                  postStyles.nextParagraph,
-              )}
-            >
-              <Inline text={block.text} />
-            </p>
-          )
-        ),
-      )}
-    </div>
-  );
-}
-
-/**
- * How a page reads. `Index` (case studies, plain pages): the breadcrumb names the page, its
- * heading stays for screen readers only, and headings read as body text, like the homepage index.
- * `Post` (product pages): a written article, with a visible title, a byline, a larger opening
- * sentence, sized headings and comfortable reading measure; `tool` follows the opening.
- */
-export type ArticleVariant =
-  | { $: "Index" }
-  | { $: "Post"; byline: ComponentChildren; tool: ComponentChildren | null };
-
-/** Renders a page's Markdown; `eager` gives its first image high fetch priority. */
-export function Article({
-  markdown,
-  eager,
-  variant,
-}: {
-  markdown: string;
-  eager: boolean;
-  variant: ArticleVariant;
-}) {
-  const { title, blocks } = parse(markdown);
-  const post = variant.$ === "Post";
-  const firstMedia = blocks.find((block) => block.type === "media");
-  // Each ## opens a section with a chapter-sized gap; content before the first ## is not wrapped.
-  const sections: Block[][] = [[]];
-  for (const block of blocks) {
-    if (block.type === "h2") sections.push([]);
-    sections.at(-1)?.push(block);
-  }
-  // Groups are fixed for the page; each is keyed by what it opens with.
-  const render = (groups: Group[], nested: boolean) =>
-    groups.map((item, index) =>
-      Array.isArray(item) ? (
-        <Prose
-          key={`prose:${JSON.stringify(item[0])}`}
-          blocks={item}
-          after={groups[index - 1]}
-          nested={nested}
-          post={post}
-          lede={post && !nested && index === 0}
-        />
-      ) : item.type === "media" ? (
-        <Figures
-          key={`media:${item.items.map(({ id }) => id).join(",")}`}
-          items={item.items}
-          eager={eager && item === firstMedia}
-        />
-      ) : (
-        <Code key={`code:${item.title}:${item.code.length}`} {...item} post={post} />
-      ),
-    );
-  const [intro = [], ...chapters] = sections;
-  const body = (
-    <>
-      {render(group(intro), false)}
-      {variant.$ === "Post" && variant.tool !== null && (
-        <div {...stylex.props(styles.column, postStyles.tool)}>{variant.tool}</div>
-      )}
-      {chapters.map((chapter) => (
-        <section {...stylex.props(styles.section, post && postStyles.section)}>
-          {render(group(chapter), true)}
-        </section>
-      ))}
-    </>
-  );
-  switch (variant.$) {
-    case "Index":
-      return (
-        <>
-          <header {...stylex.props(styles.column)}>
-            <h1 {...stylex.props(ui.prose, styles.prose, styles.heading, ui.srOnly)}>
-              <Inline text={title} />
-            </h1>
-          </header>
-          {body}
-        </>
-      );
-    case "Post":
-      return (
-        <>
-          <header {...stylex.props(styles.column, postStyles.header)}>
-            <h1 {...stylex.props(ui.prose, postStyles.title)}>
-              <Inline text={title} />
-            </h1>
-            <p {...stylex.props(styles.small, postStyles.byline)}>{variant.byline}</p>
-          </header>
-          {body}
-        </>
-      );
-    default: {
-      const _: never = variant;
-      return _;
+        ));
+        break;
+      case "media":
+        place("figure", (spacing) => (
+          <div {...stylex.props(spacing)}>
+            <Figures items={block.items} eager={eager && block === firstMedia} />
+          </div>
+        ));
+        break;
+      case "code":
+        place("figure", (spacing) => (
+          <div {...stylex.props(spacing)}>
+            <Code language={block.language} title={block.title} code={block.code} />
+          </div>
+        ));
+        break;
+      default: {
+        const _: never = block;
+        return _;
+      }
     }
   }
+  if (blocks.length < 2 && facts !== null)
+    place("text", (spacing) => <div {...stylex.props(spacing)}>{facts}</div>);
+  placeTool();
+  return (
+    <>
+      <h1 {...stylex.props(ui.prose, styles.heading, ui.srOnly)}>
+        <Inline text={title} />
+      </h1>
+      {nodes}
+    </>
+  );
 }
 
-/** A product page reads as an article: measured type, sized headings, code in a panel. */
-const postStyles = stylex.create({
-  header: { marginBottom: "32px" },
-  title: {
-    margin: 0,
-    color: colors.primary,
-    fontSize: { default: "30px", "@media (min-width: 769px)": "38px" },
-    lineHeight: 1.12,
-    fontWeight: 500,
-    letterSpacing: "-0.025em",
-    textWrap: "balance",
-  },
-  byline: { display: "flex", flexWrap: "wrap", columnGap: "20px", margin: "16px 0 0" },
-  text: { fontSize: "17px", lineHeight: "28px" },
-  lede: { fontSize: "20px", lineHeight: "30px", letterSpacing: "-0.01em", color: colors.primary },
-  nextParagraph: { marginTop: "20px" },
-  heading: { color: colors.primary, fontWeight: 500, letterSpacing: "-0.015em" },
-  h2: { fontSize: "24px", lineHeight: "30px", marginBottom: "16px" },
-  h3: { fontSize: "18px", lineHeight: "26px", margin: "36px 0 8px" },
-  first: { marginTop: 0 },
-  section: { marginTop: "64px" },
-  list: { margin: "16px 0 0", paddingLeft: "22px", listStyleType: "disc" },
-  nextItem: { marginTop: "10px" },
-  codeBlock: {
-    marginTop: "24px",
-    padding: "16px 20px",
-    borderRadius: "12px",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: colors.codeBorder,
-    backgroundColor: colors.codeBg,
-  },
-  pre: { lineHeight: "22px" },
-  tool: { marginTop: "40px" },
-  commands: { display: "flex", flexDirection: "column", gap: "8px", marginTop: "24px" },
-});
-
 export const styles = stylex.create({
-  column: { width: `min(100%, ${space.contentColumn})`, marginInline: "auto" },
-  /** Resets the browser's heading size and weight to the running text's. */
-  heading: { fontSize: "inherit", lineHeight: "inherit" },
-  title: { maxWidth: space.contentColumn, margin: `0 0 ${space.caseTitleTextGap}` },
-  section: { marginTop: "80px" },
-  h2: { marginBottom: "24px" },
-  h3: { margin: "48px 0 12px" },
+  /** A part's heading: running-text size, set apart by weight and space, never larger than the name. */
+  heading: {
+    color: colors.primary,
+    fontSize: "16px",
+    lineHeight: "24px",
+    fontWeight: 500,
+    scrollMarginTop: { default: space.pageInset, "@media (max-width: 767px)": "72px" },
+  },
   prose: { color: colors.article, fontWeight: colors.proseWeight },
-  nextParagraph: { marginTop: "32px" },
-  list: { margin: "20px 0 0 20px" },
+  /** The opening sentence: what the work is, at full contrast. */
+  lede: { color: colors.primary },
+  partGap: { marginTop: "48px" },
+  headingGap: { marginTop: "8px" },
+  lineGap: { marginTop: "24px" },
+  list: { paddingLeft: "20px", listStyleType: "square" },
+  item: { "::marker": { color: colors.tertiary } },
   nextItem: { marginTop: "8px" },
   link: {
     color: { default: colors.article, ":focus-visible": colors.primary },
@@ -580,14 +507,14 @@ export const styles = stylex.create({
   },
   strong: { color: colors.primary, fontWeight: 500 },
   small: { color: colors.tertiary, fontSize: "14px", lineHeight: "20px" },
-  media: { width: "100%", marginTop: "24px" },
+  media: { width: "100%" },
   grid: {
     display: "grid",
     gridTemplateColumns: {
       default: "repeat(2, minmax(0, 1fr))",
       "@media (max-width: 768px)": "1fr",
     },
-    gap: "20px",
+    gap: "24px",
   },
   figure: { minWidth: 0 },
   image: {
@@ -606,16 +533,19 @@ export const styles = stylex.create({
   mark: { width: "88%" },
   markImage: { filter: colors.artworkFilter },
   centered: { marginInline: "auto" },
-  caption: { maxWidth: space.contentColumn, marginTop: "12px" },
-  afterMedia: { marginTop: "48px" },
-  afterCode: { marginTop: space.textMediaGap },
-  codeBlock: { marginTop: space.textMediaGap },
+  caption: { marginTop: "8px" },
   codeLabel: { marginBottom: "8px" },
   pre: {
     overflowX: "auto",
+    padding: "12px 16px",
+    borderRadius: "12px",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: colors.codeBorder,
+    backgroundColor: colors.codeBg,
     color: colors.primary,
     fontSize: "14px",
-    lineHeight: "20px",
+    lineHeight: "24px",
     tabSize: 4,
   },
 });

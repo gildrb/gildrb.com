@@ -33,9 +33,9 @@ export type SideArchiveData = {
 };
 
 /**
- * Builds the tiles, in a new random order, into the element just before the running script.
- * Runs inline as the parser reaches it, so the first paint already has them in place.
- * Self-contained on purpose: `SideArchive` inlines its source.
+ * Builds the tiles, in the archive's own order (newest project first), into the element just
+ * before the running script. Runs inline as the parser reaches it, so the first paint already has
+ * them in place. Self-contained on purpose: `SideArchive` inlines its source.
  */
 export function buildSideArchive(data: SideArchiveData): void {
   const grid = document.currentScript?.previousElementSibling;
@@ -46,11 +46,7 @@ export function buildSideArchive(data: SideArchiveData): void {
     for (const [name, value] of attributes) node.setAttribute(name, value);
     return node;
   };
-  // Random keys, then sorted: every order equally likely.
-  const order = data.tiles
-    .map((tile) => ({ tile, key: Math.random() }))
-    .toSorted((left, right) => left.key - right.key);
-  for (const { tile } of order) {
+  for (const tile of data.tiles) {
     const size: [string, string] = ["style", `width:${tile.share}%;`];
     const art = tile.video
       ? element("video", [

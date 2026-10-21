@@ -40,8 +40,9 @@ const globalCss = [
   `::selection{color:${colors.bg};background:${colors.primary}}`,
   // A touch shows nothing: no grey tap flash, and no press state takes its place.
   "a,button{-webkit-tap-highlight-color:transparent}",
-  // In-page links (skip to content, back to top) glide unless motion is reduced.
-  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
+  // In-page links (skip to content, contents, back to top) glide unless motion is reduced, and a
+  // move to another page of the site cross-fades in 150ms instead of flashing.
+  "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}@view-transition{navigation:auto}::view-transition-old(root),::view-transition-new(root){animation-duration:150ms}}",
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
@@ -496,7 +497,7 @@ const styles = stylex.create({
     maxWidth: "none",
     gridColumn: { default: null, [media.wide]: "2 / -1" },
   },
-  caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "26px" },
+  caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "24px" },
   homeToggle: {
     gridRow: { default: null, [media.mobile]: 1 },
     // Dense: centered over the table's arrows, whose column ends at the layout's right edge.

@@ -1,5 +1,5 @@
 # Local Studio
 
-Brand and website for Local Studio, private AI that runs on your Mac, 2026. [Visit the site](https://localstudio.gildrb.com/)
+Brand and website for Local Studio, private AI that runs on your Mac.
 
 ![](media:local-studio-tour)

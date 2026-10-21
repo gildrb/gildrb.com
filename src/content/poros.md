@@ -1,6 +1,6 @@
 # Poros: open a dev server that runs on your server, on your Mac or phone
 
-You build on a server, a desktop or a VM. You want to see the page on your laptop or phone. Poros gives the dev server a private HTTPS link on your Tailscale network. You need no port forward, no SSH tunnel and no public URL.
+Open the dev server of your server on your Mac or phone, through a private HTTPS link on your Tailscale network.
 
 ```sh
 curl -fsSL https://poros.gildrb.com/install | bash
@@ -8,7 +8,7 @@ curl -fsSL https://poros.gildrb.com/install | bash
 
 ## The problem
 
-The dev server listens on `localhost` of the server. Your browser cannot reach it. An SSH tunnel stops when the connection drops. A public tunnel puts unfinished work on the internet. Vite and other dev servers refuse unknown hosts. Phones need HTTPS for many browser features.
+You build on a server, a desktop or a VM, and you want to see the page on your laptop or phone. The dev server listens on `localhost` of the server. Your browser cannot reach it. An SSH tunnel stops when the connection drops. A public tunnel puts unfinished work on the internet. Vite and other dev servers refuse unknown hosts. Phones need HTTPS for many browser features.
 
 ## What Poros does
 
@@ -18,7 +18,7 @@ The dev server listens on `localhost` of the server. Your browser cannot reach i
 - It forwards requests and WebSockets with the local `Host`. Hot reload works, and Vite needs no configuration.
 - It removes the route when the command stops.
 
-Open the link on a device of your tailnet: Mac, iPhone, iPad or a different computer. Your code and the dev server stay on the development machine.
+Open the link on a device of your tailnet: Mac, iPhone, iPad or a different computer. You need no port forward, no SSH tunnel and no public URL. Your code and the dev server stay on the development machine.
 
 ## Use
 

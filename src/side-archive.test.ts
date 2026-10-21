@@ -108,10 +108,8 @@ describe("buildSideArchive", () => {
     expect(video?.getAttribute("src")).toBe("/videos/gil-rodrigues-local-studio-tour.e.mp4");
   });
 
-  test("orders the tiles by random draw", () => {
-    const draws = [0.9, 0.1, 0.5, 0.3];
-    vi.spyOn(Math, "random").mockImplementation(() => draws.shift() ?? 0);
+  test("keeps the archive's order, newest project first", () => {
     const order = [...build().querySelectorAll("a")].map((link) => link.getAttribute("href"));
-    expect(order).toEqual(["/heph", "/all?open=archive-book-mark", "/local-studio", "/t3"]);
+    expect(order).toEqual(["/t3", "/heph", "/local-studio", "/all?open=archive-book-mark"]);
   });
 });

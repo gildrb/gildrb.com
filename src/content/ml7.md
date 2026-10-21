@@ -1,5 +1,5 @@
 # mL7
 
-Channel logo for Overwatch player [Mihai “mL7” Lupascu](https://www.twitch.tv/ml7support), 2018.
+A channel logo for the Overwatch player Mihai “mL7” Lupascu.
 
 ![](media:ml7-logo-system)

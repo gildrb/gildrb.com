@@ -234,11 +234,11 @@ function sideData(work: readonly Work[]): SideArchiveData {
 }
 
 /**
- * The third column on wide screens: the archive beside a page's text, or its `home` picks beside
- * the homepage table, in a new random order on every visit. It scrolls on its own, so the
- * homepage still holds to the viewport and an inner page keeps it in view while the text
- * scrolls. Its tiles are built from data as the page parses (`side-archive.ts`); without
- * JavaScript the column stays empty and the archive page has them all.
+ * The third column on wide screens: the curated `home` picks, newest project first, beside the
+ * homepage table or a plain page without parts. It scrolls on its own, so the homepage still holds
+ * to the viewport and an inner page keeps it in view while the text scrolls. Its tiles are built
+ * from data as the page parses (`side-archive.ts`); without JavaScript the column stays empty and
+ * the archive page has them all.
  */
 export function SideArchive({ work, home }: { work: readonly Work[]; home: boolean }) {
   const script = `(${buildSideArchive.toString()})(${scriptJson(sideData(work))})`;
@@ -285,7 +285,8 @@ const styles = stylex.create({
     paddingBlock: space.pageInset,
   },
   tile: { minWidth: 0, margin: 0 },
-  cell: { display: "grid", placeItems: "center", aspectRatio: "1" },
+  /** Art stands on the cell's bottom-left corner, so every caption sits right under its image. */
+  cell: { display: "grid", placeItems: "end start", aspectRatio: "1" },
   frame: { display: "block" },
   zoom: { cursor: { default: "auto", [media.desktop]: "zoom-in" } },
   art: {

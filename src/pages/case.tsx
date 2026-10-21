@@ -1,8 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
+import { Aside, Facts } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
-import { Article, parse, singleSizes, sources } from "../markdown.tsx";
+import { media as artwork } from "../media.ts";
+import { Article, outline, parse, singleSizes, sources } from "../markdown.tsx";
 import {
   type Assets,
   Document,
@@ -71,10 +73,13 @@ function Frame({
   head: preact.ComponentChildren;
   mono: boolean;
   /**
-   * Wide screens' third column: the archive beside the text, the page's own content spanning it
-   * (the archive page), or nothing, so an article reads alone (product pages).
+   * Wide screens' third column: a project's facts and the page's contents, the curated archive
+   * beside a plain page without parts, or the page's own content spanning it (the archive page).
    */
-  third: { $: "Archive"; work: readonly Work[] } | { $: "Content" } | { $: "Empty" };
+  third:
+    | { $: "Aside"; item: Case | Product | null; markdown: string }
+    | { $: "Archive"; work: readonly Work[] }
+    | { $: "Content" };
   children: preact.ComponentChildren;
 }) {
   return (
@@ -112,7 +117,13 @@ function Frame({
           <PageLinks phone={false} />
         </Sidebar>
         <Main wide={third.$ === "Content"}>{children}</Main>
-        {third.$ === "Archive" && <SideArchive work={third.work} home={false} />}
+        {third.$ === "Archive" && (
+          <SideArchive
+            work={third.work.filter(({ id }) => artwork[id]?.home === true)}
+            home={false}
+          />
+        )}
+        {third.$ === "Aside" && <Aside item={third.item} parts={outline(third.markdown)} />}
         <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
@@ -166,12 +177,10 @@ export function CasePage({
   assets,
   item,
   markdown,
-  work,
 }: {
   assets: Assets;
   item: Case;
   markdown: string;
-  work: readonly Work[];
 }) {
   const url = `${origin}/${item.slug}`;
   const image = item.ogImage && versioned(`/images/optimized/${item.ogImage}`);
@@ -188,7 +197,7 @@ export function CasePage({
       title={item.headline}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Archive", work }}
+      third={{ $: "Aside", item, markdown }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -216,7 +225,11 @@ export function CasePage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager variant={{ $: "Index" }} />
+        <Article
+          markdown={markdown}
+          eager
+          facts={<Facts item={item} style={styles.narrowFacts} />}
+        />
       </article>
       <Next projects={others} />
     </Frame>
@@ -303,6 +316,8 @@ const styles = stylex.create({
     gridTemplateColumns: space.tableColumns,
     columnGap: { default: space.tableGap, "@media (max-width: 768px)": space.mobileTableGap },
   },
+  /** Below the opening sentence where there is no third column for the facts. */
+  narrowFacts: { display: { default: null, [media.wide]: "none" } },
 });
 
 /** A plain page (about, contact, …) written in Markdown. */
@@ -317,6 +332,7 @@ export function DocPage({
   markdown: string;
   work: readonly Work[];
 }) {
+  const parts = outline(markdown);
   return (
     <Frame
       assets={assets}
@@ -325,7 +341,7 @@ export function DocPage({
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}
-      third={{ $: "Archive", work }}
+      third={parts.length > 0 ? { $: "Aside", item: null, markdown } : { $: "Archive", work }}
       head={
         <>
           <Alternates slug={page.slug} name={page.name} />
@@ -350,7 +366,7 @@ export function DocPage({
       }
     >
       <article {...stylex.props(styles.column, styles.phoneItem)}>
-        <Article markdown={markdown} eager variant={{ $: "Index" }} />
+        <Article markdown={markdown} eager />
       </article>
     </Frame>
   );
@@ -381,7 +397,7 @@ export function ProductPage({
       current={item.name}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Empty" }}
+      third={{ $: "Aside", item, markdown }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -415,22 +431,10 @@ export function ProductPage({
         <Article
           markdown={markdown}
           eager
-          variant={{
-            $: "Post",
-            byline: (
-              <time dateTime={item.date}>
-                {new Date(`${item.date}T00:00:00Z`).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                  timeZone: "UTC",
-                })}
-              </time>
-            ),
-            tool: item.converter ? (
-              <Island name="archetypon" component={Converter} props={{}} />
-            ) : null,
-          }}
+          facts={<Facts item={item} style={styles.narrowFacts} />}
+          tool={
+            item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
+          }
         />
       </article>
       <Next projects={others} />

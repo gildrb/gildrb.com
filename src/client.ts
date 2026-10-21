@@ -6,6 +6,8 @@ import { Portfolio } from "./islands/portfolio.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { compareRows, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
+import { trackContents } from "./contents.ts";
+import { revealImages } from "./reveal.ts";
 import { autoplayVideos } from "./video.ts";
 import { routeWheel } from "./wheel.ts";
 import { enableZoom } from "./zoom.ts";
@@ -13,6 +15,8 @@ import { enableZoom } from "./zoom.ts";
 enableZoom();
 autoplayVideos();
 routeWheel();
+revealImages();
+trackContents();
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
   theme: () => ThemeToggle,

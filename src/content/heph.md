@@ -1,6 +1,6 @@
 # Heph
 
-Ask your own files a question. Heph answers and shows the passages it used, so you can check it. [GitHub](https://github.com/gildrb/heph)
+Ask your own files a question. Heph answers and shows the passages that it used, so you can check it.
 
 ![](media:heph-session)
 

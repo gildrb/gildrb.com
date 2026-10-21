@@ -19,8 +19,8 @@ import { versioned } from "./versioned.ts";
 
 const url = (path: string) => `${origin}${path}`;
 
-const work = projects.map(({ href, title, scope, date, external, description }) => {
-  const link = external ? href : url(href);
+const work = projects.map(({ href, title, scope, date, description }) => {
+  const link = href.startsWith("https://") ? href : url(href);
   return `- [${title}](${link}) (${scope}, ${date.slice(0, 7)}): ${description}`;
 });
 

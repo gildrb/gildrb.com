@@ -526,11 +526,6 @@ export function Converter() {
 
   return (
     <div {...stylex.props(styles.tool)}>
-      <p {...stylex.props(ui.prose, styles.prose)}>
-        Drop SVG files on this page. They come back as SVG, PDF, PNG, WebP, JPEG and ICO, in one
-        ZIP. It runs in your browser: nothing is uploaded.
-      </p>
-
       <DropZone dragging={dragging} onFiles={add} />
 
       <OptionsPanel
@@ -851,7 +846,6 @@ const hideEnd = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opacity:
 
 const styles = stylex.create({
   tool: { display: "flex", flexDirection: "column", gap: space.sectionGap },
-  prose: { margin: 0, color: colors.article, fontWeight: colors.proseWeight },
   drop: {
     display: "flex",
     flexDirection: "column",
@@ -993,7 +987,13 @@ const styles = stylex.create({
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     alignItems: "baseline",
   },
-  status: { margin: 0, color: colors.secondary, minHeight: "26px" },
+  /** Takes no room until it has something to say; it stays in the page so it is announced. */
+  status: {
+    margin: 0,
+    marginTop: { default: 0, ":empty": `calc(${space.sectionGap} * -1)` },
+    color: colors.secondary,
+    minHeight: { default: "24px", ":empty": 0 },
+  },
   problem: { color: colors.primary },
   /** Set like the article links (`markdown.tsx`): hover turns the underline the text color. */
   download: {

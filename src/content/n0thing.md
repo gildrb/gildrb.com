@@ -1,6 +1,6 @@
 # n0thing
 
-Wordmark commissioned by [Jordan “n0thing” Gilbert](https://www.n0thing.gg/), 2019.
+A pixel wordmark that Jordan “n0thing” Gilbert commissioned.
 
 ![](media:n0thing-wordmark-animation)
 
