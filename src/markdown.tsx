@@ -478,8 +478,7 @@ export const styles = stylex.create({
   part: { fontWeight: 400 },
   /** A step inside a part: running-text size, set apart by weight. */
   subheading: { fontSize: "16px", fontWeight: 500 },
-  /** Weight 400 in both themes: below 400 text thins out (interfaces.rauno.me). */
-  prose: { color: colors.article, fontWeight: 400 },
+  prose: { color: colors.article, fontWeight: colors.proseWeight },
   /** The opening sentence: what the work is, at full contrast. */
   lede: { color: colors.primary },
   partGap: { marginTop: "48px" },
