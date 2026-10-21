@@ -1,22 +1,21 @@
-// The browser's own animations (WAAPI) through Motion's small build, with Motion's spring.
-import { type AnimationPlaybackControlsWithThen, spring } from "motion";
+// The browser's own animations (WAAPI) through Motion's small build: no animation engine to load.
+import type { AnimationPlaybackControlsWithThen } from "motion";
 import { animate } from "motion/mini";
 
 /**
- * How the square moves to the next part: a quick spring with a little give, done in about the
- * 200ms an interaction may take (interfaces.rauno.me).
+ * How the square moves to a new part: fast out, gentle in, no overshoot, within the 200ms an
+ * interaction may take (interfaces.rauno.me). Every move has the same length and the same curve,
+ * so it always looks the same.
  */
-const snap = { type: spring, visualDuration: 0.18, bounce: 0.25 } as const;
-
-/** How far the square leans toward the next part before it snaps there: a fifth of the way. */
-const lean = 0.2;
+const glide = { duration: 0.18, ease: [0.2, 0, 0, 1] } as const;
 
 /**
- * Marks the part of the page being read in its contents list (`aside.tsx`). The square sits on the
- * part's link and leans a little toward the next one as the reader scrolls through the part; when
- * the next part begins, it snaps there on a spring, and the link turns to full contrast. Positions
- * are measured from the links themselves, so the square stays on its line at any font size. A
- * click scrolls to its part without adding a history entry, so Back leaves the page.
+ * Marks the part of the page being read in its contents list (`aside.tsx`). The square stands still
+ * on the part's link and only moves when the reader reaches another part: it glides there, and the
+ * link turns to full contrast. A move that starts during another one starts from where the square
+ * is, so it never jumps. Positions are measured from the links themselves, so the square stays on
+ * its line at any font size. A click scrolls to its part without adding a history entry, so Back
+ * leaves the page.
  */
 export function trackContents(): void {
   const nav = document.querySelector<HTMLElement>("[data-contents]");
@@ -30,15 +29,14 @@ export function trackContents(): void {
   const still = matchMedia("(prefers-reduced-motion: reduce)");
   let current = -1;
   let queued = false;
-  let snapping: AnimationPlaybackControlsWithThen | null = null;
-  let target = "";
+  let moving: AnimationPlaybackControlsWithThen | null = null;
 
   /** The square's offset that centers it on the first text line of a part's link. */
   const place = (link: HTMLAnchorElement) => {
     const style = getComputedStyle(link);
     const line = Number.parseFloat(style.lineHeight);
     const padding = Number.parseFloat(style.paddingTop);
-    return link.offsetTop + padding + (line - marker.offsetHeight) / 2;
+    return `translateY(${link.offsetTop + padding + (line - marker.offsetHeight) / 2}px)`;
   };
 
   for (const { link, heading } of parts)
@@ -50,9 +48,9 @@ export function trackContents(): void {
 
   const update = () => {
     queued = false;
-    // Where each part begins, in scroll position: once its heading reaches the reading line, a
-    // quarter down the viewport. Parts near the end of a page can never get there, so they are
-    // pulled back into the scroll range, a step apart, and every part is reached on the way down.
+    // A part is being read once its heading reaches the reading line, a quarter down the viewport.
+    // Parts near the end of a page can never get there, so their starts are pulled back into the
+    // scroll range, a step apart, and every part is reached on the way down.
     const line = innerHeight / 4;
     const end = Math.max(0, document.documentElement.scrollHeight - innerHeight);
     const step = 64;
@@ -63,44 +61,26 @@ export function trackContents(): void {
       starts[at] = Math.max(0, Math.min(starts[at] ?? 0, limit));
     }
     let index = 0;
-    let progress = 0;
-    for (const [at, start] of starts.entries()) {
-      if (scrollY < start && at > 0) break;
-      index = at;
-      const next = starts[at + 1];
-      progress =
-        next === undefined || next <= start
-          ? 0
-          : Math.min(1, Math.max(0, (scrollY - start) / (next - start)));
-    }
+    for (const [at, start] of starts.entries()) if (scrollY >= start) index = at;
     const part = parts[index];
-    if (!part) return;
-    const from = place(part.link);
-    const next = parts[index + 1];
-    const to = next === undefined ? from : place(next.link);
-    target = `translateY(${from + (to - from) * lean * progress}px)`;
-    if (index === current) {
-      if (snapping === null) marker.style.transform = target;
-      return;
-    }
+    if (!part || index === current) return;
     const first = current === -1;
     current = index;
     for (const [at, { link }] of parts.entries()) {
       if (at === index) link.setAttribute("aria-current", "location");
       else link.removeAttribute("aria-current");
     }
-    snapping?.stop();
-    snapping = null;
-    if (first || still.matches) {
-      marker.style.transform = target;
-      return;
-    }
-    const run = animate(marker, { transform: target }, snap);
-    snapping = run;
+    const target = place(part.link);
+    // Freeze the square where it is now, mid-move or not, and move on from there.
+    const from = getComputedStyle(marker).transform;
+    moving?.stop();
+    moving = null;
+    marker.style.transform = target;
+    if (first || still.matches || from === "none") return;
+    const run = animate(marker, { transform: [from, target] }, glide);
+    moving = run;
     void run.finished.then(() => {
-      if (snapping !== run) return;
-      snapping = null;
-      marker.style.transform = target;
+      if (moving === run) moving = null;
     });
   };
 
@@ -110,6 +90,9 @@ export function trackContents(): void {
     requestAnimationFrame(update);
   };
   addEventListener("scroll", schedule, { passive: true });
-  addEventListener("resize", schedule);
+  addEventListener("resize", () => {
+    current = -1;
+    schedule();
+  });
   update();
 }
