@@ -132,9 +132,14 @@ const styles = stylex.create({
   },
   /** Home rows: on phones the date is the last cell, flush with the row's right edge. */
   homeDate: { paddingInlineEnd: 0 },
-  /** Narrow rows show the month; the day stays readable to assistive tech. */
+  /**
+   * Narrow rows show the month; the day stays readable to assistive tech. The hidden day is pinned
+   * inside the date: placed after the month, it would stand 1px past the row, which on phones is
+   * the scrolling list's edge, and the list would scroll sideways.
+   */
   dayHome: {
     position: { default: null, [media.mobile]: "absolute", [narrowTable]: "absolute" },
+    insetInlineEnd: { default: null, [media.mobile]: 0, [narrowTable]: 0 },
     width: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
     height: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
     overflow: { default: null, [media.mobile]: "hidden", [narrowTable]: "hidden" },
