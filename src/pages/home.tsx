@@ -111,7 +111,7 @@ const styles = stylex.create({
   summary: {
     maxWidth: space.contentColumn,
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
-    gridRow: { default: null, [media.desktop]: 1, [media.mobile]: 2 },
+    gridRow: { default: null, [media.desktop]: 1, [media.mobile]: 3 },
     alignSelf: { default: null, [media.desktop]: "start" },
     minHeight: { default: null, [media.desktop]: "var(--desktop-intro-height, 0px)" },
     marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },

@@ -164,7 +164,7 @@ const styles = stylex.create({
       },
     },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
-    gridRow: { default: null, [media.mobile]: 3, [media.desktop]: 2 },
+    gridRow: { default: null, [media.mobile]: 4, [media.desktop]: 2 },
     alignSelf: {
       default: null,
       [media.desktop]: "start",

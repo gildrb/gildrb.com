@@ -5,10 +5,10 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
-import { contacts, type Link, origin, person, type Project, profiles, projects } from "./site.ts";
+import { contacts, type Link, origin, person, profiles } from "./site.ts";
 import { themeColor, themeCss, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
-import { Figures, type Style, ui, untranslated } from "./ui.tsx";
+import { type Style, ui, untranslated } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
 export type Assets = {
@@ -227,7 +227,8 @@ export function Main({
 /**
  * Site name, or on inner pages a breadcrumb back to it: the name in grey on top, the page below it in full contrast. The name links to gildrb.com by its full
  * URL: product pages live on their own hosts, where `/` is the product page itself. A page with no
- * heading of its own (the archive) makes the breadcrumb its `<h1>`.
+ * heading of its own (the archive) makes the breadcrumb its `<h1>`. On the homepage, phones make
+ * the name a button that shows and hides Contact and Links (`links.ts`).
  */
 export function Name({ current, heading = false }: { current?: string; heading?: boolean }) {
   const Tag = heading ? "h1" : "p";
@@ -249,53 +250,41 @@ export function Name({ current, heading = false }: { current?: string; heading?:
       {...stylex.props(ui.heading, styles.name, styles.homeName)}
       id="site-title"
       itemProp="name"
+      // Named by its text alone: the button inside is named after it too and would read twice.
+      aria-labelledby="site-name"
       {...untranslated}
     >
-      Gil Rodrigues
+      <span id="site-name">Gil Rodrigues</span>
+      <button
+        {...stylex.props(ui.reset, ui.focusRing, styles.linksToggle)}
+        type="button"
+        aria-labelledby="site-name"
+        aria-expanded="false"
+        aria-controls="profile-links"
+        data-links-toggle
+      />
     </h1>
   );
 }
 
-/**
- * On inner pages the links sit in the sidebar on desktop and below the content on phones.
- * `table` is the project list the page shows, which the phone links align to (see `Links`).
- */
-export function PageLinks({
-  phone,
-  table = projects,
-}: {
-  phone: boolean;
-  table?: readonly Project[];
-}) {
+/** On inner pages the links sit in the sidebar on desktop and below the content on phones. */
+export function PageLinks({ phone }: { phone: boolean }) {
   return (
     <div {...stylex.props(phone ? styles.phoneOnly : styles.desktopOnly)}>
-      <Links phone={phone} table={table} />
+      <Links phone={phone} />
     </div>
   );
 }
 
 /**
- * Profile and contact links. On phones they share the columns of the page's project table:
- * two hidden ruler cells, every title in `table` drawn from an attribute and one month (every
- * row's is as wide: tabular digits), so the contact column starts exactly where that table's
- * subject column does. A case study passes its own list, which leaves out itself and the external
- * projects; pages without a table use the homepage's.
+ * Contact, then the profile links: one list above the other on every screen. The homepage's
+ * stay hidden on phones until the name is tapped (`links.ts`), then sit right under it.
  */
-export function Links({
-  home = false,
-  phone = false,
-  table = projects,
-}: {
-  home?: boolean;
-  phone?: boolean;
-  table?: readonly Project[];
-}) {
-  const link = (item: Link, placement: Style, me: boolean, row?: number) => {
+export function Links({ home = false, phone = false }: { home?: boolean; phone?: boolean }) {
+  const link = (item: Link, placement: Style, me: boolean) => {
     return (
       <a
         {...stylex.props(ui.quiet, ui.focusRing, styles.link, placement)}
-        // Phones place each profile link on its own grid row; flex ignores it on desktop.
-        style={row === undefined ? undefined : { gridRow: String(row) }}
         href={item.href}
         target="_blank"
         rel={me ? "me noopener noreferrer" : "noopener noreferrer"}
@@ -306,42 +295,22 @@ export function Links({
       </a>
     );
   };
-  const [first] = table;
   return (
     <nav
       {...stylex.props(ui.text, styles.links, home ? styles.homeLinks : styles.caseLinks)}
+      id={home ? "profile-links" : undefined}
       aria-label="Public profiles and contact"
       data-mobile-links={phone || home || undefined}
     >
-      {(phone || home) && first !== undefined && (
-        <>
-          <span
-            {...stylex.props(ui.text, styles.ruler, styles.rulerDate)}
-            aria-hidden="true"
-            data-nosnippet
-          >
-            <Figures text={first.date.slice(0, 7)} />
-          </span>
-          <span
-            {...stylex.props(ui.text, styles.ruler, styles.rulerTitle)}
-            aria-hidden="true"
-            data-titles={table.map((project) => project.title).join("\n")}
-          />
-        </>
-      )}
-      <p {...stylex.props(styles.label, styles.contact, styles.contactLabel)}>
+      <p {...stylex.props(styles.label, styles.contactLabel)}>
         <span data-nosnippet>Contact</span>
       </p>
-      <Island name="email" component={Email} props={{ style: [styles.contact, styles.emailRow] }} />
-      {contacts.map((item, index) =>
-        link(item, [styles.contact, index ? styles.fourthRow : styles.thirdRow], false),
-      )}
+      <Island name="email" component={Email} props={{}} />
+      {contacts.map((item) => link(item, null, false))}
       <p {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup)}>
         <span data-nosnippet>Links</span>
       </p>
-      {profiles.map((item, index) =>
-        link(item, [styles.profile, styles.profileGroup], true, index + 2),
-      )}
+      {profiles.map((item) => link(item, styles.profileGroup, true))}
     </nav>
   );
 }
@@ -454,7 +423,7 @@ const styles = stylex.create({
     gridTemplateRows: {
       default: null,
       [media.desktop]: "auto minmax(min-content, 1fr) auto",
-      [media.mobile]: "auto auto minmax(0, 1fr) auto",
+      [media.mobile]: "auto auto auto minmax(0, 1fr)",
       // Dense: like on phones, the page holds to the viewport and the project list scrolls. The
       // list's row still grows to fit the sidebar links, so those are never cut off.
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto 1fr auto" },
@@ -581,6 +550,15 @@ const styles = stylex.create({
     gridRow: 1,
     alignSelf: "start",
   },
+  /**
+   * Phones: laid over the homepage name, so a tap on the name shows or hides Contact and Links
+   * (`links.ts`). Desktop keeps them in the sidebar and has no such button.
+   */
+  linksToggle: {
+    display: { default: "none", [media.mobile]: "block" },
+    position: "absolute",
+    inset: 0,
+  },
   caseName: {
     display: "flex",
     flexDirection: "column",
@@ -604,17 +582,21 @@ const styles = stylex.create({
   desktopOnly: { display: { default: "contents", [media.mobile]: "none" } },
   phoneOnly: { display: { default: "none", [media.mobile]: "contents" } },
   links: {
-    display: { default: "flex", [media.mobile]: "grid" },
+    display: "flex",
     flexDirection: "column",
     rowGap: space.linkGap,
-    gridTemplateColumns: { default: null, [media.mobile]: space.projectColumns },
-    columnGap: { default: null, [media.mobile]: space.mobileTableGap },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
   },
+  /** Phones: hidden until the name is tapped (`links.ts`), then right under it, above About. */
   homeLinks: {
-    gridRow: { default: null, [media.desktop]: 2, [media.mobile]: 4 },
-    alignSelf: { default: null, [media.desktop]: "start", [media.mobile]: "end" },
-    paddingBottom: { default: null, [media.mobile]: "24px" },
+    display: {
+      default: "flex",
+      [media.mobile]: "none",
+      [stylex.when.ancestor("[data-links-open]", rootMarker)]: { [media.mobile]: "flex" },
+    },
+    gridRow: 2,
+    alignSelf: { default: null, [media.desktop]: "start" },
+    marginBottom: { default: null, [media.mobile]: space.sectionGap },
   },
   caseLinks: {
     order: { default: null, [media.mobile]: 6 },
@@ -622,28 +604,12 @@ const styles = stylex.create({
   },
   label: { color: colors.secondary, width: "fit-content" },
   profileLabel: {
-    marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch },
-    gridRow: { default: null, [media.mobile]: 1 },
-    gridColumn: { default: null, [media.mobile]: 1 },
-  },
-  /**
-   * A table cell's width without its height: the date and title columns size to every project,
-   * exactly as the homepage table's do, while the rulers themselves take no space or voice.
-   */
-  ruler: {
-    display: { default: "none", [media.mobile]: "block" },
-    gridRow: 1,
-    height: 0,
-    overflow: "hidden",
-    visibility: "hidden",
-    whiteSpace: "nowrap",
-    paddingInlineEnd: space.mobileCellEndSpace,
-  },
-  rulerDate: { gridColumn: 3 },
-  /** One title per line, as generated content: the widest sets the column, none is page text. */
-  rulerTitle: {
-    gridColumn: 1,
-    "::before": { content: "attr(data-titles)", whiteSpace: "pre" },
+    // Phones: one section gap between the two lists, as between About and the table.
+    marginTop: {
+      default: null,
+      [media.desktop]: space.sidebarBaselinePitch,
+      [media.mobile]: `calc(${space.sectionGap} - ${space.linkGap})`,
+    },
   },
   /** The project table's columns, so the links line up with its Project column. */
   metadata: {
@@ -667,25 +633,11 @@ const styles = stylex.create({
     paddingBlock: `calc(${space.linkGap} / 2)`,
     marginBlock: `calc(${space.linkGap} / -2)`,
   },
-  profile: {
-    gridColumn: { default: null, [media.mobile]: 1 },
-    justifySelf: "start",
-    width: { default: "fit-content", [media.mobile]: "max-content" },
-  },
-  contact: {
-    // Phones: Contact takes the subject column, beside Links.
-    gridColumn: { default: null, [media.mobile]: "2 / -1" },
-    justifySelf: "start",
-  },
   contactLabel: {
     marginTop: {
       default: `calc(${space.sectionGap} - ${space.sectionContentGap})`,
       [media.desktop]: 0,
       [media.mobile]: 0,
     },
-    gridRow: { default: null, [media.mobile]: 1 },
   },
-  emailRow: { gridRow: { default: null, [media.mobile]: 2 } },
-  thirdRow: { gridRow: { default: null, [media.mobile]: 3 } },
-  fourthRow: { gridRow: { default: null, [media.mobile]: 4 } },
 });

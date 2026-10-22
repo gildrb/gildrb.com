@@ -71,7 +71,6 @@ function Frame({
   description,
   shareDescription = description,
   image = assets.shareImage,
-  table,
   head,
   mono,
   third,
@@ -87,8 +86,6 @@ function Frame({
   /** A stamped site path, see `versioned`. */
   image?: string;
   current: string;
-  /** The project list the page shows, if any; the phone links align to its columns. */
-  table?: readonly Project[];
   head: preact.ComponentChildren;
   mono: boolean;
   /**
@@ -146,7 +143,7 @@ function Frame({
             home={false}
           />
         )}
-        <PageLinks phone {...(table && { table })} />
+        <PageLinks phone />
       </Shell>
     </Document>
   );
@@ -220,7 +217,6 @@ export function CasePage({
       {...(image && { image })}
       current={item.name}
       title={item.headline}
-      table={others}
       mono={monoBlocks(markdown)}
       third={{ $: "Aside", markdown }}
       head={
@@ -427,7 +423,6 @@ export function ProductPage({
       type="website"
       description={item.description}
       current={item.name}
-      table={others}
       mono={monoBlocks(markdown)}
       third={{ $: "Aside", markdown }}
       head={

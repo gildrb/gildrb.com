@@ -4,9 +4,9 @@ import { useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { email } from "../site.ts";
 import { colors, fontFeatures, space } from "../tokens.stylex.ts";
-import { type Style, ui } from "../ui.tsx";
+import { ui } from "../ui.tsx";
 
-export function Email({ style }: { style?: Style }) {
+export function Email() {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef(0);
   async function copy(event: TargetedMouseEvent<HTMLButtonElement>) {
@@ -29,7 +29,6 @@ export function Email({ style }: { style?: Style }) {
         ui.focusRing,
         styles.email,
         state === "failed" && styles.failed,
-        style,
       )}
       type="button"
       aria-label={`Copy ${email}`}

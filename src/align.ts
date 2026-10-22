@@ -5,8 +5,7 @@
  *   on every page, so the sidebar links line up with the project table and stay put across pages.
  *   Marks short viewports as dense (see below).
  * - Phones: shows the project list's bottom fade in the first frame when it overflows (the
- *   scroll-driven animation takes over from the next frame). The contact column needs no help:
- *   it shares the table's columns (see `Links`).
+ *   scroll-driven animation takes over from the next frame).
  *
  * Self-contained on purpose: `alignScript` inlines its source at the end of `<body>`.
  */
