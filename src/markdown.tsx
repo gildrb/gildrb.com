@@ -5,7 +5,7 @@ import { Island } from "./island.tsx";
 import { Command } from "./islands/command.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
-import { colors, media as screens, space, underline } from "./tokens.stylex.ts";
+import { colors, space, underline } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -149,10 +149,12 @@ function Video({ id }: { id: string }) {
   );
 }
 
+// Wide screens: the case pages' first column (`Main`'s `reading`), 592px. Two images in a row
+// share it, less their 24px gap.
 export const singleSizes =
-  "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
+  "(min-width: 1280px) 592px, (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
 const gridSizes =
-  "(max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
+  "(min-width: 1280px) 284px, (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
 
 /** The responsive variants of `gil-rodrigues-<id>-<width>.<ext>`, or the single vector file. */
 export function sources(id: string): { src: string; srcset?: string } {
@@ -350,19 +352,19 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
 
 /**
  * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
- * it), the opening sentence, then the parts. `narrow` follows the opening sentence where there is
- * no third column (the Elsewhere line), then `tool` (Archetypon's converter). `eager` gives the
- * first image high fetch priority.
+ * it), the opening sentence, then the parts. `elsewhere` (the Elsewhere line) follows the opening
+ * sentence, then `tool` (Archetypon's converter). `eager` gives the first image high fetch
+ * priority.
  */
 export function Article({
   markdown,
   eager,
-  narrow = null,
+  elsewhere = null,
   tool = null,
 }: {
   markdown: string;
   eager: boolean;
-  narrow?: ComponentChildren;
+  elsewhere?: ComponentChildren;
   tool?: ComponentChildren;
 }) {
   const { title, blocks } = parse(markdown);
@@ -371,12 +373,16 @@ export function Article({
   const nodes: ComponentChildren[] = [];
   let previous: Kind | null = null;
   let pendingTool = tool;
+  /** Everything but images and recordings keeps the text's width, centered in a wider article. */
   const place = (
     kind: Kind,
-    render: (spacing: false | (typeof styles)[Spacing]) => ComponentChildren,
+    render: (
+      layout: readonly [false | (typeof styles)[Spacing], false | typeof styles.measure],
+    ) => ComponentChildren,
+    wide = false,
   ) => {
     const spacing = gap(kind, previous);
-    nodes.push(render(spacing !== null && styles[spacing]));
+    nodes.push(render([spacing !== null && styles[spacing], !wide && styles.measure]));
     previous = kind;
   };
   const placeTool = () => {
@@ -387,8 +393,8 @@ export function Article({
   };
   for (const [index, block] of blocks.entries()) {
     const anchor = found.get(index);
-    if (index === 1 && narrow !== null)
-      place("text", (spacing) => <div {...stylex.props(spacing, styles.narrow)}>{narrow}</div>);
+    if (index === 1 && elsewhere !== null)
+      place("text", (spacing) => <div {...stylex.props(spacing)}>{elsewhere}</div>);
     if (anchor?.top === true) placeTool();
     switch (block.type) {
       case "h2":
@@ -436,11 +442,15 @@ export function Article({
         ));
         break;
       case "media":
-        place("figure", (spacing) => (
-          <div {...stylex.props(spacing)}>
-            <Figures items={block.items} eager={eager && block === firstMedia} />
-          </div>
-        ));
+        place(
+          "figure",
+          (spacing) => (
+            <div {...stylex.props(spacing)}>
+              <Figures items={block.items} eager={eager && block === firstMedia} />
+            </div>
+          ),
+          true,
+        );
         break;
       case "code":
         place("figure", (spacing) => (
@@ -480,8 +490,8 @@ export const styles = stylex.create({
   prose: { color: colors.article, fontWeight: colors.proseWeight },
   /** The opening sentence: what the work is, at full contrast. */
   lede: { color: colors.primary },
-  /** Shown only where there is no third column: the aside has the same content there. */
-  narrow: { display: { default: null, [screens.wide]: "none" } },
+  /** The text's width. */
+  measure: { maxWidth: space.contentColumn },
   partGap: { marginTop: "48px" },
   headingGap: { marginTop: "8px" },
   lineGap: { marginTop: "24px" },

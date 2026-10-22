@@ -161,6 +161,11 @@ export const space = stylex.defineVars({
   sidebarColumn: `${30 * unit}px`,
   contentColumn: `${68 * unit}px`,
   layoutGap: `${6 * unit}px`,
+  /**
+   * Case pages on wide screens: the images' width. They share the text's left edge and end where
+   * the homepage's archive grid starts: the text column plus the gap after it.
+   */
+  figureColumn: `${(68 + 6) * unit}px`,
   mediaRadius: "22px",
   /** Archive tiles: one square cell, at least this wide; the grid fills the rest. */
   tileMin: `${26 * unit}px`,

@@ -18,7 +18,6 @@ import {
 import { Row } from "../row.tsx";
 import {
   type Case,
-  type Link,
   cases,
   caseWork,
   origin,
@@ -84,15 +83,17 @@ function Frame({
   head: preact.ComponentChildren;
   mono: boolean;
   /**
-   * Wide screens' third column: a project's facts and the page's contents, the curated archive
-   * beside a plain page without parts, or the page's own content spanning it (the archive page).
+   * The page's contents, shown in the sidebar instead of the links; the curated archive beside a
+   * plain page without parts; or the page's own content spanning the wide screens' third column
+   * (the archive page).
    */
   third:
-    | { $: "Aside"; links: readonly Link[]; markdown: string }
+    | { $: "Aside"; markdown: string }
     | { $: "Archive"; work: readonly Work[] }
     | { $: "Content" };
   children: preact.ComponentChildren;
 }) {
+  const parts = third.$ === "Aside" ? contents(third.markdown) : [];
   return (
     <Document
       assets={assets}
@@ -125,16 +126,17 @@ function Frame({
           }}
         >
           <Name current={current} heading={third.$ === "Content"} />
-          <PageLinks phone={false} />
+          {parts.length > 0 ? <Aside parts={parts} /> : <PageLinks phone={false} />}
         </Sidebar>
-        <Main wide={third.$ === "Content"}>{children}</Main>
+        <Main wide={third.$ !== "Archive"} reading={third.$ === "Aside"}>
+          {children}
+        </Main>
         {third.$ === "Archive" && (
           <SideArchive
             work={third.work.filter(({ id }) => artwork[id]?.home === true)}
             home={false}
           />
         )}
-        {third.$ === "Aside" && <Aside links={third.links} parts={contents(third.markdown)} />}
         <PageLinks phone {...(table && { table })} />
       </Shell>
     </Document>
@@ -208,7 +210,7 @@ export function CasePage({
       title={item.headline}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Aside", links: item.links, markdown }}
+      third={{ $: "Aside", markdown }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -235,11 +237,11 @@ export function CasePage({
         </>
       }
     >
-      <article {...stylex.props(styles.column, styles.phoneItem)}>
+      <article {...stylex.props(styles.article, styles.phoneItem)}>
         <Article
           markdown={markdown}
           eager
-          narrow={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
+          elsewhere={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
         />
       </article>
       <Next projects={others} />
@@ -309,9 +311,17 @@ export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[
 }
 
 const styles = stylex.create({
-  column: { width: `min(100%, ${space.contentColumn})`, marginInline: "auto" },
+  column: {
+    width: `min(100%, ${space.contentColumn})`,
+    marginInline: { default: "auto", [media.wide]: 0 },
+  },
+  /** Its text keeps the column's width; on wide screens its images grow past it (`Main`). */
+  article: {
+    width: { default: `min(100%, ${space.contentColumn})`, [media.wide]: "100%" },
+    marginInline: "auto",
+  },
   phoneItem: {
-    gridColumn: { default: null, [media.mobile]: "1 / -1" },
+    gridColumn: { default: null, [media.mobile]: "1 / -1", [media.wide]: 1 },
     order: { default: null, [media.mobile]: 5 },
   },
   next: {
@@ -350,7 +360,7 @@ export function DocPage({
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}
-      third={parts.length > 0 ? { $: "Aside", links: [], markdown } : { $: "Archive", work }}
+      third={parts.length > 0 ? { $: "Aside", markdown } : { $: "Archive", work }}
       head={
         <>
           <Alternates slug={page.slug} name={page.name} />
@@ -374,7 +384,7 @@ export function DocPage({
         </>
       }
     >
-      <article {...stylex.props(styles.column, styles.phoneItem)}>
+      <article {...stylex.props(styles.article, styles.phoneItem)}>
         <Article markdown={markdown} eager />
       </article>
     </Frame>
@@ -406,7 +416,7 @@ export function ProductPage({
       current={item.name}
       table={others}
       mono={monoBlocks(markdown)}
-      third={{ $: "Aside", links: item.links, markdown }}
+      third={{ $: "Aside", markdown }}
       head={
         <>
           <Alternates slug={item.slug} name={item.name} />
@@ -436,11 +446,11 @@ export function ProductPage({
         </>
       }
     >
-      <article {...stylex.props(styles.column, styles.phoneItem)}>
+      <article {...stylex.props(styles.article, styles.phoneItem)}>
         <Article
           markdown={markdown}
           eager
-          narrow={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
+          elsewhere={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
           }

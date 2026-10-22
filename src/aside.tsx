@@ -5,8 +5,8 @@ import { colors, media, space, underline } from "./tokens.stylex.ts";
 import { type Style, ui } from "./ui.tsx";
 
 /**
- * The page's parts, to jump to. `contents.ts` marks the part being read with the square in the
- * gutter beside the text; without JavaScript the list still links every part.
+ * The page's parts, to jump to. `contents.ts` marks the part being read with a square just right of
+ * its link; without JavaScript the list still links every part.
  */
 function Contents({ parts }: { parts: readonly Heading[] }) {
   return (
@@ -28,32 +28,6 @@ function Contents({ parts }: { parts: readonly Heading[] }) {
   );
 }
 
-/**
- * Where the work lives or was posted, set like the sidebar's lists. "Elsewhere", not "Links": on
- * phones it sits above the profile links, which already take that name.
- */
-export function WorkLinks({ links, style }: { links: readonly Link[]; style?: Style }) {
-  return (
-    <nav {...stylex.props(ui.text, styles.group, style)} aria-label="Elsewhere">
-      <p {...stylex.props(styles.label)}>Elsewhere</p>
-      <ul {...stylex.props(styles.list)}>
-        {links.map(({ label, href }) => (
-          <li {...stylex.props(styles.item)}>
-            <a
-              {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link)}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
-
 /** Where a link goes, as people read an address: no scheme, no `www.`, no trailing slash. */
 function destination(href: string): string {
   const url = new URL(href);
@@ -62,8 +36,8 @@ function destination(href: string): string {
 }
 
 /**
- * Narrow screens, where there is no third column: one line right under the opening sentence,
- * naming the address each link goes to, so it is seen first instead of at the end of the page.
+ * One line right under the opening sentence, naming the address each link goes to, so it is seen
+ * first instead of at the end of the page.
  */
 export function ElsewhereLine({ links, style }: { links: readonly Link[]; style?: Style }) {
   return (
@@ -88,41 +62,23 @@ export function ElsewhereLine({ links, style }: { links: readonly Link[]; style?
 }
 
 /**
- * Wide screens' third column on a project or plain page: its contents and its links, set like the
- * sidebar's lists and held in view while the text scrolls beside it.
+ * Desktop: the page's contents in the sidebar, in place of the contact and profile links, set as
+ * they are. Phones keep those links below the content.
  */
-export function Aside({ parts, links }: { parts: readonly Heading[]; links: readonly Link[] }) {
+export function Aside({ parts }: { parts: readonly Heading[] }) {
   return (
-    <aside {...stylex.props(ui.text, styles.aside)} aria-label="On this page">
-      {parts.length > 0 && <Contents parts={parts} />}
-      {links.length > 0 && <WorkLinks links={links} />}
-    </aside>
+    <div {...stylex.props(ui.text, styles.aside)}>
+      <Contents parts={parts} />
+    </div>
   );
 }
 
 const styles = stylex.create({
-  aside: {
-    display: { default: "none", [media.wide]: "flex" },
-    flexDirection: "column",
-    rowGap: space.sidebarBaselinePitch,
-    gridColumn: 3,
-    gridRow: 1,
-    alignSelf: "start",
-    position: "sticky",
-    top: 0,
-    maxHeight: "100vh",
-    overflowY: "auto",
-    scrollbarWidth: "none",
-    paddingBlock: space.pageInset,
-    // Room for the marker in the gutter, which the scrolling box would otherwise clip.
-    paddingLeft: "24px",
-    marginLeft: "-24px",
-    maxWidth: `${42 * 8 + 24}px`,
-  },
+  aside: { display: { default: "contents", [media.mobile]: "none" } },
   group: { display: "flex", flexDirection: "column", rowGap: space.linkGap },
   /** As the sidebar's "Contact" and "Links". */
   label: { color: colors.secondary },
-  /** The narrow screens' line: running text, an address may break anywhere rather than overflow. */
+  /** The Elsewhere line: running text, an address may break anywhere rather than overflow. */
   line: { margin: 0, color: colors.article, overflowWrap: "anywhere" },
   /** Set like the article links (`markdown.tsx`). */
   address: {
@@ -155,17 +111,19 @@ const styles = stylex.create({
     marginBlock: `calc(${space.linkGap} / -2)`,
   },
   /**
-   * The square for the part being read, just left of its link, in the gutter between the text and
-   * this list. `contents.ts` measures each link and moves it there; the default centers it on the
-   * first link's first line (24px) for pages without JavaScript. Decorative, so it never takes a
-   * pointer.
+   * The square for the part being read, just right of its link's words. `contents.ts` measures each
+   * link and moves it there; it stays hidden until then, since without JavaScript no part is
+   * marked. Decorative, so it never takes a pointer.
    */
   marker: {
     position: "absolute",
     top: 0,
-    left: "-14px",
-    transform: "translateY(9px)",
-    width: "6px",
+    left: 0,
+    // `contents.ts` draws the square from its top-left corner.
+    transformOrigin: "0 0",
+    visibility: "hidden",
+    /** 4:3, a little wider than tall. */
+    width: "8px",
     height: "6px",
     backgroundColor: colors.primary,
     pointerEvents: "none",

@@ -197,11 +197,16 @@ export function Sidebar({
 export function Main({
   home = false,
   wide = false,
+  reading = false,
   children,
 }: {
   home?: boolean;
   /** Spans every column right of the sidebar, as the archive does. */
   wide?: boolean;
+  /**
+   * Wide screens, with `wide`: one column, as wide as the images, which grow past the text.
+   */
+  reading?: boolean;
   children: ComponentChildren;
 }) {
   return (
@@ -210,6 +215,7 @@ export function Main({
         styles.content,
         home ? [styles.homeColumn, styles.homeContent] : styles.caseContent,
         wide && styles.wideContent,
+        reading && styles.reading,
       )}
     >
       {/* The skip link's target. `<main>` itself cannot take focus on phones, where it is
@@ -518,6 +524,17 @@ const styles = stylex.create({
   wideContent: {
     maxWidth: "none",
     gridColumn: { default: null, [media.wide]: "2 / -1" },
+  },
+  /**
+   * Wide screens: the text starts where the homepage's table starts, so it does not move between
+   * pages. The images share its left edge and end where the homepage's archive grid starts
+   * (`figureColumn`). The rest stays empty.
+   */
+  reading: {
+    display: { default: "flex", [media.mobile]: "contents", [media.wide]: "grid" },
+    gridTemplateColumns: { default: null, [media.wide]: space.figureColumn },
+    // The article, then the next projects at the bottom of the page.
+    gridTemplateRows: { default: null, [media.wide]: "auto 1fr" },
   },
   caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "24px" },
   homeToggle: {
