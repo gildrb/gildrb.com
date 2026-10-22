@@ -225,7 +225,8 @@ function Figures({
           {...stylex.props(
             styles.figure,
             banner && styles.window,
-            banner && media[id]?.frame && styles.frame,
+            // The demos draw their own frame, rounded with them on small screens.
+            banner && !demos.has(id) && styles.frame,
           )}
         >
           {id === "heph-demo" ? (
@@ -634,7 +635,7 @@ export const styles = stylex.create({
     maxHeight: { default: null, "@media (min-width: 1280px)": "calc(100svh - 240px)" },
     overflow: "hidden",
   },
-  /** The demos' banner frame (`ben-davis.tsx`): the homepage table's hairline, over the artwork. */
+  /** A banner's frame: the homepage table's hairline, over the artwork. */
   frame: {
     position: "relative",
     "::after": {
