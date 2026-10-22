@@ -40,8 +40,8 @@ const monoBlocks = (markdown: string) =>
 
 /**
  * The parts a page lists to jump to. A page of a screen or two (the product pages, mL7, Local
- * Studio) is read at once and lists none: its later parts could not even reach the reading line.
- * Pages with three or more figures run long enough to need the list.
+ * Studio) is read at once and lists none. Pages with three or more figures run long enough to need
+ * the list.
  */
 function contents(markdown: string): Heading[] {
   const figures = parse(markdown).blocks.filter((block) => block.type === "media").length;

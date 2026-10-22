@@ -135,19 +135,14 @@ export function trackContents(): void {
   const update = () => {
     queued = false;
     // A part is being read once its heading reaches the reading line, a quarter down the viewport.
-    // Parts near the end of a page can never get there, so their starts are pulled back into the
-    // scroll range, a step apart, and every part is reached on the way down.
-    const line = innerHeight / 4;
+    // Over the last screen of scrolling the line slides down to the viewport's bottom, so short
+    // parts at the end of a page get a fair share of the scroll and every part is reached.
     const end = Math.max(0, document.documentElement.scrollHeight - innerHeight);
-    const step = 64;
-    const starts = parts.map(({ heading }) => heading.getBoundingClientRect().top + scrollY - line);
-    for (let at = starts.length - 1; at >= 0; at -= 1) {
-      const after = starts[at + 1];
-      const limit = after === undefined ? end : after - step;
-      starts[at] = Math.max(0, Math.min(starts[at] ?? 0, limit));
-    }
+    const progress = Math.min(1, Math.max(0, (scrollY - (end - innerHeight)) / innerHeight));
+    const line = (innerHeight / 4) * (1 + 3 * progress);
     let index = 0;
-    for (const [at, start] of starts.entries()) if (scrollY >= start) index = at;
+    for (const [at, { heading }] of parts.entries())
+      if (heading.getBoundingClientRect().top <= line) index = at;
     const part = parts[index];
     if (!part || index === current) return;
     const first = current === -1;
