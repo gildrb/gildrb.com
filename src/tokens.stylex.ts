@@ -184,7 +184,8 @@ export const space = stylex.defineVars({
   /**
    * The project tables (homepage, "View next"): project, subject, then the date set right, and a
    * slot past it for the row square or →. Desktop: the title column a unit multiple, the date as
-   * wide as its figures. Phones: content-sized, the subject taking what is left.
+   * wide as its figures. Phones: content-sized, the subject taking what is left; the homepage
+   * table, with no square there, drops the slot (`portfolio.tsx`).
    */
   projectColumns: {
     default: `${titleColumn} minmax(max-content, 1fr) max-content 16px`,

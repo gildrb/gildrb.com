@@ -23,6 +23,7 @@ function describe(key: SortKey, direction: SortDirection): string {
  * is the table's footer, whatever the order: "Archive" in the project column, the count in the subject column. Edge fades show while the list scrolls on phones.
  * One square marks the row under the pointer or in focus, in the column where other lists show →;
  * it smears from row to row as the Contents square does and leaves with the pointer (`rows.ts`).
+ * Phones show no square: the table drops its column, and the date ends at the table's right edge.
  */
 export function Portfolio({ more }: { more: number }) {
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
@@ -149,7 +150,10 @@ const hideBottom = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opaci
 const styles = stylex.create({
   frame: {
     display: "grid",
-    gridTemplateColumns: space.projectColumns,
+    gridTemplateColumns: {
+      default: space.projectColumns,
+      [media.mobile]: "max-content minmax(0, 1fr) max-content",
+    },
     // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls under
     // the header, between edge fades.
     gridTemplateRows: {
@@ -291,7 +295,12 @@ const styles = stylex.create({
       [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
     },
   },
-  archiveGlyph: { gridColumn: 4, width: space.arrowWidth, textAlign: "center" },
+  archiveGlyph: {
+    display: { default: null, [media.mobile]: "none" },
+    gridColumn: 4,
+    width: space.arrowWidth,
+    textAlign: "center",
+  },
   section: {
     display: {
       default: "grid",
@@ -336,9 +345,10 @@ const styles = stylex.create({
   },
   /**
    * The row square: the Contents square's size and colour (`aside.tsx`). Hidden until a row is
-   * pointed at or focused; decorative, so it never takes a pointer.
+   * pointed at or focused, and on phones; decorative, so it never takes a pointer.
    */
   marker: {
+    display: { default: null, [media.mobile]: "none" },
     position: "absolute",
     top: 0,
     left: 0,

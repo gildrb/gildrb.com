@@ -9,7 +9,8 @@ import { Figures, ui, untranslated } from "./ui.tsx";
  * the columns; `home` rows live in the homepage table, the others in "View next" lists.
  * The link is named by its title, descriptor and date, and described by its description. A row
  * that leaves the site underlines its title, as the article links do; the others show →. Home rows
- * show no glyph: their cell is where the table's one square lands (`portfolio.tsx`).
+ * show no glyph: their cell is where the table's one square lands (`portfolio.tsx`). Phones show
+ * no square, so there home rows drop the cell and the date closes the row.
  */
 export function Row({ project, first, home }: { project: Project; first: boolean; home: boolean }) {
   const Title = home ? "h3" : "span";
@@ -47,7 +48,7 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         </span>
       </span>
       <time
-        {...stylex.props(ui.text, styles.cell, styles.date)}
+        {...stylex.props(ui.text, styles.cell, styles.date, home && styles.homeDate)}
         id={`${id}-date`}
         dateTime={project.date}
       >
@@ -59,7 +60,10 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
         {project.description}
       </span>
-      <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
+      <span
+        {...stylex.props(ui.text, ui.sans, styles.arrow, home && styles.squareSlot)}
+        aria-hidden="true"
+      >
         {home ? (
           <span {...stylex.props(styles.glyph)} data-row-mark>
             {"\u00a0"}
@@ -126,6 +130,8 @@ const styles = stylex.create({
     textAlign: "end",
     color: "inherit",
   },
+  /** Home rows: on phones the date is the last cell, flush with the row's right edge. */
+  homeDate: { paddingInlineEnd: 0 },
   /** Narrow rows show the month; the day stays readable to assistive tech. */
   dayHome: {
     position: { default: null, [media.mobile]: "absolute", [narrowTable]: "absolute" },
@@ -223,5 +229,7 @@ const styles = stylex.create({
     justifyContent: "flex-end",
     gap: "8px",
   },
+  /** Home rows: phones show no square (`rows.ts`), so the slot goes and takes no column. */
+  squareSlot: { display: { default: "inline-flex", [media.mobile]: "none" } },
   glyph: { flexShrink: 0, width: space.arrowWidth, textAlign: "center" },
 });

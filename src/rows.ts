@@ -8,7 +8,8 @@ function rowOf(event: Event): Element | null {
  * The homepage table's row square (`Portfolio`): it marks the row under the pointer or in focus,
  * in the column where other lists show →, smears from row to row (`smear.ts`) and fades only as it
  * leaves. Plain DOM on the server-rendered table, so it works the moment the script runs, before
- * the table hydrates; a pointer already resting on a row is marked at once.
+ * the table hydrates; a pointer already resting on a row is marked at once. Phones hide the rows'
+ * square cells (`Row`), and a row without one is never marked.
  */
 export function trackRows() {
   const box = document.querySelector<HTMLElement>("[data-rows]");
@@ -17,9 +18,18 @@ export function trackRows() {
   const still = matchMedia("(prefers-reduced-motion: reduce)");
   const motion = smear(square);
   let current: Element | null = null;
+  const hide = () => {
+    current = null;
+    square.style.transitionDuration = "";
+    square.style.opacity = "0";
+  };
   const mark = (row: Element | null) => {
     const cell = row?.querySelector("[data-row-mark]");
     if (!row || !cell || row === current) return;
+    if (cell.getClientRects().length === 0) {
+      hide();
+      return;
+    }
     const from = box.getBoundingClientRect();
     const at = cell.getBoundingClientRect();
     const target = {
@@ -31,11 +41,6 @@ export function trackRows() {
     current = row;
     square.style.transitionDuration = "0s";
     square.style.opacity = "1";
-  };
-  const hide = () => {
-    current = null;
-    square.style.transitionDuration = "";
-    square.style.opacity = "0";
   };
   // `pointermove` too: `pointerover` does not fire for a pointer that was already on a row.
   box.addEventListener("pointerover", (event) => mark(rowOf(event)));
