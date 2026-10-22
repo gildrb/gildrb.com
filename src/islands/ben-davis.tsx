@@ -4,7 +4,7 @@ import { colors } from "../tokens.stylex.ts";
 
 type Player = { goToAndStop(frame: number, isFrame: boolean): void; destroy(): void };
 type Lottie = { loadAnimation(options: Record<string, unknown>): Player };
-type Animation = { op: number };
+type Animation = { w: number };
 
 function isLottie(value: unknown): value is Lottie {
   return (
@@ -16,9 +16,7 @@ function isLottie(value: unknown): value is Lottie {
 }
 
 function isAnimation(value: unknown): value is Animation {
-  return (
-    typeof value === "object" && value !== null && "op" in value && typeof value.op === "number"
-  );
+  return typeof value === "object" && value !== null && "w" in value && typeof value.w === "number";
 }
 
 /** Loads lottie-web's player once, from the classic script davis7.sh ships with. */
@@ -39,11 +37,12 @@ function loadLottie(src: string): Promise<Lottie> {
 }
 
 // Without a pointer, the animation turns one way, rests, and turns back.
-const restFor = 1.6;
-const turnFor = 0.9;
-// How far the folded mark moves right to sit centred, in percent of the animation's width.
-const markShift = 30;
-
+const restFor = 1.4;
+const turnFor = 0.55;
+// The file's last keyframe that moves anything; after it the file only holds the mark.
+const foldEnd = 46.2;
+// Samples per frame of where the drawing's centre sits, to keep it centred while it folds.
+const samplesPerFrame = 2;
 /**
  * The davis7.sh header animation, large: the name "Ben Davis" folds into the db mark. Hovering the
  * stage folds it into the mark and leaving unfolds it; without a pointer it plays back and forth. With `fill`, the stage fills the banner window of the case page; otherwise it
@@ -85,13 +84,35 @@ export function Fold({
         animationData: data,
         rendererSettings: { preserveAspectRatio: "xMidYMid meet" },
       });
-      const end = data.op - 1;
+      const fold = lottie;
+      const width = data.w;
+      // Where the drawing's centre sits at each sample, in the file's units: the name is long and
+      // the mark is short, so the centre moves as it folds.
+      const centres: number[] = [];
+      const group = container.querySelector("svg > g");
+      const samples = Math.ceil(foldEnd * samplesPerFrame);
+      for (let sample = 0; sample <= samples; sample += 1) {
+        const at = Math.min(foldEnd, sample / samplesPerFrame);
+        fold.goToAndStop(at, true);
+        const box = group instanceof SVGGraphicsElement ? group.getBBox() : undefined;
+        centres.push(box ? box.x + box.width / 2 : width / 2);
+      }
+      // Draws the fold at `progress`, 0 the name and 1 the mark, centred in the stage. Time runs
+      // straight through the file, so its own easing shapes the motion.
+      const draw = (progress: number) => {
+        const at = progress * foldEnd;
+        fold.goToAndStop(at, true);
+        const index = Math.min(samples - 1, Math.floor(at * samplesPerFrame));
+        const within = at * samplesPerFrame - index;
+        const before = centres[index] ?? width / 2;
+        const after = centres[index + 1] ?? before;
+        const centre = before + (after - before) * within;
+        const scale = container.clientWidth / width;
+        container.style.translate = `${((width / 2 - centre) * scale).toFixed(2)}px 0`;
+      };
       const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      // Progress through the fold, 0 the name and 1 the mark. It moves at one fixed speed and is
-      // drawn through an ease, so every turn takes the same time and has the same shape.
       let progress = reduced ? 1 : 0;
-      lottie.goToAndStop(progress * end, true);
-      if (reduced) container.style.translate = `${markShift}% 0`;
+      draw(progress);
       setReady(true);
       if (reduced) return;
       let last = performance.now();
@@ -111,10 +132,7 @@ export function Fold({
           const move = step / turnFor;
           progress = Math.abs(left) <= move ? goal : progress + Math.sign(left) * move;
           if (progress === goal) restUntil = clock + restFor;
-          const eased = progress * progress * (3 - 2 * progress);
-          lottie?.goToAndStop(eased * end, true);
-          // The name is centred and the mark sits at its left end: slide it to the centre as it folds.
-          container.style.translate = `${(eased * markShift).toFixed(2)}% 0`;
+          draw(progress);
         }
         frame = requestAnimationFrame(tick);
       };
