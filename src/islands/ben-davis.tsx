@@ -45,9 +45,8 @@ const turnFor = 0.9;
 const markShift = 30;
 
 /**
- * The davis7.sh header animation, large: the name "Ben Davis" folds into the db mark. Moving the
- * pointer across the stage scrubs it, left the name, right the mark; without a pointer it plays
- * back and forth. With `fill`, the stage fills the banner window of the case page; otherwise it
+ * The davis7.sh header animation, large: the name "Ben Davis" folds into the db mark. Hovering the
+ * stage folds it into the mark and leaving unfolds it; without a pointer it plays back and forth. With `fill`, the stage fills the banner window of the case page; otherwise it
  * keeps 4:3.
  */
 export function Fold({
@@ -61,7 +60,7 @@ export function Fold({
 }) {
   const stage = useRef<HTMLDivElement>(null);
   const art = useRef<HTMLDivElement>(null);
-  const pointer = useRef<number | null>(null);
+  const hovered = useRef(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -88,34 +87,35 @@ export function Fold({
       });
       const end = data.op - 1;
       const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      let position = reduced ? end : 0;
-      lottie.goToAndStop(position, true);
+      // Progress through the fold, 0 the name and 1 the mark. It moves at one fixed speed and is
+      // drawn through an ease, so every turn takes the same time and has the same shape.
+      let progress = reduced ? 1 : 0;
+      lottie.goToAndStop(progress * end, true);
       if (reduced) container.style.translate = `${markShift}% 0`;
       setReady(true);
       if (reduced) return;
       let last = performance.now();
       let clock = 0;
+      // Without a pointer it rests on one end, turns, rests on the other, and turns back.
+      let idleGoal = 0;
+      let restUntil = restFor;
       const tick = (now: number) => {
         const step = Math.min(0.05, (now - last) / 1000);
         last = now;
         clock += step;
-        const cycle = 2 * (restFor + turnFor);
-        const phase = clock % cycle;
-        const auto =
-          phase < restFor
-            ? 0
-            : phase < restFor + turnFor
-              ? (phase - restFor) / turnFor
-              : phase < 2 * restFor + turnFor
-                ? 1
-                : 1 - (phase - 2 * restFor - turnFor) / turnFor;
-        const goal = (pointer.current ?? auto) * end;
-        // The pointer leads; the animation follows a little behind it, like a hand on a dial.
-        position +=
-          (goal - position) * (1 - Math.exp(-step * (pointer.current === null ? 30 : 12)));
-        lottie?.goToAndStop(position, true);
-        // The name is centred and the mark sits at its left end: slide it to the centre as it folds.
-        container.style.translate = `${((position / end) * markShift).toFixed(2)}% 0`;
+        if (hovered.current) idleGoal = 0;
+        else if (progress === idleGoal && clock >= restUntil) idleGoal = 1 - idleGoal;
+        const goal = hovered.current ? 1 : idleGoal;
+        if (progress !== goal) {
+          const left = goal - progress;
+          const move = step / turnFor;
+          progress = Math.abs(left) <= move ? goal : progress + Math.sign(left) * move;
+          if (progress === goal) restUntil = clock + restFor;
+          const eased = progress * progress * (3 - 2 * progress);
+          lottie?.goToAndStop(eased * end, true);
+          // The name is centred and the mark sits at its left end: slide it to the centre as it folds.
+          container.style.translate = `${(eased * markShift).toFixed(2)}% 0`;
+        }
         frame = requestAnimationFrame(tick);
       };
       frame = requestAnimationFrame(tick);
@@ -131,21 +131,15 @@ export function Fold({
     };
   }, [player, animation]);
 
-  const aim = (event: PointerEvent) => {
-    const box = stage.current?.getBoundingClientRect();
-    if (!box || box.width === 0) return;
-    // The middle half of the stage covers the whole turn, so both ends are easy to reach.
-    const x = (event.clientX - box.left) / box.width;
-    pointer.current = Math.min(1, Math.max(0, (x - 0.25) * 2));
-  };
-
   return (
     <div
       ref={stage}
       {...stylex.props(styles.stage, fill && styles.fill)}
-      onPointerMove={aim}
+      onPointerEnter={() => {
+        hovered.current = true;
+      }}
       onPointerLeave={() => {
-        pointer.current = null;
+        hovered.current = false;
       }}
     >
       <div
@@ -172,7 +166,6 @@ const styles = stylex.create({
     containerType: "size",
     backgroundColor: colors.bg,
     borderRadius: { default: null, [small]: "15px" },
-    cursor: "ew-resize",
     // The banner's frame: the hairline of the homepage table's rows, drawn over the artwork.
     "::after": {
       content: '""',
@@ -191,9 +184,9 @@ const styles = stylex.create({
     margin: "auto",
     width: "78%",
     height: "40%",
-    opacity: 0,
+    visibility: "hidden",
     filter: colors.artworkFilter,
     pointerEvents: "none",
   },
-  ready: { opacity: 1 },
+  ready: { visibility: "visible" },
 });

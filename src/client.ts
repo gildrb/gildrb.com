@@ -7,12 +7,14 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { compareRows, origin, products, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
 import { loadPagesAhead } from "./ahead.ts";
+import { trackRows } from "./rows.ts";
 import { trackContents } from "./contents.ts";
 import { loopDescriptors } from "./descriptor.ts";
 import { autoplayVideos } from "./video.ts";
 import { routeWheel } from "./wheel.ts";
 import { enableZoom } from "./zoom.ts";
 
+trackRows();
 enableZoom();
 autoplayVideos();
 routeWheel();

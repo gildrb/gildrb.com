@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
-import { smear } from "../smear.ts";
 import { colors, media, rootMarker, rowMarker, space } from "../tokens.stylex.ts";
 import { Figures, ui } from "../ui.tsx";
 
@@ -23,7 +22,7 @@ function describe(key: SortKey, direction: SortDirection): string {
  * the subject is plain text. The archive
  * is the table's footer, whatever the order: "Archive" in the project column, the count in the subject column. Edge fades show while the list scrolls on phones.
  * One square marks the row under the pointer or in focus, in the column where other lists show →;
- * it smears from row to row as the Contents square does (`smear.ts`) and leaves with the pointer.
+ * it smears from row to row as the Contents square does and leaves with the pointer (`rows.ts`).
  */
 export function Portfolio({ more }: { more: number }) {
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
@@ -32,8 +31,6 @@ export function Portfolio({ more }: { more: number }) {
   });
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const section = useRef<HTMLElement>(null);
-  const list = useRef<HTMLDivElement>(null);
-  const marker = useRef<HTMLSpanElement>(null);
 
   // Browsers with scroll-driven animations tie the edge fades to the scroll position in CSS, so
   // they are right from the first frame; this fallback only serves the others.
@@ -52,52 +49,6 @@ export function Portfolio({ more }: { more: number }) {
     return () => {
       observer.disconnect();
       element.removeEventListener("scroll", update);
-    };
-  }, []);
-
-  useEffect(() => {
-    const box = list.current;
-    const square = marker.current;
-    if (!box || !square) return undefined;
-    const still = matchMedia("(prefers-reduced-motion: reduce)");
-    const motion = smear(square);
-    let shown = false;
-    const mark = (event: Event) => {
-      if (!(event.target instanceof Element)) return;
-      const cell = event.target.closest("a")?.querySelector("[data-row-mark]");
-      if (!cell) return;
-      const from = box.getBoundingClientRect();
-      const at = cell.getBoundingClientRect();
-      const target = {
-        x: at.left - from.left + (at.width - square.offsetWidth) / 2,
-        y: at.top - from.top + (at.height - square.offsetHeight) / 2,
-      };
-      if (shown && !still.matches) motion.move(target);
-      else motion.jump(target);
-      shown = true;
-      // Arrives at once; only leaving fades.
-      square.style.transitionDuration = "0s";
-      square.style.opacity = "1";
-    };
-    const hide = (event: Event) => {
-      if (
-        event instanceof FocusEvent &&
-        event.relatedTarget instanceof Node &&
-        box.contains(event.relatedTarget)
-      )
-        return;
-      square.style.transitionDuration = "";
-      square.style.opacity = "0";
-    };
-    box.addEventListener("pointerover", mark);
-    box.addEventListener("focusin", mark);
-    box.addEventListener("pointerleave", hide);
-    box.addEventListener("focusout", hide);
-    return () => {
-      box.removeEventListener("pointerover", mark);
-      box.removeEventListener("focusin", mark);
-      box.removeEventListener("pointerleave", hide);
-      box.removeEventListener("focusout", hide);
     };
   }, []);
 
@@ -166,8 +117,8 @@ export function Portfolio({ more }: { more: number }) {
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
           Projects
         </h2>
-        <div ref={list} {...stylex.props(styles.list)}>
-          <span {...stylex.props(styles.marker)} ref={marker} aria-hidden="true" />
+        <div data-rows {...stylex.props(styles.list)}>
+          <span {...stylex.props(styles.marker)} data-row-square aria-hidden="true" />
           {rows.map((project, index) => (
             <Row key={project.href} project={project} first={index === 0} home />
           ))}

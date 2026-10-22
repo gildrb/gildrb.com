@@ -292,7 +292,7 @@ export function Specimen({ fill, font }: { fill: boolean; font: string }) {
                   />
                 )
               ) : (
-                <text key={chosen} x={0} y={0} {...stylex.props(styles.glyph)}>
+                <text x={0} y={0} {...stylex.props(styles.glyph)}>
                   {shown}
                 </text>
               )}
@@ -350,11 +350,6 @@ const small = "@container (max-width: 560px)";
 const banner = "@media (min-width: 1280px)";
 const hover = "@media (hover: hover)";
 
-const arrive = stylex.keyframes({
-  from: { opacity: 0.35 },
-  to: { opacity: 1 },
-});
-
 // Each cell draws the hairline on its right and bottom; the frame draws the outer edge.
 const grid = `1px 0 0 ${colors.hairline}, 0 1px 0 ${colors.hairline}`;
 
@@ -409,9 +404,6 @@ const styles = stylex.create({
     fontFamily: '"CURVES"',
     fontSize: `${unitsPerEm}px`,
     fill: colors.primary,
-    animationName: arrive,
-    animationDuration: "0.2s",
-    animationTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
   },
   missing: { fill: "none", stroke: colors.primary, strokeWidth: 1.5 },
   lineLabel: {

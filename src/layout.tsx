@@ -126,13 +126,14 @@ export function Document({
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: fontGate }} />
         <script type="speculationrules" dangerouslySetInnerHTML={{ __html: speculationRules }} />
-        {/* Low priority keeps the island code out of the first paint. Preact's typings lack
+        {/* High priority: the page reacts to the pointer (the row square, the Contents square) as
+            soon as it shows. A module script never blocks the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
         <script
           data-cfasync="false"
           type="module"
           src={assets.script}
-          {...{ fetchpriority: "low" }}
+          {...{ fetchpriority: "high" }}
         />
       </head>
       <body
