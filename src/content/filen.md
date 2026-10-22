@@ -1,10 +1,10 @@
 # Filen
 
-A self-initiated identity for Filen, the cloud storage app that I use.
-
 ![](media:filen-wordmark)
 
 ## The brief
+
+A self-initiated identity for Filen, the cloud storage app that I use.
 
 I use Filen every day. The product works well, but its logo did not. Filen did not commission this work. My brief was a mark, a wordmark, an app icon, a pattern and campaign copy.
 

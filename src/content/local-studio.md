@@ -1,10 +1,10 @@
 # Local Studio
 
-Brand and website for Local Studio, private AI that runs on your Mac.
-
 ![](media:local-studio-tour)
 
 ## The brief
+
+Brand and website for Local Studio, private AI that runs on your Mac.
 
 Local Studio runs AI models on your Mac. It needed a brand and a website.
 

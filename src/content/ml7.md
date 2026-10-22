@@ -1,10 +1,10 @@
 # Mihai Lupascu
 
-A channel logo for the Overwatch player Mihai “mL7” Lupascu.
-
 ![](media:ml7-logo-system)
 
 ## A thank-you
+
+A channel logo for the Overwatch player Mihai “mL7” Lupascu.
 
 In 2018 I learned competitive Overwatch from better players, Mihai among them. I made him a logo as a thank-you. A compact geometric mL stays clear in small stream overlays, and an orange brush stroke through the 7 gives it direction.
 

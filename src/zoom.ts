@@ -14,7 +14,7 @@ const backdropOpacity = "0.96";
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 type Rect = { left: number; top: number; width: number; height: number };
-type Pose = { transform: string; borderRadius: string };
+type Pose = { transform: string; clipPath: string };
 
 type Zoomed = {
   button: HTMLButtonElement;
@@ -29,11 +29,11 @@ type Zoomed = {
 
 let zoomed: Zoomed | undefined;
 
-/** The largest box with the image's ratio that fits the page container and the viewport. */
+/** The largest box with the artwork's own ratio that fits the page container and the viewport. */
 function frameFor(image: HTMLImageElement): Rect | undefined {
   const container = image.closest("main")?.parentElement?.getBoundingClientRect();
-  if (!container || image.width === 0 || image.height === 0) return undefined;
-  const ratio = image.width / image.height;
+  if (!container || image.naturalWidth === 0 || image.naturalHeight === 0) return undefined;
+  const ratio = image.naturalWidth / image.naturalHeight;
   const width = Math.min(
     container.width,
     innerWidth - inset * 2,
@@ -47,19 +47,60 @@ function frameFor(image: HTMLImageElement): Rect | undefined {
   return { left, top: (innerHeight - height) / 2, width, height };
 }
 
-/** Maps the enlarged frame onto `rect`, keeping the image's visible corner radius. */
-function poseAt(rect: Rect, frame: Rect, radius: number): Pose {
-  const scale = rect.width / frame.width;
-  return {
-    transform: `translate(${rect.left - frame.left}px, ${rect.top - frame.top}px) scale(${scale})`,
-    borderRadius: `${radius / scale}px`,
+/** Where one `object-position` value puts the artwork: a share of the free space, or pixels. */
+function offset(value: string, free: number): number {
+  return value.endsWith("%") ? (free * Number.parseFloat(value)) / 100 : Number.parseFloat(value);
+}
+
+/**
+ * The whole artwork's box on the page and the part of it that shows. A banner crops its image
+ * (`object-fit: cover`); the enlargement starts from that crop and opens to the whole artwork.
+ */
+function artworkOf(image: HTMLImageElement): { artwork: Rect; shown: Rect } {
+  const shown = image.getBoundingClientRect();
+  const style = getComputedStyle(image);
+  const fit = style.objectFit;
+  if (fit !== "cover" && fit !== "contain") return { artwork: shown, shown };
+  const scales = [shown.width / image.naturalWidth, shown.height / image.naturalHeight];
+  const scale = fit === "cover" ? Math.max(...scales) : Math.min(...scales);
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  const [x = "50%", y = "50%"] = style.objectPosition.split(" ");
+  const artwork = {
+    left: shown.left + offset(x, shown.width - width),
+    top: shown.top + offset(y, shown.height - height),
+    width,
+    height,
   };
+  return { artwork, shown: fit === "cover" ? shown : artwork };
+}
+
+/**
+ * Maps the enlarged frame onto the image on the page: the whole artwork scaled onto its box
+ * there, clipped to the part that shows, with the image's visible corner radius.
+ */
+function poseAt(image: HTMLImageElement, frame: Rect, radius: number): Pose {
+  const { artwork, shown } = artworkOf(image);
+  const scale = artwork.width / frame.width;
+  const top = Math.max(0, shown.top - artwork.top) / scale;
+  const left = Math.max(0, shown.left - artwork.left) / scale;
+  const bottom = Math.max(0, artwork.top + artwork.height - shown.top - shown.height) / scale;
+  const right = Math.max(0, artwork.left + artwork.width - shown.left - shown.width) / scale;
+  return {
+    transform: `translate(${artwork.left - frame.left}px, ${artwork.top - frame.top}px) scale(${scale})`,
+    clipPath: `inset(${top}px ${right}px ${bottom}px ${left}px round ${radius / scale}px)`,
+  };
+}
+
+/** The enlarged pose: the whole artwork, unclipped. */
+function openPose(radius: number): Pose {
+  return { transform: "none", clipPath: `inset(0px 0px 0px 0px round ${radius}px)` };
 }
 
 /** Moves to the given pose on the site's spring; returns once nothing is moving. */
 function settle(state: Zoomed, pose: Pose, opacity: string) {
   const duration = reducedMotion.matches ? 0 : fadeDuration;
-  state.copy.style.transition = `transform ${duration}ms ${spring}, border-radius ${duration}ms ${spring}`;
+  state.copy.style.transition = `transform ${duration}ms ${spring}, clip-path ${duration}ms ${spring}`;
   state.backdrop.style.transition = `opacity ${duration}ms ${spring}`;
   Object.assign(state.copy.style, pose);
   state.backdrop.style.opacity = opacity;
@@ -71,13 +112,15 @@ function enlarge(button: HTMLButtonElement) {
   const image = button.querySelector("img");
   if (!image) return;
   const frame = frameFor(image);
-  const rect = image.getBoundingClientRect();
-  // Nothing to gain where the image already spans the container, as on phones.
-  if (!frame || frame.width < rect.width * 1.1) return;
+  if (!frame) return;
+  const { artwork, shown } = artworkOf(image);
+  const cropped = artwork.width > shown.width + 1 || artwork.height > shown.height + 1;
+  // Nothing to gain where the whole image already spans the container, as on phones.
+  if (!cropped && frame.width < artwork.width * 1.1) return;
 
   const style = getComputedStyle(image);
   const radius = Number.parseFloat(style.borderTopLeftRadius);
-  const start = poseAt(rect, frame, radius);
+  const start = poseAt(image, frame, radius);
   const backdrop = document.createElement("div");
   backdrop.style.cssText = `position:fixed;inset:0;z-index:1000;cursor:zoom-out;opacity:0;background:${
     getComputedStyle(document.body).backgroundColor
@@ -102,7 +145,7 @@ function enlarge(button: HTMLButtonElement) {
     `width:${frame.width}px`,
     `height:${frame.height}px`,
     `transform:${start.transform}`,
-    `border-radius:${start.borderRadius}`,
+    `clip-path:${start.clipPath}`,
     `filter:${style.filter}`,
   ].join(";");
   if (image.srcset) {
@@ -131,7 +174,7 @@ function enlarge(button: HTMLButtonElement) {
   });
   // Commit the starting pose, so the change below transitions from it.
   copy.getBoundingClientRect();
-  settle(state, { transform: "none", borderRadius: `${radius}px` }, backdropOpacity);
+  settle(state, openPose(radius), backdropOpacity);
 }
 
 function shrink() {
@@ -141,7 +184,7 @@ function shrink() {
   // Clicks now reach the page again: the image itself to reopen it, or any other to open that.
   state.copy.style.pointerEvents = "none";
   state.backdrop.style.pointerEvents = "none";
-  settle(state, poseAt(state.image.getBoundingClientRect(), state.frame, state.radius), "0");
+  settle(state, poseAt(state.image, state.frame, state.radius), "0");
 }
 
 /** Sends a returning image back out, from wherever it has got to. */
@@ -150,7 +193,7 @@ function reopen(state: Zoomed) {
   state.copy.style.pointerEvents = "";
   state.backdrop.style.pointerEvents = "";
   state.button.setAttribute("aria-expanded", "true");
-  settle(state, { transform: "none", borderRadius: `${state.radius}px` }, backdropOpacity);
+  settle(state, openPose(state.radius), backdropOpacity);
 }
 
 /** Puts the page's image back and drops the copy; safe to call twice. */

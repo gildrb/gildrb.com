@@ -17,6 +17,12 @@ type Block =
 
 const mediaLine = /^!\[(.*)\]\(media:([a-z0-9-]+)\)$/;
 
+/** The images a page opens with, before any text: wide screens show them as a banner. */
+export function bannerOf(blocks: Block[]): Extract<Block, { type: "media" }> | undefined {
+  const [first] = blocks;
+  return first?.type === "media" ? first : undefined;
+}
+
 /** Parses the case-study Markdown subset documented in README.md. */
 export function parse(markdown: string): { title: string; blocks: Block[] } {
   const [titleLine = "", ...lines] = markdown.replaceAll("\r\n", "\n").trim().split("\n");
@@ -91,7 +97,17 @@ function Inline({ text }: { text: string }) {
 
 const images = readdirSync("public/images/optimized");
 
-function Image({ id, grid, eager }: { id: string; grid: boolean; eager: boolean }) {
+function Image({
+  id,
+  sizes,
+  eager,
+  fill,
+}: {
+  id: string;
+  sizes: string;
+  eager: boolean;
+  fill: boolean;
+}) {
   const item = media[id];
   if (!item) throw new Error(`Unknown media id: ${id}`);
   const { src, srcset } = sources(id);
@@ -104,20 +120,25 @@ function Image({ id, grid, eager }: { id: string; grid: boolean; eager: boolean 
         styles.zoom,
         item.mark && styles.mark,
         item.mark === "center" && styles.centered,
+        fill && styles.fill,
       )}
       aria-label={`Enlarge: ${item.alt}`}
       aria-expanded="false"
       data-zoom
     >
       <img
-        {...stylex.props(styles.image, item.mark && styles.markImage)}
+        {...stylex.props(
+          styles.image,
+          item.mark && styles.markImage,
+          fill && (item.mark ? styles.contain : styles.cover),
+        )}
         alt={item.alt}
         width={item.width}
         height={item.height}
         decoding="async"
         {...(eager ? { fetchpriority: "high" } : { loading: "lazy" })}
         src={src}
-        {...(srcset && { srcset, sizes: grid ? gridSizes : singleSizes })}
+        {...(srcset && { srcset, sizes })}
         data-arrive=""
       />
     </button>
@@ -128,12 +149,12 @@ function Image({ id, grid, eager }: { id: string; grid: boolean; eager: boolean 
  * A recording: a still poster until `video.ts` plays it, silently and on a loop, while it is on
  * screen and motion is allowed. Not enlargeable; it already spans its column.
  */
-function Video({ id }: { id: string }) {
+function Video({ id, fill }: { id: string; fill: boolean }) {
   const item = media[id];
   if (!item) throw new Error(`Unknown media id: ${id}`);
   return (
     <video
-      {...stylex.props(styles.image)}
+      {...stylex.props(styles.image, fill && styles.cover)}
       width={item.width}
       height={item.height}
       poster={sources(id).src}
@@ -149,12 +170,23 @@ function Video({ id }: { id: string }) {
   );
 }
 
-// Wide screens: the case pages' first column (`Main`'s `reading`), 592px. Two images in a row
-// share it, less their 24px gap.
-export const singleSizes =
+// Wide screens: the case pages' reading column, 592px. Two images in a row share it, less their
+// 24px gap. A banner spans the table and the grid: the wrapper (at most 1900px, 32px padding)
+// less the sidebar and its gap.
+const singleSizes =
   "(min-width: 1280px) 592px, (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
 const gridSizes =
   "(min-width: 1280px) 284px, (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
+const bannerSizes =
+  "(min-width: 1280px) calc(min(100vw, 1900px) - 352px), (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
+const bannerGridSizes =
+  "(min-width: 1280px) calc((min(100vw, 1900px) - 376px) / 2), (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
+
+/** The `sizes` of an image in a banner or not, alone or one of a row of two. */
+export function sizesFor(banner: boolean, grid: boolean): string {
+  if (banner) return grid ? bannerGridSizes : bannerSizes;
+  return grid ? gridSizes : singleSizes;
+}
 
 /** The responsive variants of `gil-rodrigues-<id>-<width>.<ext>`, or the single vector file. */
 export function sources(id: string): { src: string; srcset?: string } {
@@ -173,18 +205,31 @@ export function sources(id: string): { src: string; srcset?: string } {
   return { src, srcset };
 }
 
-function Figures({ items, eager }: { items: { id: string; caption: string }[]; eager: boolean }) {
+function Figures({
+  items,
+  eager,
+  banner,
+}: {
+  items: { id: string; caption: string }[];
+  eager: boolean;
+  banner: boolean;
+}) {
   const grid = items.length > 1;
   return (
     <div {...stylex.props(styles.media, grid && styles.grid)}>
       {items.map(({ id, caption }, index) => (
-        <figure {...stylex.props(styles.figure)}>
+        <figure {...stylex.props(styles.figure, banner && styles.window)}>
           {id === "heph-demo" ? (
             <Island name="heph" component={Terminal} props={{}} />
           ) : media[id]?.video ? (
-            <Video id={id} />
+            <Video id={id} fill={banner} />
           ) : (
-            <Image id={id} grid={grid} eager={eager && index === 0} />
+            <Image
+              id={id}
+              sizes={sizesFor(banner, grid)}
+              eager={eager && index === 0}
+              fill={banner}
+            />
           )}
           {caption && (
             <figcaption {...stylex.props(styles.small, styles.caption)}>
@@ -352,37 +397,46 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
 
 /**
  * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
- * it), the opening sentence, then the parts. `elsewhere` (the Elsewhere line) follows the opening
- * sentence, then `tool` (Archetypon's converter). `eager` gives the first image high fetch
- * priority.
+ * it), then the blocks. The first paragraph is the opening, at full contrast, wherever it stands
+ * (n0thing opens with an image and a part). `elsewhere` (the Elsewhere line) follows it, then
+ * `tool` (Archetypon's converter). `eager` gives the first image high fetch priority. `reading`
+ * (`Main`'s reading layout): images keep the reading column, and the images a page opens with
+ * span the homepage's table and grid as a banner.
  */
 export function Article({
   markdown,
   eager,
   elsewhere = null,
   tool = null,
+  reading = false,
 }: {
   markdown: string;
   eager: boolean;
   elsewhere?: ComponentChildren;
   tool?: ComponentChildren;
+  reading?: boolean;
 }) {
   const { title, blocks } = parse(markdown);
   const found = anchors(blocks);
   const firstMedia = blocks.find((block) => block.type === "media");
+  const banner = reading ? bannerOf(blocks) : undefined;
+  const opening = blocks.findIndex((block) => block.type === "p");
   const nodes: ComponentChildren[] = [];
   let previous: Kind | null = null;
   let pendingTool = tool;
-  /** Everything but images and recordings keeps the text's width, centered in a wider article. */
+  /** Text keeps its measure; images may be wider, up to the whole article for a banner. */
   const place = (
     kind: Kind,
     render: (
-      layout: readonly [false | (typeof styles)[Spacing], false | typeof styles.measure],
+      layout: readonly [
+        false | (typeof styles)[Spacing],
+        false | typeof styles.measure | typeof styles.figureMeasure,
+      ],
     ) => ComponentChildren,
-    wide = false,
+    width: false | typeof styles.measure | typeof styles.figureMeasure = styles.measure,
   ) => {
     const spacing = gap(kind, previous);
-    nodes.push(render([spacing !== null && styles[spacing], !wide && styles.measure]));
+    nodes.push(render([spacing !== null && styles[spacing], width]));
     previous = kind;
   };
   const placeTool = () => {
@@ -393,7 +447,7 @@ export function Article({
   };
   for (const [index, block] of blocks.entries()) {
     const anchor = found.get(index);
-    if (index === 1 && elsewhere !== null)
+    if (index === opening + 1 && opening !== -1 && elsewhere !== null)
       place("text", (spacing) => <div {...stylex.props(spacing)}>{elsewhere}</div>);
     if (anchor?.top === true) placeTool();
     switch (block.type) {
@@ -418,7 +472,7 @@ export function Article({
       }
       case "p":
         place("text", (spacing) => (
-          <p {...stylex.props(ui.prose, styles.prose, index === 0 && styles.lede, spacing)}>
+          <p {...stylex.props(ui.prose, styles.prose, index === opening && styles.lede, spacing)}>
             <Inline text={block.text} />
           </p>
         ));
@@ -446,10 +500,14 @@ export function Article({
           "figure",
           (spacing) => (
             <div {...stylex.props(spacing)}>
-              <Figures items={block.items} eager={eager && block === firstMedia} />
+              <Figures
+                items={block.items}
+                eager={eager && block === firstMedia}
+                banner={block === banner}
+              />
             </div>
           ),
-          true,
+          block === banner ? false : reading && styles.figureMeasure,
         );
         break;
       case "code":
@@ -488,10 +546,12 @@ export const styles = stylex.create({
   /** A step inside a part: running-text size, set apart by weight. */
   subheading: { fontSize: "16px", fontWeight: 500 },
   prose: { color: colors.article, fontWeight: colors.proseWeight },
-  /** The opening sentence: what the work is, at full contrast. */
+  /** The opening paragraph: what the work is, at full contrast. */
   lede: { color: colors.primary },
   /** The text's width. */
   measure: { maxWidth: space.contentColumn },
+  /** An image's width in the case pages' reading column. */
+  figureMeasure: { maxWidth: space.figureColumn },
   partGap: { marginTop: "48px" },
   headingGap: { marginTop: "8px" },
   lineGap: { marginTop: "24px" },
@@ -532,6 +592,27 @@ export const styles = stylex.create({
     gap: "24px",
   },
   figure: { minWidth: 0 },
+  /**
+   * A banner's window on wide screens, where banners span the table and grid: 4:3, but never so
+   * tall that the first heading leaves the first screen. Every case page's text starts at the
+   * same height; the artwork is cut at the window's edge and keeps going past it.
+   */
+  window: {
+    aspectRatio: { default: null, "@media (min-width: 1280px)": "4 / 3" },
+    maxHeight: { default: null, "@media (min-width: 1280px)": "calc(100svh - 240px)" },
+    overflow: "hidden",
+  },
+  /** Fills the banner window on wide screens: artwork is cropped, a mark is shown whole. */
+  fill: { height: { default: null, "@media (min-width: 1280px)": "100%" } },
+  cover: {
+    height: { default: "auto", "@media (min-width: 1280px)": "100%" },
+    objectFit: "cover",
+    objectPosition: "50% 0",
+  },
+  contain: {
+    height: { default: "auto", "@media (min-width: 1280px)": "100%" },
+    objectFit: "contain",
+  },
   image: {
     display: "block",
     width: "100%",

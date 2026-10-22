@@ -1,10 +1,10 @@
 # Jordan Gilbert
 
-A pixel wordmark that Jordan “n0thing” Gilbert commissioned.
-
 ![](media:n0thing-wordmark-animation)
 
 ## The brief
+
+A pixel wordmark that Jordan “n0thing” Gilbert commissioned.
 
 In 2019, the former professional Counter-Strike player Jordan “n0thing” Gilbert asked for a serious logo and left the direction open.
 

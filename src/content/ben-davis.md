@@ -1,10 +1,10 @@
 # Ben Davis
 
-A db monogram for the developer Ben Davis, and the site that it lives on.
-
 ![](media:ben-davis-brandmark)
 
 ## The old mark
+
+A db monogram for the developer Ben Davis, and the site that it lives on.
 
 Ben Davis builds software and co-hosts the Nerd Snipe podcast. His old mark set a slab-sided d against a round b. The two letters did not share a weight or a curve.
 

@@ -1,12 +1,12 @@
 # Heph
 
-Heph answers questions from the files in a folder and checks every quote that it cites against the source.
-
 ![](media:heph-session)
 
 ![](media:heph-demo)
 
 ## Unchecked answers
+
+Heph answers questions from the files in a folder and checks every quote that it cites against the source.
 
 I studied with general AI assistants. Their mistakes looked plausible, and a mistake took longer to find than the answer saved. The first Heph, shown above, cited passages, but a ✓ only meant that Heph had retrieved the passage.
 

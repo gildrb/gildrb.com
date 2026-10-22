@@ -204,7 +204,7 @@ export function Main({
   /** Spans every column right of the sidebar, as the archive does. */
   wide?: boolean;
   /**
-   * Wide screens, with `wide`: one column, as wide as the images, which grow past the text.
+   * Wide screens, with `wide`: one column across the table and the grid, for a banner image.
    */
   reading?: boolean;
   children: ComponentChildren;
@@ -528,11 +528,11 @@ const styles = stylex.create({
   /**
    * Wide screens: the text starts where the homepage's table starts, so it does not move between
    * pages. The images share its left edge and end where the homepage's archive grid starts
-   * (`figureColumn`). The rest stays empty.
+   * (`figureColumn`, in `Article`); only a banner spans the whole column, table and grid.
    */
   reading: {
     display: { default: "flex", [media.mobile]: "contents", [media.wide]: "grid" },
-    gridTemplateColumns: { default: null, [media.wide]: space.figureColumn },
+    gridTemplateColumns: { default: null, [media.wide]: "minmax(0, 1fr)" },
     // The article, then the next projects at the bottom of the page.
     gridTemplateRows: { default: null, [media.wide]: "auto 1fr" },
   },

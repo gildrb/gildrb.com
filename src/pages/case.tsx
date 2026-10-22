@@ -4,7 +4,15 @@ import { Aside, ElsewhereLine } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import { media as artwork } from "../media.ts";
-import { Article, type Heading, outline, parse, singleSizes, sources } from "../markdown.tsx";
+import {
+  Article,
+  bannerOf,
+  type Heading,
+  outline,
+  parse,
+  sizesFor,
+  sources,
+} from "../markdown.tsx";
 import {
   type Assets,
   Document,
@@ -145,15 +153,18 @@ function Frame({
 
 /** Starts loading a page's first image with the HTML, since it is usually the largest paint. */
 function HeroPreload({ markdown }: { markdown: string }) {
-  const first = parse(markdown).blocks.find((block) => block.type === "media")?.items[0]?.id;
-  if (!first || first === "heph-demo") return null;
+  const { blocks } = parse(markdown);
+  const block = blocks.find((each) => each.type === "media");
+  const first = block?.items[0]?.id;
+  if (!block || !first || first === "heph-demo") return null;
   const { src, srcset } = sources(first);
+  const sizes = sizesFor(bannerOf(blocks) === block, block.items.length > 1);
   return (
     <link
       rel="preload"
       as="image"
       href={src}
-      {...(srcset && { imagesrcset: srcset, imagesizes: singleSizes })}
+      {...(srcset && { imagesrcset: srcset, imagesizes: sizes })}
       fetchPriority="high"
     />
   );
@@ -241,6 +252,7 @@ export function CasePage({
         <Article
           markdown={markdown}
           eager
+          reading
           elsewhere={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
         />
       </article>
@@ -385,7 +397,7 @@ export function DocPage({
       }
     >
       <article {...stylex.props(styles.article, styles.phoneItem)}>
-        <Article markdown={markdown} eager />
+        <Article markdown={markdown} eager reading={parts.length > 0} />
       </article>
     </Frame>
   );
@@ -450,6 +462,7 @@ export function ProductPage({
         <Article
           markdown={markdown}
           eager
+          reading
           elsewhere={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null

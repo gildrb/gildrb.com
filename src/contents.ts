@@ -50,9 +50,9 @@ function settled(edge: Edge, to: Point): boolean {
  * just right of the part's link text and only moves when the reader reaches another part: it
  * smears there, and the link turns to full contrast. A move that starts during another one
  * carries on from where the square is and how fast it goes, so it never jumps. Positions are
- * measured from the links'
- * text, so the square stays beside its words at any font size. A click scrolls to its part without
- * adding a history entry, so Back leaves the page.
+ * measured from the links' text, so the square stays beside its words at any font size. A click
+ * scrolls to its part without adding a history entry, so Back leaves the page, and marks that part
+ * until the reader scrolls on their own: a short part's heading can land past the reading line.
  */
 export function trackContents(): void {
   const nav = document.querySelector<HTMLElement>("[data-contents]");
@@ -65,6 +65,8 @@ export function trackContents(): void {
   if (parts.length === 0) return;
   const still = matchMedia("(prefers-reduced-motion: reduce)");
   let current = -1;
+  /** The part last clicked, held until the reader scrolls, presses a key or touches the page. */
+  let chosen: number | null = null;
   let queued = false;
   const top: Edge = { x: 0, y: 0, vx: 0, vy: 0 };
   const bottom: Edge = { x: 0, y: 0, vx: 0, vy: 0 };
@@ -125,12 +127,21 @@ export function trackContents(): void {
       y: link.offsetTop + padding + (line - marker.offsetHeight) / 2,
     };
   };
-  for (const { link, heading } of parts)
+  for (const [at, { link, heading }] of parts.entries())
     link.addEventListener("click", (event) => {
       event.preventDefault();
+      chosen = at;
       heading.scrollIntoView({ behavior: still.matches ? "instant" : "smooth" });
       history.replaceState(history.state, "", link.hash);
+      update();
     });
+  const release = () => {
+    if (chosen === null) return;
+    chosen = null;
+    schedule();
+  };
+  for (const input of ["wheel", "touchstart", "keydown", "pointerdown"])
+    addEventListener(input, release, { passive: true });
 
   const update = () => {
     queued = false;
@@ -144,9 +155,10 @@ export function trackContents(): void {
     const rise = span > 0 ? Math.min(1, scrollY / span) : 1;
     const fall = span > 0 ? Math.min(1, Math.max(0, (scrollY - (end - span)) / span)) : 1;
     const line = (innerHeight / 4) * rise + ((innerHeight * 3) / 4) * fall;
-    let index = 0;
-    for (const [at, { heading }] of parts.entries())
-      if (heading.getBoundingClientRect().top <= line) index = at;
+    let index = chosen ?? 0;
+    if (chosen === null)
+      for (const [at, { heading }] of parts.entries())
+        if (heading.getBoundingClientRect().top <= line) index = at;
     const part = parts[index];
     if (!part || index === current) return;
     const first = current === -1;
