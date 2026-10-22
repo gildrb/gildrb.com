@@ -43,6 +43,12 @@ export const media: Readonly<Record<string, Media>> = {
     height: 1036,
     video: true,
   },
+  /** The Heph demo's wallpaper: Velázquez, "Apollo in the Forge of Vulcan", 1630, Museo del Prado (public domain). */
+  "heph-forge": {
+    alt: "Velázquez's painting Apollo in the Forge of Vulcan: Apollo, haloed, speaks to Vulcan and his smiths at the anvil",
+    width: 2952,
+    height: 2214,
+  },
   "heph-session": {
     alt: "Screen recording of Heph in the terminal answering questions about a folder of lecture notes, citing the files behind each answer",
     width: 1080,

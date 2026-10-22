@@ -220,7 +220,14 @@ function Figures({
       {items.map(({ id, caption }, index) => (
         <figure {...stylex.props(styles.figure, banner && styles.window)}>
           {id === "heph-demo" ? (
-            <Island name="heph" component={Terminal} props={{}} />
+            <Island
+              name="heph"
+              component={Terminal}
+              props={{
+                fill: banner,
+                wallpaper: { ...sources("heph-forge"), sizes: sizesFor(banner, grid) },
+              }}
+            />
           ) : media[id]?.video ? (
             <Video id={id} fill={banner} />
           ) : (
