@@ -90,6 +90,9 @@ function answerLength(run: Run): number {
   return run.answer.reduce((sum, block) => sum + blockLength(block), 0);
 }
 
+/** A raster image's `src` and `srcset`, from `sources()` in `markdown.tsx`, with its `sizes`. */
+export type Wallpaper = { src: string; srcset?: string; sizes: string };
+
 /** The window's place and size on the desktop, in pixels. */
 type Rect = { x: number; y: number; w: number; h: number };
 type Sides = { left: boolean; right: boolean; top: boolean; bottom: boolean };
@@ -156,12 +159,12 @@ const handles = [
 
 /**
  * Heph's command line, replaying answers that Heph gave from its own guide, in a window of
- * glass on a black 4:3 desktop. The window moves by its title
+ * glass on a 4:3 desktop showing Velázquez's forge of Vulcan. The window moves by its title
  * bar and resizes by its edges and corners, and stops just short of the desktop's edges. The
  * green light or a double click on the title bar zooms it to fill the desktop. With `fill`, the
  * desktop fills the banner window of the case page; otherwise it keeps 4:3.
  */
-export function Terminal({ fill }: { fill: boolean }) {
+export function Terminal({ fill, wallpaper }: { fill: boolean; wallpaper: Wallpaper }) {
   const desktop = useRef<HTMLDivElement>(null);
   const paneRef = useRef<HTMLDivElement>(null);
   // Where the reader moved or sized the window to; `null` keeps it centred at its own size.
@@ -266,6 +269,14 @@ export function Terminal({ fill }: { fill: boolean }) {
 
   return (
     <div ref={desktop} {...stylex.props(styles.desktop, fill && styles.fill)}>
+      <img
+        {...stylex.props(styles.wallpaper)}
+        src={wallpaper.src}
+        srcset={wallpaper.srcset}
+        sizes={wallpaper.sizes}
+        alt=""
+        decoding="async"
+      />
       <div
         ref={paneRef}
         {...stylex.props(styles.pane, frame !== null && styles.placed)}
@@ -1016,6 +1027,15 @@ const styles = stylex.create({
     },
   },
   fill: { height: { default: null, [banner]: "100%" } },
+  wallpaper: {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    userSelect: "none",
+    pointerEvents: "none",
+  },
   // The window: centred by its margins until dragged, then where the reader left it. No
   // transform: a half-pixel translate over a backdrop filter blurs the text.
   pane: {
@@ -1028,7 +1048,7 @@ const styles = stylex.create({
   },
   placed: { inset: "auto", margin: 0 },
   /*
-   * Liquid glass: the desktop comes through, blurred and a little more saturated, under a
+   * Liquid glass: the wallpaper comes through, blurred and a little more saturated, under a
    * tint of the terminal colour. The rim is light caught on the edge of the glass, brightest at
    * the top, and a glare fades down from the top edge. The shadow is deep and soft.
    */

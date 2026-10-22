@@ -229,7 +229,14 @@ function Figures({
           )}
         >
           {id === "heph-demo" ? (
-            <Island name="heph" component={Terminal} props={{ fill: banner }} />
+            <Island
+              name="heph"
+              component={Terminal}
+              props={{
+                fill: banner,
+                wallpaper: { ...sources("heph-forge"), sizes: sizesFor(banner, grid) },
+              }}
+            />
           ) : id === "curves-demo" ? (
             <Island
               name="curves"
