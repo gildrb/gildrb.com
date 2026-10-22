@@ -7,6 +7,7 @@ import { media as artwork } from "../media.ts";
 import {
   Article,
   bannerOf,
+  demos,
   type Heading,
   outline,
   parse,
@@ -43,7 +44,7 @@ const monoBlocks = (markdown: string) =>
   parse(markdown).blocks.some(
     (block) =>
       block.type === "code" ||
-      (block.type === "media" && block.items.some(({ id }) => id === "heph-demo")),
+      (block.type === "media" && block.items.some(({ id }) => demos.has(id))),
   );
 
 /**
@@ -156,7 +157,7 @@ function HeroPreload({ markdown }: { markdown: string }) {
   const { blocks } = parse(markdown);
   const block = blocks.find((each) => each.type === "media");
   const first = block?.items[0]?.id;
-  if (!block || !first || first === "heph-demo") return null;
+  if (!block || !first || demos.has(first)) return null;
   const { src, srcset } = sources(first);
   const sizes = sizesFor(bannerOf(blocks) === block, block.items.length > 1);
   return (
@@ -346,7 +347,7 @@ const styles = stylex.create({
   },
   nextList: {
     display: "grid",
-    gridTemplateColumns: space.tableColumns,
+    gridTemplateColumns: space.projectColumns,
     columnGap: { default: space.tableGap, "@media (max-width: 768px)": space.mobileTableGap },
   },
 });

@@ -19,9 +19,9 @@ import { versioned } from "./versioned.ts";
 
 const url = (path: string) => `${origin}${path}`;
 
-const work = projects.map(({ href, title, scope, date, description }) => {
+const work = projects.map(({ href, title, descriptor, date, description }) => {
   const link = href.startsWith("https://") ? href : url(href);
-  return `- [${title}](${link}) (${scope}, ${date.slice(0, 7)}): ${description}`;
+  return `- [${title}](${link}) (${descriptor}, ${date.slice(0, 7)}): ${description}`;
 });
 
 const sameAs = profiles.map(({ href }) => href);
@@ -234,7 +234,7 @@ ${cases
       <link>${url(`/${item.slug}`)}</link>
       <guid isPermaLink="true">${url(`/${item.slug}`)}</guid>
       <pubDate>${new Date(`${item.date}T00:00:00Z`).toUTCString()}</pubDate>
-      <category>${escape(item.scope)}</category>
+      <category>${escape(item.descriptor)}</category>
       <description>${escape(item.description)}</description>
     </item>`,
   )

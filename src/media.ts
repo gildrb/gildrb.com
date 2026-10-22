@@ -14,6 +14,8 @@ export type Media = {
    * same id are its poster frame. It plays only while on screen (see `video.ts`).
    */
   video?: true;
+  /** Artwork on black that runs to its edges: as a banner it gets the table's hairline frame. */
+  frame?: true;
   /**
    * Shown in the archive (`archive.tsx`): finished or working artwork of Gil's own, not
    * feedback threads, app screenshots or other people's work. Labelled with its case study:
@@ -42,12 +44,6 @@ export const media: Readonly<Record<string, Media>> = {
     width: 1080,
     height: 1036,
     video: true,
-  },
-  /** The Heph demo's wallpaper: Velázquez, "Apollo in the Forge of Vulcan", 1630, Museo del Prado (public domain). */
-  "heph-forge": {
-    alt: "Velázquez's painting Apollo in the Forge of Vulcan: Apollo, haloed, speaks to Vulcan and his smiths at the anvil",
-    width: 2952,
-    height: 2214,
   },
   "heph-session": {
     alt: "Screen recording of Heph in the terminal answering questions about a folder of lecture notes, citing the files behind each answer",
@@ -279,6 +275,7 @@ export const media: Readonly<Record<string, Media>> = {
   },
   "n0thing-wordmark-animation": {
     alt: "Animated medium-gray n0thing pixel wordmark on black with a blinking underscore",
+    frame: true,
     archive: true,
     home: true,
     width: 1280,

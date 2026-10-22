@@ -5,7 +5,6 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
-import { arriveCss, arriveScript } from "./arrive.ts";
 import { contacts, type Link, origin, person, type Project, profiles, projects } from "./site.ts";
 import { themeColor, themeCss, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
@@ -46,7 +45,6 @@ const globalCss = [
   // another click during it cannot cancel it and shows a flash. The browser swaps pages at once,
   // and the sidebar, the same on every page, stays as it is.
   "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
-  arriveCss,
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
@@ -127,7 +125,6 @@ export function Document({
         <style dangerouslySetInnerHTML={{ __html: `${globalCss}\n${assets.css}` }} />
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: fontGate }} />
-        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: arriveScript }} />
         <script type="speculationrules" dangerouslySetInnerHTML={{ __html: speculationRules }} />
         {/* Low priority keeps the island code out of the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
@@ -144,7 +141,7 @@ export function Document({
           home ? [styles.homeBody, styles.fixedViewport] : styles.caseBody,
         )}
         id="top"
-        data-intro={person.summary}
+        data-intro={person.about}
       >
         <div
           {...stylex.props(ui.srOnly)}
@@ -227,7 +224,7 @@ export function Main({
 }
 
 /**
- * Site name, or on inner pages a breadcrumb back to it. The name links to gildrb.com by its full
+ * Site name, or on inner pages a breadcrumb back to it: the name in grey on top, the page below it in full contrast. The name links to gildrb.com by its full
  * URL: product pages live on their own hosts, where `/` is the product page itself. A page with no
  * heading of its own (the archive) makes the breadcrumb its `<h1>`.
  */
@@ -242,9 +239,6 @@ export function Name({ current, heading = false }: { current?: string; heading?:
       >
         Gil Rodrigues
       </a>
-      <span {...stylex.props(styles.arrow)} aria-hidden="true">
-        →
-      </span>
       <a {...stylex.props(ui.target, ui.focusRing, styles.current)} href="#top">
         {current}
       </a>
@@ -281,9 +275,9 @@ export function PageLinks({
 
 /**
  * Profile and contact links. On phones they share the columns of the page's project table:
- * two hidden ruler cells, one month (every row's is as wide: tabular digits) and every title in
- * `table` drawn from an attribute, so the contact column starts exactly where that table's scope
- * column does. A case study passes its own list, which leaves out itself and the external
+ * two hidden ruler cells, every title in `table` drawn from an attribute and one month (every
+ * row's is as wide: tabular digits), so the contact column starts exactly where that table's
+ * subject column does. A case study passes its own list, which leaves out itself and the external
  * projects; pages without a table use the homepage's.
  */
 export function Links({
@@ -298,7 +292,7 @@ export function Links({
   const link = (item: Link, placement: Style, me: boolean, row?: number) => {
     return (
       <a
-        {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, placement)}
+        {...stylex.props(ui.quiet, ui.focusRing, styles.link, placement)}
         // Phones place each profile link on its own grid row; flex ignores it on desktop.
         style={row === undefined ? undefined : { gridRow: String(row) }}
         href={item.href}
@@ -352,20 +346,27 @@ export function Links({
 }
 
 /**
- * humans.txt and llms.txt, and Source in the column where the project table's Scope starts: the
- * footer is desktop-only, where the table's columns are fixed (see `space.tableColumns`).
+ * src, humans.txt and llms.txt, one above the other in the project table's first column: the
+ * footer is desktop-only, where the table's columns are fixed (see `space.projectColumns`).
  */
 export function Metadata({ style }: { style?: Style }) {
   return (
     <footer {...stylex.props(style)}>
       <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Metadata">
+        <a
+          {...stylex.props(ui.quiet, ui.focusRing, styles.link, styles.file)}
+          href="https://github.com/gildrb/gildrb.com"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          src
+        </a>
         {[
           { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
           { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
-        ].map(({ href, label, rel, type }, index) => (
+        ].map(({ href, label, rel, type }) => (
           <a
             {...stylex.props(ui.quiet, ui.focusRing, styles.link, styles.file)}
-            style={{ gridRow: String(index + 1) }}
             href={href}
             rel={rel}
             type={type}
@@ -373,14 +374,6 @@ export function Metadata({ style }: { style?: Style }) {
             {label}
           </a>
         ))}
-        <a
-          {...stylex.props(ui.quiet, ui.focusRing, ui.outbound, styles.link, styles.source)}
-          href="https://github.com/gildrb/gildrb.com"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          Source
-        </a>
       </nav>
     </footer>
   );
@@ -589,8 +582,8 @@ const styles = stylex.create({
   },
   caseName: {
     display: "flex",
-    flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
-    columnGap: "8px",
+    flexDirection: "column",
+    alignItems: "start",
     whiteSpace: "nowrap",
     minHeight: {
       default: null,
@@ -599,7 +592,6 @@ const styles = stylex.create({
     },
   },
   home: {
-    flexBasis: { default: "100%", [media.mobile]: "auto" },
     color: {
       default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
@@ -607,7 +599,6 @@ const styles = stylex.create({
     },
     textDecoration: "none",
   },
-  arrow: { color: colors.tertiary },
   current: { color: colors.primary, textDecoration: "none" },
   desktopOnly: { display: { default: "contents", [media.mobile]: "none" } },
   phoneOnly: { display: { default: "none", [media.mobile]: "contents" } },
@@ -615,7 +606,7 @@ const styles = stylex.create({
     display: { default: "flex", [media.mobile]: "grid" },
     flexDirection: "column",
     rowGap: space.linkGap,
-    gridTemplateColumns: { default: null, [media.mobile]: space.tableColumns },
+    gridTemplateColumns: { default: null, [media.mobile]: space.projectColumns },
     columnGap: { default: null, [media.mobile]: space.mobileTableGap },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
   },
@@ -632,7 +623,7 @@ const styles = stylex.create({
   profileLabel: {
     marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch },
     gridRow: { default: null, [media.mobile]: 1 },
-    gridColumn: { default: null, [media.mobile]: "1 / 3" },
+    gridColumn: { default: null, [media.mobile]: 1 },
   },
   /**
    * A table cell's width without its height: the date and title columns size to every project,
@@ -647,24 +638,23 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     paddingInlineEnd: space.mobileCellEndSpace,
   },
-  rulerDate: { gridColumn: 1 },
+  rulerDate: { gridColumn: 3 },
   /** One title per line, as generated content: the widest sets the column, none is page text. */
   rulerTitle: {
-    gridColumn: 2,
+    gridColumn: 1,
     "::before": { content: "attr(data-titles)", whiteSpace: "pre" },
   },
-  /** The project table's columns, so Source lines up with its Scope. */
+  /** The project table's columns, so the links line up with its Project column. */
   metadata: {
     display: "grid",
-    gridTemplateColumns: space.tableColumns,
+    gridTemplateColumns: space.projectColumns,
     columnGap: space.tableGap,
     rowGap: space.linkGap,
     alignItems: "baseline",
     // Centers the last line on the theme toggle beside it.
     paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
   },
-  file: { gridColumn: "1 / 3", justifySelf: "start" },
-  source: { gridColumn: 3, gridRow: 2, justifySelf: "start" },
+  file: { gridColumn: 1, justifySelf: "start" },
   /** Compact (a dense homepage too short for the whole sidebar, see `align.ts`): contact stays. */
   profileGroup: {
     display: {
@@ -677,13 +667,13 @@ const styles = stylex.create({
     marginBlock: `calc(${space.linkGap} / -2)`,
   },
   profile: {
-    gridColumn: { default: null, [media.mobile]: "1 / 3" },
+    gridColumn: { default: null, [media.mobile]: 1 },
     justifySelf: "start",
     width: { default: "fit-content", [media.mobile]: "max-content" },
   },
   contact: {
-    // Phones: Contact takes the third column, beside Links.
-    gridColumn: { default: null, [media.mobile]: "3 / -1" },
+    // Phones: Contact takes the subject column, beside Links.
+    gridColumn: { default: null, [media.mobile]: "2 / -1" },
     justifySelf: "start",
   },
   contactLabel: {

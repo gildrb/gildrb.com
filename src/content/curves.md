@@ -1,6 +1,6 @@
 # CURVES
 
-![](media:curves-letterforms)
+![](media:curves-demo)
 
 ## The question
 
@@ -9,6 +9,8 @@ A free display typeface with 96 unicase glyphs, built from geometric forms.
 In 2019 I drew logos from geometric shapes. I wanted to make a full character set with one construction rule.
 
 ![](media:curves-wordmark)
+
+![](media:curves-letterforms)
 
 ## Every glyph
 

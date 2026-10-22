@@ -2,7 +2,7 @@
  * A page's images are fetched before the reader opens it, so it opens with them in place instead
  * of showing them appear. When a pointer rests on a link to another page of this site, a finger
  * touches it, or the keyboard focuses it, the page is fetched and the images of its first screen
- * are loaded into the cache; `arrive.ts` then shows them at once. Chrome also prerenders the page
+ * are loaded into the cache. Chrome also prerenders the page
  * itself (the speculation rules in `layout.tsx`); this covers every other browser and the images
  * a prerender leaves for later.
  */
@@ -30,7 +30,7 @@ async function loadAhead(url: URL): Promise<void> {
   const response = await fetch(url, { headers: { Accept: "text/html" } });
   if (!response.ok) return;
   const page = new DOMParser().parseFromString(await response.text(), "text/html");
-  const media = [...page.querySelectorAll("main [data-arrive]")].slice(0, firstScreen);
+  const media = [...page.querySelectorAll("main img, main video")].slice(0, firstScreen);
   for (const element of media) {
     // Same srcset and sizes in the same window: the browser picks the file the page will use.
     const image = new Image();
@@ -52,7 +52,7 @@ async function loadAhead(url: URL): Promise<void> {
  * at once, lowest priority, so scrolling finds them in place.
  */
 function loadRestAhead(): void {
-  for (const image of document.querySelectorAll<HTMLImageElement>("img[data-arrive]")) {
+  for (const image of document.querySelectorAll<HTMLImageElement>("img")) {
     if (image.loading !== "lazy") continue;
     image.fetchPriority = "low";
     image.loading = "eager";

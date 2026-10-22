@@ -92,9 +92,13 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
             <h2 {...stylex.props(ui.text, styles.heading)} id="profile-summary-title">
               About
             </h2>
-            <p {...stylex.props(ui.text)}>{person.summary}</p>
+            <p {...stylex.props(ui.text)}>{person.about}</p>
           </section>
-          <Island name="portfolio" component={Portfolio} props={{}} />
+          <Island
+            name="portfolio"
+            component={Portfolio}
+            props={{ more: work.filter(({ from }) => from.$ === "Archive").length }}
+          />
           <Metadata style={styles.footer} />
         </Main>
         <SideArchive work={work.filter(({ id }) => artwork[id]?.home === true)} home />

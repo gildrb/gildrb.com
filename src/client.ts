@@ -8,7 +8,7 @@ import { compareRows, origin, products, type SortDirection, type SortKey } from 
 import { space } from "./tokens.stylex.ts";
 import { loadPagesAhead } from "./ahead.ts";
 import { trackContents } from "./contents.ts";
-import { loopScopes } from "./scope.ts";
+import { loopDescriptors } from "./descriptor.ts";
 import { autoplayVideos } from "./video.ts";
 import { routeWheel } from "./wheel.ts";
 import { enableZoom } from "./zoom.ts";
@@ -17,7 +17,7 @@ enableZoom();
 autoplayVideos();
 routeWheel();
 trackContents();
-loopScopes();
+loopDescriptors();
 loadPagesAhead();
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
@@ -30,6 +30,10 @@ const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands
   archetypon: () => import("./islands/archetypon.tsx").then((module) => module.Converter),
   // Only product pages show copyable commands.
   command: () => import("./islands/command.tsx").then((module) => module.Command),
+  // Only the CURVES case study shows the glyph wall.
+  curves: () => import("./islands/curves.tsx").then((module) => module.Specimen),
+  // Only the Ben Davis case study plays the mark.
+  "ben-davis": () => import("./islands/ben-davis.tsx").then((module) => module.Fold),
 };
 
 function isIslandName(value: string | undefined): value is keyof Islands {
@@ -59,6 +63,10 @@ async function hydrateNamed(name: keyof Islands, element: HTMLElement): Promise<
       return mount(await islands.archetypon(), element);
     case "command":
       return mount(await islands.command(), element);
+    case "curves":
+      return mount(await islands.curves(), element);
+    case "ben-davis":
+      return mount(await islands["ben-davis"](), element);
     default: {
       const _: never = name;
       return _;
@@ -244,12 +252,11 @@ function sortRow(element: HTMLElement) {
   return {
     date: element.dataset.date ?? "",
     title: element.dataset.title ?? "",
-    scope: element.dataset.scope ?? "",
   };
 }
 
 function isSortKey(value: string | null): value is SortKey {
-  return value === "date" || value === "title" || value === "scope";
+  return value === "date" || value === "title";
 }
 
 function isSortDirection(value: string | null): value is SortDirection {

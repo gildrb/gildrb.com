@@ -14,6 +14,8 @@ export const person = {
   alternateNames: ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
   role: "Designer",
   summary: "Designer based in Germany.",
+  /** The homepage About text. `summary` stays the description in metadata, feeds and llms.txt. */
+  about: "Based in Germany.",
 } as const;
 
 export type Link = { label: string; href: string };
@@ -34,13 +36,11 @@ export const contacts: readonly Link[] = [
   { label: "X", href: "https://x.com/gildrb_" },
 ];
 
-/** Controlled scope vocabulary; a project takes one term or two. */
-export type Scope = "Brand" | "Logo" | "Type" | "Product" | "Engineering" | "Tool";
-
 type Row = {
   date: string;
   title: string;
-  scope: Scope | `${Scope}, ${Scope}`;
+  /** What the client or product is, in at most four words: the table's Subject column. */
+  descriptor: string;
   /** One sentence; homepage and "View next" rows carry it as the link's description. */
   description: string;
   /** Where the work lives or was posted: the page's Links list. */
@@ -67,7 +67,7 @@ export const cases: readonly Case[] = [
     title: "Local Studio",
     name: "Local Studio",
     headline: "Local Studio: brand and website for private AI on your Mac",
-    scope: "Brand, Engineering",
+    descriptor: "On-device AI for Mac",
     links: [{ label: "Site", href: "https://localstudio.gildrb.com/" }],
     description:
       "The brand and website Gil Rodrigues designed and built for Local Studio, private AI that runs on your Mac.",
@@ -80,7 +80,7 @@ export const cases: readonly Case[] = [
     title: "T3",
     name: "T3",
     headline: "T3: a self-initiated logomark exploration by Gil Rodrigues",
-    scope: "Logo",
+    descriptor: "Coding agent client",
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2080990301208952994" }],
     description:
       "A self-initiated T3 logomark exploration built across products, icons, and a family of rejected directions.",
@@ -94,7 +94,7 @@ export const cases: readonly Case[] = [
     title: "Ben Davis",
     name: "Ben Davis",
     headline: "Ben Davis: a db monogram and the davis7.sh website",
-    scope: "Engineering, Logo",
+    descriptor: "Developer and YouTuber",
     links: [
       { label: "Site", href: "https://davis7.gildrb.com/" },
       { label: "Ben Davis", href: "https://x.com/davis7" },
@@ -112,7 +112,7 @@ export const cases: readonly Case[] = [
     title: "Heph",
     name: "Heph",
     headline: "Heph: answers from your files, with every quote checked",
-    scope: "Engineering, Product",
+    descriptor: "Local document agent",
     links: [{ label: "Source", href: "https://github.com/gildrb/heph-agent" }],
     description:
       "Heph answers questions from the files in a folder and checks every quote that it cites against the source.",
@@ -125,7 +125,7 @@ export const cases: readonly Case[] = [
     title: "Filen",
     name: "Filen",
     headline: "Filen: a self-initiated identity concept by Gil Rodrigues",
-    scope: "Brand",
+    descriptor: "Encrypted cloud storage",
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2021242178727452998" }],
     description:
       "How Gil Rodrigues developed a self-initiated identity concept for Filen, from rejected marks to an app icon and campaign system.",
@@ -139,7 +139,7 @@ export const cases: readonly Case[] = [
     title: "Jordan Gilbert",
     name: "Jordan Gilbert",
     headline: "Jordan Gilbert: a pixel wordmark for n0thing",
-    scope: "Logo",
+    descriptor: "Counter-Strike player",
     links: [{ label: "n0thing", href: "https://www.n0thing.gg/" }],
     description:
       "How Gil Rodrigues developed Jordan “n0thing” Gilbert's commissioned pixel wordmark through a rejected typewriter study, final exports, and motion.",
@@ -153,7 +153,7 @@ export const cases: readonly Case[] = [
     title: "CURVES",
     name: "CURVES",
     headline: "CURVES: a free geometric display typeface by Gil Rodrigues",
-    scope: "Type",
+    descriptor: "Geometric display typeface",
     links: [
       { label: "DaFont", href: "https://www.dafont.com/curves.font" },
       { label: "Behance", href: "https://www.behance.net/gallery/75409663/CURVES-Free-Font" },
@@ -170,7 +170,7 @@ export const cases: readonly Case[] = [
     title: "Mihai Lupascu",
     name: "Mihai Lupascu",
     headline: "Mihai Lupascu: a compact channel logo by Gil Rodrigues",
-    scope: "Logo",
+    descriptor: "Overwatch streamer",
     links: [{ label: "Twitch", href: "https://www.twitch.tv/ml7support" }],
     description: "How Gil Rodrigues designed the compact mL7 channel logo in 2018.",
     ogDescription:
@@ -188,7 +188,7 @@ export function caseWork(item: Case) {
     "@type": "CreativeWork",
     name: item.title,
     dateCreated: item.date,
-    genre: item.scope,
+    genre: item.descriptor,
     creator: { "@id": `${origin}/#person` },
   } as const;
 }
@@ -222,7 +222,7 @@ export const products: readonly Product[] = [
     date: "2026-10-05",
     title: "Eukhe",
     name: "Eukhe",
-    scope: "Engineering, Tool",
+    descriptor: "Coding agent",
     links: [{ label: "Source", href: "https://github.com/gildrb/eukhe" }],
     home: "https://eukhe.com",
     aliases: ["eukhe.gildrb.com", "www.eukhe.com"],
@@ -243,7 +243,7 @@ export const products: readonly Product[] = [
     date: "2026-09-26",
     title: "Archetypon",
     name: "Archetypon",
-    scope: "Tool",
+    descriptor: "SVG asset converter",
     links: [{ label: "Source", href: "https://github.com/gildrb/archetypon" }],
     home: "https://archetypon.gildrb.com",
     aliases: [],
@@ -261,7 +261,7 @@ export const products: readonly Product[] = [
     date: "2026-09-02",
     title: "Poros",
     name: "Poros",
-    scope: "Engineering, Tool",
+    descriptor: "Remote dev servers",
     links: [{ label: "Source", href: "https://github.com/gildrb/poros" }],
     home: "https://poros.gildrb.com",
     aliases: [],
@@ -283,8 +283,8 @@ export const products: readonly Product[] = [
 const externals: readonly External[] = [];
 
 /**
- * `external`: the row leaves Gil's own pages (↗). Products live on their own hosts but are his
- * pages too, so they read as subpages (→).
+ * `external`: the row leaves Gil's own pages (underlined title, no arrow). Products live on
+ * their own hosts but are his pages too, so they read as subpages (→).
  */
 export type Project = Row & { href: string; external: boolean };
 
@@ -327,18 +327,17 @@ export const pages = [
   { ...developers, kind: "WebPage" },
 ] as const;
 
-export type SortKey = "date" | "title" | "scope";
+export type SortKey = "date" | "title";
 export type SortDirection = "ascending" | "descending";
 
 const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 
-/** Dates sort chronologically; text sorts A–Z when "descending", matching the header arrow. */
+/** Dates sort chronologically, newest first when "descending"; text sorts A–Z when "descending". */
 export function compareRows(key: SortKey, direction: SortDirection) {
   const factor = (key === "date") === (direction === "descending") ? -1 : 1;
   return (left: Record<SortKey, string>, right: Record<SortKey, string>): number =>
     factor *
     (key === "date"
       ? left.date.localeCompare(right.date)
-      : collator.compare(left[key], right[key]) ||
-        (key === "scope" ? collator.compare(left.title, right.title) : 0));
+      : collator.compare(left[key], right[key]));
 }

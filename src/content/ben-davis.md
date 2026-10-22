@@ -1,6 +1,6 @@
 # Ben Davis
 
-![](media:ben-davis-brandmark)
+![](media:ben-davis-demo)
 
 ## The old mark
 
@@ -15,6 +15,8 @@ Ben Davis builds software and co-hosts the Nerd Snipe podcast. His old mark set 
 A d and a b are mirror images. I kept that symmetry. One diagonal carries the stem of the d into the bowl of the b. The stems and bowls have one weight and one corner radius. The mark is one path.
 
 ![](media:ben-davis-construction)
+
+![](media:ben-davis-brandmark)
 
 ## In use
 

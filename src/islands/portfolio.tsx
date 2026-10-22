@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
-import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
-import { ui } from "../ui.tsx";
+import { smear } from "../smear.ts";
+import { colors, media, rootMarker, rowMarker, space } from "../tokens.stylex.ts";
+import { Figures, ui } from "../ui.tsx";
 
 const columns = [
-  { key: "date", label: "Date" },
   { key: "title", label: "Project" },
-  { key: "scope", label: "Scope" },
+  { key: "date", label: "Date" },
 ] as const satisfies readonly { key: SortKey; label: string }[];
 
 function describe(key: SortKey, direction: SortDirection): string {
@@ -18,14 +18,22 @@ function describe(key: SortKey, direction: SortDirection): string {
   return direction === "descending" ? "A to Z" : "Z to A";
 }
 
-/** The homepage project table: sortable columns, and edge fades while the list scrolls on phones. */
-export function Portfolio() {
+/**
+ * The homepage project table: project, subject, then the date set right. Project and date sort,
+ * the subject is plain text. The archive
+ * is the table's footer, whatever the order: "Archive" in the project column, the count in the subject column. Edge fades show while the list scrolls on phones.
+ * One square marks the row under the pointer or in focus, in the column where other lists show →;
+ * it smears from row to row as the Contents square does (`smear.ts`) and leaves with the pointer.
+ */
+export function Portfolio({ more }: { more: number }) {
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
     key: "date",
     direction: "descending",
   });
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const section = useRef<HTMLElement>(null);
+  const list = useRef<HTMLDivElement>(null);
+  const marker = useRef<HTMLSpanElement>(null);
 
   // Browsers with scroll-driven animations tie the edge fades to the scroll position in CSS, so
   // they are right from the first frame; this fallback only serves the others.
@@ -44,6 +52,52 @@ export function Portfolio() {
     return () => {
       observer.disconnect();
       element.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    const box = list.current;
+    const square = marker.current;
+    if (!box || !square) return undefined;
+    const still = matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = smear(square);
+    let shown = false;
+    const mark = (event: Event) => {
+      if (!(event.target instanceof Element)) return;
+      const cell = event.target.closest("a")?.querySelector("[data-row-mark]");
+      if (!cell) return;
+      const from = box.getBoundingClientRect();
+      const at = cell.getBoundingClientRect();
+      const target = {
+        x: at.left - from.left + (at.width - square.offsetWidth) / 2,
+        y: at.top - from.top + (at.height - square.offsetHeight) / 2,
+      };
+      if (shown && !still.matches) motion.move(target);
+      else motion.jump(target);
+      shown = true;
+      // Arrives at once; only leaving fades.
+      square.style.transitionDuration = "0s";
+      square.style.opacity = "1";
+    };
+    const hide = (event: Event) => {
+      if (
+        event instanceof FocusEvent &&
+        event.relatedTarget instanceof Node &&
+        box.contains(event.relatedTarget)
+      )
+        return;
+      square.style.transitionDuration = "";
+      square.style.opacity = "0";
+    };
+    box.addEventListener("pointerover", mark);
+    box.addEventListener("focusin", mark);
+    box.addEventListener("pointerleave", hide);
+    box.addEventListener("focusout", hide);
+    return () => {
+      box.removeEventListener("pointerover", mark);
+      box.removeEventListener("focusin", mark);
+      box.removeEventListener("pointerleave", hide);
+      box.removeEventListener("focusout", hide);
     };
   }, []);
 
@@ -85,40 +139,21 @@ export function Portfolio() {
                       ui.focusRing,
                       styles.sort,
                       styles[key],
+                      active && styles.active,
                     )}
                     type="button"
                     // Starts with the visible label, so voice control finds it by what it says.
                     aria-label={`${label}, sort projects by ${key}`}
                     onClick={(event) => select(key, event)}
                   >
-                    <span>{label}&nbsp;</span>
-                    <span
-                      {...stylex.props(
-                        ui.sans,
-                        styles.indicator,
-                        styles[`${key}Indicator`],
-                        active && styles.visible,
-                      )}
-                      aria-hidden="true"
-                    >
-                      {active && sort.direction === "ascending" ? "↑" : "↓"}
-                    </span>
+                    {label}
                   </button>
                 </th>
               );
             })}
-            <td {...stylex.props(styles.contents)}>
-              <a
-                {...stylex.props(ui.target, ui.focusRing, styles.archive)}
-                href={`/all?sort=${sort.key}&direction=${sort.direction}`}
-              >
-                Archive
-                <span {...stylex.props(ui.sans)} aria-hidden="true">
-                  {" "}
-                  →
-                </span>
-              </a>
-            </td>
+            <th {...stylex.props(styles.contents, styles.cellText)} scope="col">
+              <span {...stylex.props(styles.label, styles.descriptor)}>Subject</span>
+            </th>
           </tr>
         </thead>
       </table>
@@ -131,10 +166,23 @@ export function Portfolio() {
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
           Projects
         </h2>
-        <div {...stylex.props(styles.list)}>
+        <div ref={list} {...stylex.props(styles.list)}>
+          <span {...stylex.props(styles.marker)} ref={marker} aria-hidden="true" />
           {rows.map((project, index) => (
             <Row key={project.href} project={project} first={index === 0} home />
           ))}
+          <a
+            {...stylex.props(rowMarker, styles.archive)}
+            href={`/all?sort=${sort.key}&direction=${sort.direction}`}
+          >
+            <span {...stylex.props(ui.text, styles.title)}>Archive</span>
+            <span {...stylex.props(ui.text, styles.more)}>
+              <Figures text={String(more)} /> more
+            </span>
+            <span {...stylex.props(ui.text, styles.archiveGlyph)} aria-hidden="true" data-row-mark>
+              {"\u00a0"}
+            </span>
+          </a>
         </div>
       </section>
     </div>
@@ -150,7 +198,7 @@ const hideBottom = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opaci
 const styles = stylex.create({
   frame: {
     display: "grid",
-    gridTemplateColumns: space.tableColumns,
+    gridTemplateColumns: space.projectColumns,
     // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls under
     // the header, between edge fades.
     gridTemplateRows: {
@@ -250,45 +298,49 @@ const styles = stylex.create({
     // A hairline drawn inside the header, so it never adds to the header's height.
     boxShadow: `inset 0 -1px ${colors.hairline}`,
   },
+  /** The sorted column reads full contrast, the other stays grey and lights on hover. */
   sort: {
     gridRow: 1,
-    display: "inline-grid",
-    gridTemplateColumns: "auto 1ch",
-    alignItems: "baseline",
     justifySelf: "start",
-  },
-  date: { gridColumn: 1 },
-  title: { gridColumn: 2 },
-  scope: { gridColumn: 3 },
-  /** The arrow shows on the sorted column, and on hover; it takes its label's color. */
-  indicator: {
-    visibility: {
-      default: "hidden",
-      [stylex.when.ancestor(":hover")]: { [media.hover]: "visible" },
+    color: {
+      default: colors.secondary,
+      ":hover": { [media.hover]: colors.primary },
     },
-    textAlign: "center",
   },
-  dateIndicator: {},
-  titleIndicator: { transform: "translateX(2.3px)" },
-  scopeIndicator: { transform: "translateX(1.3px)" },
-  visible: { visibility: "visible" },
+  active: { color: colors.primary },
+  title: { gridColumn: 1 },
+  descriptor: { gridColumn: 2 },
+  date: { gridColumn: 3, justifySelf: "end" },
   contents: { display: "contents" },
   /** Header cells read as the row's text, not bold and centred. */
   cellText: { fontWeight: "inherit", textAlign: "start" },
-  // Spans the scope column too, flush right: on phones the arrow column stays as narrow as its
-  // arrows instead of taking the label's width, which would push the table off screen.
+  label: { gridRow: 1, justifySelf: "start" },
+  /** The table's footer: "Archive" under the projects, the count under the subjects, the row square's place at the right end. */
   archive: {
-    gridRow: 1,
-    gridColumn: "3 / -1",
-    justifySelf: "end",
+    display: "grid",
+    gridColumn: "1 / -1",
+    gridTemplateColumns: "subgrid",
+    alignItems: "baseline",
+    paddingBlock: { default: space.touchInset, [media.desktop]: space.portfolioRowPadding },
+    boxShadow: `inset 0 1px ${colors.hairline}`,
+    color: colors.primary,
+    textDecoration: "none",
+    touchAction: "manipulation",
+    userSelect: "none",
+    borderRadius: { default: "4px", [media.desktop]: 0, ":focus-visible": "2px" },
+    outline: { default: null, ":focus-visible": `1px solid ${colors.primary}` },
+    outlineOffset: "6px",
+  },
+  /** As a row's subject: dim until the footer is hovered or focused. */
+  more: {
+    gridColumn: 2,
     color: {
       default: colors.tertiary,
-      ":hover": { [media.hover]: colors.primary },
-      ":focus-visible": colors.primary,
+      [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
+      [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
     },
-    textAlign: "right",
-    textDecoration: "none",
   },
+  archiveGlyph: { gridColumn: 4, width: space.arrowWidth, textAlign: "center" },
   section: {
     display: {
       default: "grid",
@@ -325,5 +377,28 @@ const styles = stylex.create({
     },
     "::-webkit-scrollbar": { display: "none" },
   },
-  list: { display: "grid", gridColumn: "1 / -1", gridTemplateColumns: "subgrid" },
+  list: {
+    display: "grid",
+    gridColumn: "1 / -1",
+    gridTemplateColumns: "subgrid",
+    position: "relative",
+  },
+  /**
+   * The row square: the Contents square's size and colour (`aside.tsx`). Hidden until a row is
+   * pointed at or focused; decorative, so it never takes a pointer.
+   */
+  marker: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    zIndex: 1,
+    transformOrigin: "0 0",
+    width: "8px",
+    height: "6px",
+    backgroundColor: colors.primary,
+    opacity: 0,
+    transitionProperty: "opacity",
+    transitionDuration: "0.2s",
+    pointerEvents: "none",
+  },
 });

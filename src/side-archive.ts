@@ -61,7 +61,6 @@ export function buildSideArchive(data: SideArchiveData): void {
           ["preload", "none"],
           ["aria-label", tile.alt],
           ["data-autoplay", ""],
-          ["data-arrive", ""],
         ])
       : element("img", [
           ["class", tile.mark ? classes.markArt : classes.art],
@@ -71,7 +70,6 @@ export function buildSideArchive(data: SideArchiveData): void {
           ["decoding", "async"],
           ["loading", "lazy"],
           ["src", images + tile.src],
-          ["data-arrive", ""],
           ...(tile.srcset === undefined
             ? []
             : ([

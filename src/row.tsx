@@ -1,14 +1,15 @@
 import * as stylex from "@stylexjs/stylex";
 import { useId } from "preact/hooks";
 import type { Project } from "./site.ts";
-import { colors, media, rowMarker, scopeMarker, space } from "./tokens.stylex.ts";
+import { colors, media, rowMarker, descriptorMarker, space, underline } from "./tokens.stylex.ts";
 import { Figures, ui, untranslated } from "./ui.tsx";
 
 /**
- * One project in a four-column subgrid (date, title, scope, arrow). The parent grid owns
+ * One project in a four-column subgrid (title, descriptor, date set right, square or arrow). The parent grid owns
  * the columns; `home` rows live in the homepage table, the others in "View next" lists.
- * The link is named by the project and described by its date, scope and description; the
- * "View →" cue is visual only.
+ * The link is named by its title, descriptor and date, and described by its description. A row
+ * that leaves the site underlines its title, as the article links do; the others show →. Home rows
+ * show no glyph: their cell is where the table's one square lands (`portfolio.tsx`).
  */
 export function Row({ project, first, home }: { project: Project; first: boolean; home: boolean }) {
   const Title = home ? "h3" : "span";
@@ -22,10 +23,29 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         home ? styles.home : styles.next,
       )}
       href={project.href}
-      // Named by what it shows, in reading order (date, title, scope); the sentence describes.
-      aria-labelledby={`${id}-date ${id}-title ${id}-scope`}
+      // Named by what it shows, in reading order (title, descriptor, date); the sentence describes.
+      aria-labelledby={`${id}-title ${id}-descriptor ${id}-date`}
       aria-describedby={`${id}-description`}
     >
+      <Title
+        {...stylex.props(ui.text, styles.cell, styles.title, project.external && styles.outbound)}
+        id={`${id}-title`}
+        {...untranslated}
+      >
+        {project.title}
+      </Title>
+      <span
+        {...stylex.props(ui.text, descriptorMarker, styles.descriptor)}
+        id={`${id}-descriptor`}
+        data-descriptor
+      >
+        <span {...stylex.props(styles.track)}>
+          <span data-descriptor-text>{project.descriptor}</span>
+          <span {...stylex.props(styles.copy)} aria-hidden="true">
+            {project.descriptor}
+          </span>
+        </span>
+      </span>
       <time
         {...stylex.props(ui.text, styles.cell, styles.date)}
         id={`${id}-date`}
@@ -36,26 +56,17 @@ export function Row({ project, first, home }: { project: Project; first: boolean
           <Figures text={project.date.slice(7)} />
         </span>
       </time>
-      <Title
-        {...stylex.props(ui.text, styles.cell, styles.title)}
-        id={`${id}-title`}
-        {...untranslated}
-      >
-        {project.title}
-      </Title>
-      <span {...stylex.props(ui.text, scopeMarker, styles.scope)} id={`${id}-scope`} data-scope>
-        <span {...stylex.props(styles.track)}>
-          <span data-scope-text>{project.scope}</span>
-          <span {...stylex.props(styles.copy)} aria-hidden="true">
-            {project.scope}
-          </span>
-        </span>
-      </span>
       <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
         {project.description}
       </span>
       <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
-        <span {...stylex.props(styles.glyph)}>{project.external ? "↗" : "→"}</span>
+        {home ? (
+          <span {...stylex.props(styles.glyph)} data-row-mark>
+            {"\u00a0"}
+          </span>
+        ) : (
+          !project.external && <span {...stylex.props(styles.glyph)}>→</span>
+        )}
       </span>
     </a>
   );
@@ -106,7 +117,15 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     paddingInlineEnd: { default: null, [media.mobile]: space.mobileCellEndSpace },
   },
-  date: { gridColumn: 1, position: "relative", display: "block", color: "inherit" },
+  /** Set right, as a ledger's figures: the digits line up into a column that closes the row. */
+  date: {
+    gridColumn: 3,
+    justifySelf: "end",
+    position: "relative",
+    display: "block",
+    textAlign: "end",
+    color: "inherit",
+  },
   /** Narrow rows show the month; the day stays readable to assistive tech. */
   dayHome: {
     position: { default: null, [media.mobile]: "absolute", [narrowTable]: "absolute" },
@@ -122,12 +141,23 @@ const styles = stylex.create({
     overflow: { default: null, [phoneNext]: "hidden" },
     clipPath: { default: null, [phoneNext]: "inset(50%)" },
   },
-  title: { gridColumn: 2, margin: 0, color: colors.primary },
-  scope: {
-    gridColumn: 3,
+  title: { gridColumn: 1, margin: 0, color: colors.primary },
+  /** As `ui.outbound`, the underline raised with the row. */
+  outbound: {
+    textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
+    textDecorationColor: {
+      default: colors.tertiary,
+      [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: "currentColor" },
+      [stylex.when.ancestor(":focus-visible", rowMarker)]: "currentColor",
+    },
+  },
+  descriptor: {
+    gridColumn: 2,
     gridRow: 1,
-    // Phones are too narrow for the longest pair beside a full row. A scope that does not fit
-    // runs past in a loop (`scope.ts`); until then, or with motion reduced, it ellipsizes.
+    // Phones are too narrow for the longest pair beside a full row. A descriptor that does not fit
+    // runs past in a loop (`descriptor.ts`); until then, or with motion reduced, it ellipsizes.
     minWidth: { default: null, [media.mobile]: 0 },
     overflow: { default: null, [media.mobile]: "hidden" },
     whiteSpace: { default: null, [media.mobile]: "nowrap" },
@@ -150,15 +180,15 @@ const styles = stylex.create({
     },
   },
   /**
-   * Phones, a scope wider than its cell (`scope.ts` sets `data-marquee` and the distance): the
+   * Phones, a descriptor wider than its cell (`descriptor.ts` sets `data-marquee` and the distance): the
    * text and a copy run left in a loop, one gap apart, resting a moment between rounds, so the
-   * title keeps its room and the scope is read in full by waiting. Motion reduced, it stays
+   * title keeps its room and the descriptor is read in full by waiting. Motion reduced, it stays
    * ellipsized.
    */
   track: {
     display: {
       default: "inline",
-      [stylex.when.ancestor("[data-marquee]", scopeMarker)]: {
+      [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
         default: "inline",
         [media.motion]: "inline-flex",
       },
@@ -166,7 +196,7 @@ const styles = stylex.create({
     columnGap: "var(--marquee-gap, 0px)",
     animationName: {
       default: null,
-      [stylex.when.ancestor("[data-marquee]", scopeMarker)]: {
+      [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
         default: null,
         [media.motion]: marquee,
       },
@@ -178,7 +208,7 @@ const styles = stylex.create({
   copy: {
     display: {
       default: "none",
-      [stylex.when.ancestor("[data-marquee]", scopeMarker)]: {
+      [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
         default: "none",
         [media.motion]: "inline",
       },

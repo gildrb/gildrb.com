@@ -5,7 +5,7 @@ const light = "@media (prefers-color-scheme: light)";
 /**
  * The layout's one unit, in px: every desktop width and gap is a whole multiple of it, and a
  * line (24px) is three. The title column takes 14 units, enough for a person's full name
- * ("Mihai Lupascu" is 109px); the scope column is the remainder, 28 units at full width.
+ * ("Mihai Lupascu" is 109px); the descriptor column is the remainder, 28 units at full width.
  */
 const unit = 8;
 const dateColumn = `${12 * unit}px`;
@@ -153,7 +153,7 @@ export const space = stylex.defineVars({
   linkGap: { default: "calc(2rem - 1.5rem)", "@media (max-width: 767px)": "6px" },
   portfolioRowPadding: "calc((2.5rem - 1.5rem) / 2)",
   toggleSize: "32px",
-  /** The box each row's arrow is centered in, so ↗ and → share one axis with the theme toggle. */
+  /** The box each row's → is centered in, so it shares one axis with the theme toggle. */
   arrowWidth: "16px",
   toggleOpticalOffset: "2px",
   /** The page's inset from the viewport edge on desktop: top of the sidebar and content, bottom of the footer. */
@@ -176,10 +176,19 @@ export const space = stylex.defineVars({
   dateColumn,
   titleColumn,
   arrowColumn,
-  /** Desktop: unit multiples. Phones: content-sized, the scope column taking what is left. */
+  /** Desktop: unit multiples. Phones: content-sized, the descriptor column taking what is left. */
   tableColumns: {
     default: `${dateColumn} ${titleColumn} minmax(max-content, 1fr) ${arrowColumn}`,
     "@media (max-width: 767px)": "max-content max-content minmax(0, 1fr) minmax(19px, max-content)",
+  },
+  /**
+   * The project tables (homepage, "View next"): project, subject, then the date set right, and a
+   * slot past it for the row square or →. Desktop: the title column a unit multiple, the date as
+   * wide as its figures. Phones: content-sized, the subject taking what is left.
+   */
+  projectColumns: {
+    default: `${titleColumn} minmax(max-content, 1fr) max-content 16px`,
+    "@media (max-width: 767px)": "max-content minmax(0, 1fr) max-content minmax(19px, max-content)",
   },
 });
 
@@ -195,5 +204,5 @@ export const rootMarker = stylex.defineMarker();
 /** Put on an archive tile link so its label can react to the tile's hover and focus. */
 export const tileMarker = stylex.defineMarker();
 
-/** Put on a table row's scope cell so its text can loop when it does not fit (`scope.ts`). */
-export const scopeMarker = stylex.defineMarker();
+/** Put on a table row's descriptor cell so its text can loop when it does not fit (`descriptor.ts`). */
+export const descriptorMarker = stylex.defineMarker();

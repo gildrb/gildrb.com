@@ -74,15 +74,15 @@ function destination(work: Work): { label: string; href: string } {
   }
 }
 
-/** What `?sort=` on the archive page orders by; archive-only work has no date or scope. */
+/** What `?sort=` on the archive page orders by; archive-only work has no date. */
 function sortData(work: Work) {
   switch (work.from.$) {
     case "Case": {
-      const { date, title, scope } = work.from.project;
-      return { "data-date": date, "data-title": title, "data-scope": scope };
+      const { date, title } = work.from.project;
+      return { "data-date": date, "data-title": title };
     }
     case "Archive":
-      return { "data-date": "", "data-title": "Archive", "data-scope": "" };
+      return { "data-date": "", "data-title": "Archive" };
     default: {
       const _: never = work.from;
       return _;
@@ -122,7 +122,6 @@ function Tile({ work, load }: { work: Work; load: Load }) {
       preload="none"
       aria-label={item.alt}
       data-autoplay
-      data-arrive=""
     />
   ) : (
     <img
@@ -135,7 +134,6 @@ function Tile({ work, load }: { work: Work; load: Load }) {
       {...(load === "lazy" && { loading: "lazy" })}
       src={src}
       {...(srcset && { srcset, sizes: tileSizes })}
-      data-arrive=""
     />
   );
   return (

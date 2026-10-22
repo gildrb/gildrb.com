@@ -939,7 +939,6 @@ function ResultList({ results }: { results: readonly Result[] }) {
               alt=""
               width={48}
               height={48}
-              data-arrive=""
             />
           ) : (
             <span {...stylex.props(styles.preview)} />

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors, figureUnits, fontFeatures, media, space } from "./tokens.stylex.ts";
+import { colors, figureUnits, fontFeatures, media, space, underline } from "./tokens.stylex.ts";
 
 /** Anything `stylex.props` accepts: a style, `false`, `null`, or a nested array of them. */
 export type Style = stylex.StyleXArray<stylex.CompiledStyles | boolean | null | undefined>;
@@ -97,12 +97,14 @@ export const ui = stylex.create({
     touchAction: "manipulation",
     userSelect: "none",
   },
-  /** Marks a link that leaves the site; the arrow keeps Inter's drawing in monospace pages. */
+  /** Marks a link that leaves the site with the article links' underline (`markdown.tsx`). */
   outbound: {
-    "::after": {
-      content: '" ↗"',
-      fontFamily:
-        'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    textDecorationLine: "underline",
+    textDecorationThickness: underline.thickness,
+    textUnderlineOffset: underline.offset,
+    textDecorationColor: {
+      default: colors.tertiary,
+      ":hover": { [media.hover]: "currentColor" },
     },
   },
   /**

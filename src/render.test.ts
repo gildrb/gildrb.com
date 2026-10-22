@@ -66,20 +66,20 @@ describe("project pages", () => {
 });
 
 describe("project table", () => {
-  test("names each row by what it shows: date, title, scope", () => {
+  test("names each row by what it shows: title, descriptor, date", () => {
     const html = page("index.html");
     const labelled = [...html.matchAll(/aria-labelledby="([^"]+)"/g)].map(([, ids]) => ids);
     expect(labelled.length).toBeGreaterThan(0);
     for (const ids of labelled.filter((value) => value?.startsWith("P"))) {
       const parts = ids?.split(" ") ?? [];
-      expect(parts.map((id) => id.replace(/^.*-/, ""))).toEqual(["date", "title", "scope"]);
+      expect(parts.map((id) => id.replace(/^.*-/, ""))).toEqual(["title", "descriptor", "date"]);
       for (const id of parts) expect(html).toContain(`id="${id}"`);
     }
   });
 
   test("sort buttons are named starting with their visible label", () => {
     const html = page("index.html");
-    for (const label of ["Date", "Project", "Scope"]) {
+    for (const label of ["Date", "Project"]) {
       expect(html).toMatch(new RegExp(`aria-label="${label}, sort projects by`));
     }
   });

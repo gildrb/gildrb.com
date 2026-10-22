@@ -3,6 +3,8 @@ import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
 import { Island } from "./island.tsx";
 import { Command } from "./islands/command.tsx";
+import { Fold } from "./islands/ben-davis.tsx";
+import { Specimen } from "./islands/curves.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
 import { colors, space, underline } from "./tokens.stylex.ts";
@@ -14,6 +16,9 @@ type Block =
   | { type: "list"; items: string[] }
   | { type: "media"; items: { id: string; caption: string }[] }
   | { type: "code"; language: string; title: string; code: string };
+
+/** Figures that are live components rather than files in `media.ts`. */
+export const demos = new Set(["heph-demo", "curves-demo", "ben-davis-demo"]);
 
 const mediaLine = /^!\[(.*)\]\(media:([a-z0-9-]+)\)$/;
 
@@ -139,7 +144,6 @@ function Image({
         {...(eager ? { fetchpriority: "high" } : { loading: "lazy" })}
         src={src}
         {...(srcset && { srcset, sizes })}
-        data-arrive=""
       />
     </button>
   );
@@ -165,7 +169,6 @@ function Video({ id, fill }: { id: string; fill: boolean }) {
       preload="none"
       aria-label={item.alt}
       data-autoplay
-      data-arrive=""
     />
   );
 }
@@ -218,14 +221,29 @@ function Figures({
   return (
     <div {...stylex.props(styles.media, grid && styles.grid)}>
       {items.map(({ id, caption }, index) => (
-        <figure {...stylex.props(styles.figure, banner && styles.window)}>
+        <figure
+          {...stylex.props(
+            styles.figure,
+            banner && styles.window,
+            banner && media[id]?.frame && styles.frame,
+          )}
+        >
           {id === "heph-demo" ? (
+            <Island name="heph" component={Terminal} props={{ fill: banner }} />
+          ) : id === "curves-demo" ? (
             <Island
-              name="heph"
-              component={Terminal}
+              name="curves"
+              component={Specimen}
+              props={{ fill: banner, font: versioned("/fonts/curves.woff2") }}
+            />
+          ) : id === "ben-davis-demo" ? (
+            <Island
+              name="ben-davis"
+              component={Fold}
               props={{
                 fill: banner,
-                wallpaper: { ...sources("heph-forge"), sizes: sizesFor(banner, grid) },
+                player: versioned("/ben-davis/lottie.min.js"),
+                animation: versioned("/ben-davis/ben-davis-hover.json"),
               }}
             />
           ) : media[id]?.video ? (
@@ -608,6 +626,18 @@ export const styles = stylex.create({
     aspectRatio: { default: null, "@media (min-width: 1280px)": "4 / 3" },
     maxHeight: { default: null, "@media (min-width: 1280px)": "calc(100svh - 240px)" },
     overflow: "hidden",
+  },
+  /** The demos' banner frame (`ben-davis.tsx`): the homepage table's hairline, over the artwork. */
+  frame: {
+    position: "relative",
+    "::after": {
+      content: '""',
+      position: "absolute",
+      inset: 0,
+      borderRadius: "inherit",
+      boxShadow: `inset 0 0 0 1px ${colors.hairline}`,
+      pointerEvents: "none",
+    },
   },
   /** Fills the banner window on wide screens: artwork is cropped, a mark is shown whole. */
   fill: { height: { default: null, "@media (min-width: 1280px)": "100%" } },

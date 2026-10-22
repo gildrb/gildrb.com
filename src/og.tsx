@@ -160,11 +160,15 @@ function Page({ css }: { css: string }) {
   const text = { fontSize: rootFontSize, lineHeight: `${line}px` };
   const header = line + rowPadding;
   const row = line + rowPadding * 2;
+  const underlined = {
+    textDecoration: "underline",
+    textDecorationColor: color(colors.tertiary),
+  };
   const link = (label: string) => (
-    <span style={{ ...text, color: color(colors.tertiary) }}>{`${label} ↗`}</span>
+    <span style={{ ...text, ...underlined, color: color(colors.tertiary) }}>{label}</span>
   );
-  // One column per table column, at the page's widths: date, project and arrow are fixed, scope
-  // takes the rest. The arrow column sets its cells flush right.
+  // One column per table column, at the page's widths: project, date and arrow are fixed, subject
+  // takes the rest. Date and arrow set their cells flush right; an external row has no arrow.
   const column = (
     head: preact.ComponentChildren,
     cells: preact.ComponentChildren[],
@@ -282,27 +286,32 @@ function Page({ css }: { css: string }) {
             ),
           )}
           {column(
-            "Date\u00a0↓",
+            "Project",
+            projects.map(({ title, href, external }) => (
+              <span key={href} style={external ? underlined : undefined}>
+                {title}
+              </span>
+            )),
+            length(space.titleColumn),
+          )}
+          {column(
+            "Subject",
+            projects.map(({ descriptor, href }) => (
+              <span key={href} style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>
+                {descriptor}
+              </span>
+            )),
+            "grow",
+          )}
+          {column(
+            "Date",
             projects.map(({ date, href }) => (
               <span key={href} style={{ color: color(colors.tertiary) }}>
                 <IsoDate text={date} />
               </span>
             )),
             length(space.dateColumn),
-          )}
-          {column(
-            "Project",
-            projects.map(({ title, href }) => <span key={href}>{title}</span>),
-            length(space.titleColumn),
-          )}
-          {column(
-            "Scope",
-            projects.map(({ scope, href }) => (
-              <span key={href} style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>
-                {scope}
-              </span>
-            )),
-            "grow",
+            true,
           )}
           {column(
             "Archive",
@@ -316,7 +325,7 @@ function Page({ css }: { css: string }) {
                   color: color(colors.tertiary),
                 }}
               >
-                {external ? "↗" : "→"}
+                {external ? "" : "→"}
               </span>
             )),
             length(space.arrowColumn),

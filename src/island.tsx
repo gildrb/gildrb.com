@@ -1,7 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import type { FunctionComponent } from "preact";
 import type { Converter } from "./islands/archetypon.tsx";
+import type { Fold } from "./islands/ben-davis.tsx";
 import type { Command } from "./islands/command.tsx";
+import type { Specimen } from "./islands/curves.tsx";
 import type { Email } from "./islands/email.tsx";
 import type { Terminal } from "./islands/heph.tsx";
 import type { Portfolio } from "./islands/portfolio.tsx";
@@ -15,6 +17,8 @@ export type Islands = {
   heph: typeof Terminal;
   archetypon: typeof Converter;
   command: typeof Command;
+  curves: typeof Specimen;
+  "ben-davis": typeof Fold;
 };
 
 const styles = stylex.create({ island: { display: "contents" } });
