@@ -113,7 +113,7 @@ export function Document({
             The theme script needs the favicon and theme-color tags, so they come before it. */}
         <style dangerouslySetInnerHTML={{ __html: themeCss }} />
         <meta name="theme-color" content={themeColor.dark} />
-        <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+        <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Hold the first paint until the whole page is parsed and aligned, so it never arrives
             in pieces or shifts. Preact's typings lack `blocking` on <link>, hence the spread. */}
