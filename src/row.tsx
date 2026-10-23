@@ -40,12 +40,9 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         id={`${id}-descriptor`}
         data-descriptor
       >
-        <span {...stylex.props(styles.track)}>
-          <span data-descriptor-text>{project.descriptor}</span>
-          <span {...stylex.props(styles.copy)} aria-hidden="true">
-            {project.descriptor}
-          </span>
-        </span>
+        {/* The loop's copy is the track's `::after`, drawn from `data-copy`, which `descriptor.ts`
+            sets only when the descriptor loops: page text, crawlers and screen readers get it once. */}
+        <span {...stylex.props(styles.track, styles.copy)}>{project.descriptor}</span>
       </span>
       <time
         {...stylex.props(ui.text, styles.cell, styles.date, home && styles.homeDate)}
@@ -60,18 +57,20 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
         {project.description}
       </span>
-      <span
-        {...stylex.props(ui.text, ui.sans, styles.arrow, home && styles.squareSlot)}
-        aria-hidden="true"
-      >
-        {home ? (
-          <span {...stylex.props(styles.glyph)} data-row-mark>
-            {"\u00a0"}
-          </span>
-        ) : (
-          !project.external && <span {...stylex.props(styles.glyph)}>→</span>
-        )}
-      </span>
+      {home ? (
+        // The cell is the square's target: 16px wide, as the → glyph's slot in other lists.
+        <span
+          {...stylex.props(ui.text, ui.sans, styles.arrow, styles.squareSlot)}
+          aria-hidden="true"
+          data-row-mark
+        >
+          {"\u00a0"}
+        </span>
+      ) : (
+        <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
+          {!project.external && <span {...stylex.props(styles.glyph)}>→</span>}
+        </span>
+      )}
     </a>
   );
 }
@@ -192,7 +191,7 @@ const styles = stylex.create({
   },
   /**
    * Phones, a descriptor wider than its cell (`descriptor.ts` sets `data-marquee` and the distance): the
-   * text and a copy run left in a loop, one gap apart, resting a moment between rounds, so the
+   * text and its copy (`::after`) run left in a loop, one gap apart, resting a moment between rounds, so the
    * title keeps its room and the descriptor is read in full by waiting. Motion reduced, it stays
    * ellipsized.
    */
@@ -217,11 +216,14 @@ const styles = stylex.create({
     animationIterationCount: "infinite",
   },
   copy: {
-    display: {
-      default: "none",
-      [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
+    "::after": {
+      content: "attr(data-copy)",
+      display: {
         default: "none",
-        [media.motion]: "inline",
+        [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
+          default: "none",
+          [media.motion]: "inline",
+        },
       },
     },
   },

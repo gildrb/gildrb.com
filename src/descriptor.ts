@@ -19,13 +19,17 @@ export function loopDescriptors(): void {
     else descriptor.removeAttribute("data-marquee");
   };
   const measure = (descriptor: HTMLElement) => {
-    const text = descriptor.querySelector<HTMLElement>("[data-descriptor-text]");
+    const track = descriptor.firstElementChild;
     const state = descriptors.get(descriptor);
-    if (!text || !state) return;
+    if (!track || !state) return;
+    // The text alone: a range over the track's contents leaves out its `::after`, the copy.
+    const text = document.createRange();
+    text.selectNodeContents(track);
     const width = text.getBoundingClientRect().width;
     state.overflows =
       getComputedStyle(descriptor).overflowX === "hidden" && width > descriptor.clientWidth + 0.5;
     if (state.overflows) {
+      track.setAttribute("data-copy", track.textContent ?? "");
       const distance = width + gap;
       descriptor.style.setProperty("--marquee-gap", `${gap}px`);
       descriptor.style.setProperty("--marquee-distance", `${distance}px`);

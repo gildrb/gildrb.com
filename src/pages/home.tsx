@@ -15,17 +15,15 @@ import {
   Shell,
   Sidebar,
 } from "../layout.tsx";
-import { developers, origin, person, products, profiles } from "../site.ts";
+import { developers, origin, person, profiles, projects } from "../site.ts";
 import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
 const title = `${person.name} (${person.handle})`;
 
-/** What search results show under the name: the role, then the work people look for. */
-const description = `${person.summary} Logos, brands and websites, and open-source tools: ${products
-  .map(({ name }) => name)
-  .join(", ")}.`;
+/** What search results show under the name: the About text, then the projects by name. */
+const description = `${person.about} Projects: ${projects.map((project) => project.title).join(", ")}.`;
 
 /** Machine-readable versions of this page, advertised to crawlers and agents. */
 const alternates: [rel: string, type: string, path: string, title: string][] = [

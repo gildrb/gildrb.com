@@ -160,17 +160,15 @@ function Page({ css }: { css: string }) {
   const text = { fontSize: rootFontSize, lineHeight: `${line}px` };
   const header = line + rowPadding;
   const row = line + rowPadding * 2;
-  const underlined = {
-    textDecoration: "underline",
-    textDecorationColor: color(colors.tertiary),
-  };
   const link = (label: string) => (
-    <span style={{ ...text, ...underlined, color: color(colors.tertiary) }}>{label}</span>
+    <span style={{ ...text, color: color(colors.tertiary) }}>{label}</span>
   );
-  // One column per table column, at the page's widths: project, date and arrow are fixed, subject
-  // takes the rest. Date and arrow set their cells flush right; an external row has no arrow.
+  // One column per table column, at the page's widths: project and the square's slot are fixed,
+  // subject takes the rest, the date sets its cells flush right. Date is the active sort, so its
+  // head is full contrast. The slot stays empty: the square only shows under a pointer.
   const column = (
     head: preact.ComponentChildren,
+    headColor: string,
     cells: preact.ComponentChildren[],
     width: number | "grow",
     end = false,
@@ -188,7 +186,7 @@ function Page({ css }: { css: string }) {
           ...(width === "grow" ? { flexGrow: 1, minWidth: 0 } : { width, flexShrink: 0 }),
         }}
       >
-        <div style={{ ...cell, height: header, color: color(colors.secondary) }}>{head}</div>
+        <div style={{ ...cell, height: header, color: headColor }}>{head}</div>
         {cells.map((content, index) => (
           <div key={index} style={{ ...cell, height: row, paddingTop: rowPadding }}>
             {content}
@@ -241,7 +239,7 @@ function Page({ css }: { css: string }) {
           >
             About
           </span>
-          <span style={text}>{person.summary}</span>
+          <span style={text}>{person.about}</span>
         </div>
       </div>
       <div style={{ display: "flex", gap: length(space.layoutGap) }}>
@@ -287,15 +285,13 @@ function Page({ css }: { css: string }) {
           )}
           {column(
             "Project",
-            projects.map(({ title, href, external }) => (
-              <span key={href} style={external ? underlined : undefined}>
-                {title}
-              </span>
-            )),
+            color(colors.secondary),
+            projects.map(({ title, href }) => <span key={href}>{title}</span>),
             length(space.titleColumn),
           )}
           {column(
             "Subject",
+            color(colors.secondary),
             projects.map(({ descriptor, href }) => (
               <span key={href} style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>
                 {descriptor}
@@ -305,6 +301,7 @@ function Page({ css }: { css: string }) {
           )}
           {column(
             "Date",
+            color(colors.primary),
             projects.map(({ date, href }) => (
               <span key={href} style={{ color: color(colors.tertiary) }}>
                 <IsoDate text={date} />
@@ -313,24 +310,7 @@ function Page({ css }: { css: string }) {
             length(space.dateColumn),
             true,
           )}
-          {column(
-            "Archive",
-            projects.map(({ external, href }) => (
-              <span
-                key={href}
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  width: length(space.arrowWidth),
-                  color: color(colors.tertiary),
-                }}
-              >
-                {external ? "" : "→"}
-              </span>
-            )),
-            length(space.arrowColumn),
-            true,
-          )}
+          <div style={{ width: length(space.arrowWidth), flexShrink: 0 }} />
         </div>
       </div>
     </div>
