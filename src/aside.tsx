@@ -67,7 +67,7 @@ export function ElsewhereLine({ links, style }: { links: readonly Link[]; style?
 
 /**
  * Desktop: the page's contents in the sidebar, in place of the contact and profile links, set as
- * they are. Phones keep those links below the content.
+ * they are. Phones show neither.
  */
 export function Aside({ parts }: { parts: readonly Heading[] }) {
   return (

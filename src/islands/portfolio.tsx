@@ -177,7 +177,8 @@ const styles = stylex.create({
     },
     marginBottom: {
       default: space.textMediaGap,
-      [media.mobile]: space.sectionGap,
+      // Phones: above Safari's bottom bar too, which floats over the page.
+      [media.mobile]: `calc(${space.sectionGap} + env(safe-area-inset-bottom))`,
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     timelineScope: "--portfolio",

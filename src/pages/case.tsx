@@ -127,10 +127,9 @@ function Frame({
           }}
         >
           <Name current={current} heading={third.$ === "Content"} />
-          {parts.length > 0 ? <Aside parts={parts} /> : <PageLinks phone={false} />}
+          {parts.length > 0 ? <Aside parts={parts} /> : <PageLinks />}
         </Sidebar>
         <Main>{children}</Main>
-        <PageLinks phone />
       </Shell>
     </Document>
   );

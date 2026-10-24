@@ -106,7 +106,9 @@ export function Document({
     >
       <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* `viewport-fit=cover`: Safari reports its bottom bar and the notch as safe-area insets,
+            which the page's margins clear. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         {/* The page color first, so no frame shows the browser's white canvas (see `themeCss`).
             The theme script needs the favicon and theme-color tags, so they come before it. */}
         <style dangerouslySetInnerHTML={{ __html: themeCss }} />
@@ -168,7 +170,9 @@ export function Document({
 export function Shell({ home = false, children }: { home?: boolean; children: ComponentChildren }) {
   return (
     <div {...stylex.props(styles.wrapper)}>
-      <div {...stylex.props(styles.layout, home && styles.homeLayout)}>{children}</div>
+      <div {...stylex.props(styles.layout, home ? styles.homeLayout : styles.caseLayout)}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -252,20 +256,21 @@ export function Name({ current, heading = false }: { current?: string; heading?:
   );
 }
 
-/** On inner pages the links sit in the sidebar on desktop and below the content on phones. */
-export function PageLinks({ phone }: { phone: boolean }) {
+/** On inner pages the links sit in the sidebar on desktop; phones leave them to the homepage. */
+export function PageLinks() {
   return (
-    <div {...stylex.props(phone ? styles.phoneOnly : styles.desktopOnly)}>
-      <Links phone={phone} />
+    <div {...stylex.props(styles.desktopOnly)}>
+      <Links />
     </div>
   );
 }
 
 /**
- * Contact, then the profile links: one list above the other on every screen. The homepage's
- * stay hidden on phones until the name is tapped (`links.ts`), then sit right under it.
+ * Contact, then the profile links: one list above the other on desktop. The homepage's stay
+ * hidden on phones until the name is tapped (`links.ts`), then sit right under it, Links on the
+ * left and Contact on the right.
  */
-export function Links({ home = false, phone = false }: { home?: boolean; phone?: boolean }) {
+export function Links({ home = false }: { home?: boolean }) {
   const link = (item: Link, placement: Style, me: boolean) => {
     return (
       <a
@@ -282,20 +287,24 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
   };
   return (
     <nav
-      {...stylex.props(ui.text, styles.links, home ? styles.homeLinks : styles.caseLinks)}
+      {...stylex.props(ui.text, styles.links, home && styles.homeLinks)}
       id={home ? "profile-links" : undefined}
       aria-label="Public profiles and contact"
-      data-mobile-links={phone || home || undefined}
+      data-mobile-links={home || undefined}
     >
-      <p {...stylex.props(ui.label, styles.label, styles.contactLabel)}>
-        <span data-nosnippet>Contact</span>
-      </p>
-      <Island name="email" component={Email} props={{}} />
-      {contacts.map((item) => link(item, null, false))}
-      <p {...stylex.props(ui.label, styles.label, styles.profileLabel, styles.profileGroup)}>
-        <span data-nosnippet>Links</span>
-      </p>
-      {profiles.map((item) => link(item, styles.profileGroup, true))}
+      <div {...stylex.props(styles.linkGroup)}>
+        <p {...stylex.props(ui.label, styles.label, styles.contactLabel)}>
+          <span data-nosnippet>Contact</span>
+        </p>
+        <Island name="email" component={Email} props={{}} />
+        {contacts.map((item) => link(item, null, false))}
+      </div>
+      <div {...stylex.props(styles.linkGroup, styles.profiles)}>
+        <p {...stylex.props(ui.label, styles.label, styles.profileLabel, styles.profileGroup)}>
+          <span data-nosnippet>Links</span>
+        </p>
+        {profiles.map((item) => link(item, styles.profileGroup, true))}
+      </div>
     </nav>
   );
 }
@@ -339,6 +348,8 @@ export function Metadata({ style }: { style?: Style }) {
  * viewport edge.
  */
 const phoneGutter = `calc(${space.sectionGap} / 2)`;
+/** The left one, wider beside a notch. */
+const phoneGutterLeft = `max(${phoneGutter}, env(safe-area-inset-left))`;
 
 const styles = stylex.create({
   // The background lives on <html> too, so the held first frame is already the theme color.
@@ -382,8 +393,15 @@ const styles = stylex.create({
   caseBody: { minHeight: "100vh" },
   wrapper: {
     // A minimum margin: the layout keeps its full width until the viewport cannot fit it. Four
-    // units, a sidebar pitch.
-    paddingInline: { default: `calc(4 * ${space.unit})`, [media.mobile]: phoneGutter },
+    // units, a sidebar pitch. Beside a notch the margin grows to clear it (`viewport-fit=cover`).
+    paddingLeft: {
+      default: `max(calc(4 * ${space.unit}), env(safe-area-inset-left))`,
+      [media.mobile]: phoneGutterLeft,
+    },
+    paddingRight: {
+      default: `max(calc(4 * ${space.unit}), env(safe-area-inset-right))`,
+      [media.mobile]: `max(${phoneGutter}, env(safe-area-inset-right))`,
+    },
   },
   /** Desktop: sidebar and content, one block centred in the wrapper at every width. */
   layout: {
@@ -396,6 +414,16 @@ const styles = stylex.create({
     margin: "0 auto",
     minHeight: { default: "100vh", [media.mobile]: "auto" },
     gap: { default: space.layoutGap, [media.mobile]: 0 },
+  },
+  /**
+   * Phones: the page ends a section gap below its last row, and clears Safari's bottom bar,
+   * which floats over the page.
+   */
+  caseLayout: {
+    paddingBottom: {
+      default: null,
+      [media.mobile]: `calc(${space.sectionGap} + env(safe-area-inset-bottom))`,
+    },
   },
   homeLayout: {
     gridTemplateRows: {
@@ -454,7 +482,7 @@ const styles = stylex.create({
   skip: {
     position: { default: "absolute", [media.mobile]: "fixed" },
     top: { default: space.pageInset, [media.mobile]: space.sectionGap },
-    left: { default: 0, [media.mobile]: phoneGutter },
+    left: { default: 0, [media.mobile]: phoneGutterLeft },
     zIndex: 102,
     lineHeight: space.linkLineHeight,
     textDecoration: "none",
@@ -499,7 +527,7 @@ const styles = stylex.create({
       zIndex: -1,
       top: 0,
       bottom: 0,
-      left: `calc(${phoneGutter} * -1)`,
+      left: `calc(${phoneGutterLeft} * -1)`,
       width: "100vw",
       backgroundImage: `linear-gradient(to bottom, ${colors.bg} 60%, transparent)`,
     },
@@ -547,11 +575,11 @@ const styles = stylex.create({
   },
   current: { color: colors.primary, textDecoration: "none" },
   desktopOnly: { display: { default: "contents", [media.mobile]: "none" } },
-  phoneOnly: { display: { default: "none", [media.mobile]: "contents" } },
   links: {
     display: "flex",
-    flexDirection: "column",
+    flexDirection: { default: "column", [media.mobile]: "row" },
     rowGap: space.linkGap,
+    columnGap: { default: null, [media.mobile]: space.mobileTableGap },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
   },
   /** Phones: hidden until the name is tapped (`links.ts`), then right under it, above About. */
@@ -565,19 +593,18 @@ const styles = stylex.create({
     alignSelf: { default: null, [media.desktop]: "start" },
     marginBottom: { default: null, [media.mobile]: space.sectionGap },
   },
-  caseLinks: {
-    order: { default: null, [media.mobile]: 6 },
-    marginTop: { default: null, [media.mobile]: space.sectionGap },
+  /** Desktop: one list, as if ungrouped. Phones: one column each, side by side. */
+  linkGroup: {
+    display: { default: "contents", [media.mobile]: "flex" },
+    flexDirection: "column",
+    rowGap: space.linkGap,
+    flex: { default: null, [media.mobile]: "1 1 0" },
+    minWidth: 0,
   },
+  /** Phones: Links first, on the left. */
+  profiles: { order: { default: null, [media.mobile]: -1 } },
   label: { width: "fit-content" },
-  profileLabel: {
-    // Phones: one section gap between the two lists, as between About and the table.
-    marginTop: {
-      default: null,
-      [media.desktop]: space.sidebarBaselinePitch,
-      [media.mobile]: `calc(${space.sectionGap} - ${space.linkGap})`,
-    },
-  },
+  profileLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
   /** The project table's columns, so the links line up with its Project column. */
   metadata: {
     display: "grid",
