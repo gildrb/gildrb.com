@@ -339,13 +339,14 @@ export const space = stylex.defineVars({
     "@media (max-width: 767px)": "max-content minmax(0, 1fr) max-content",
   },
   /**
-   * A settings table (Archetypon's formats): the project table's columns with one more. The name
-   * in the title column, so it lines up with the project names; then a column as wide as its
-   * values; then one taking what is left; then the last value set right on the table's edge.
+   * A settings table (Archetypon's formats): the name in the title column, so it lines up with
+   * the project names; then three equal columns, the last value set right on the table's edge.
+   * Desktop: 112px, then 128px each with the 16px gaps, so every column starts on a unit (0, 128,
+   * 272, 416). A column never gets narrower than its values.
    */
   settingsColumns: {
-    default: `${titleColumn} max-content minmax(max-content, 1fr) max-content`,
-    "@media (max-width: 767px)": "max-content max-content minmax(0, 1fr) max-content",
+    default: `${titleColumn} repeat(3, minmax(max-content, 1fr))`,
+    "@media (max-width: 767px)": "max-content repeat(3, minmax(max-content, 1fr))",
   },
 });
 

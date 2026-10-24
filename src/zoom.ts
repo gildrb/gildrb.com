@@ -11,13 +11,19 @@ import { spring, zoomDuration } from "./entry.ts";
 // travelled. Clicking away mid-opening sends it straight back; clicking it mid-return reopens it.
 
 // The enlargement's margin from the viewport edge: one line (`space.sectionGap`, three units).
+// Phones have no margin: the artwork spans the screen's width.
 const inset = 24;
 // How far the page may scroll under an enlargement before it goes back: one table row pitch (five
 // units), so a trackpad's stray nudge keeps it open.
 const scrollTolerance = 40;
+// How far a finger must travel sideways, and more than it does up or down, to step to the next
+// artwork: the same row pitch.
+const swipeDistance = 40;
 // The backdrop ends fully opaque: the page color itself, as every other surface over the page.
 const backdropOpacity = "1";
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+// `media.mobile`: the artwork already spans the column there, so it enlarges to the screen.
+const phone = matchMedia("(max-width: 767px)");
 
 type Rect = { left: number; top: number; width: number; height: number };
 type Pose = { transform: string; clipPath: string };
@@ -46,12 +52,21 @@ function sizeOf(media: Media): { width: number; height: number } {
     : { width: media.videoWidth, height: media.videoHeight };
 }
 
-/** The largest box with the artwork's own ratio that fits the page container and the viewport. */
+/**
+ * The largest box with the artwork's own ratio that fits the page container and the viewport; on
+ * phones, the whole screen.
+ */
 function frameFor(media: Media): Rect | undefined {
-  const container = media.closest("main")?.parentElement?.getBoundingClientRect();
   const size = sizeOf(media);
-  if (!container || size.width === 0 || size.height === 0) return undefined;
+  if (size.width === 0 || size.height === 0) return undefined;
   const ratio = size.width / size.height;
+  if (phone.matches) {
+    const width = Math.min(innerWidth, innerHeight * ratio);
+    const height = width / ratio;
+    return { left: (innerWidth - width) / 2, top: (innerHeight - height) / 2, width, height };
+  }
+  const container = media.closest("main")?.parentElement?.getBoundingClientRect();
+  if (!container) return undefined;
   const width = Math.min(
     container.width,
     innerWidth - inset * 2,
@@ -166,19 +181,21 @@ function copyVideo(video: HTMLVideoElement): HTMLVideoElement {
 }
 
 /**
- * Enlarges the artwork in `button`. Returns whether it did: nothing happens where the whole
- * artwork already spans the container, as on phones. Stepping from another enlargement (`over`)
- * keeps that one's backdrop and shows the new artwork in place at once, as a slideshow does; a
- * fresh enlargement grows out of the page.
+ * Enlarges the artwork in `button`. Returns whether it did: nothing happens to an artwork that is
+ * not shown, nor, on desktop, where the whole artwork already spans the container. Phones always
+ * enlarge it to the screen. Stepping from another enlargement (`over`) keeps that one's backdrop
+ * and shows the new artwork in place at once, as a slideshow does; a fresh enlargement grows out
+ * of the page.
  */
 function enlarge(button: HTMLButtonElement, over?: Zoomed): boolean {
   const media = button.querySelector("img, video");
   if (!(media instanceof HTMLImageElement || media instanceof HTMLVideoElement)) return false;
+  if (media.getClientRects().length === 0) return false;
   const frame = frameFor(media);
   if (!frame) return false;
   const { artwork, shown } = artworkOf(media);
   const cropped = artwork.width > shown.width + 1 || artwork.height > shown.height + 1;
-  if (!cropped && frame.width < artwork.width * 1.1) return false;
+  if (!phone.matches && !cropped && frame.width < artwork.width * 1.1) return false;
 
   const style = getComputedStyle(media);
   const radius = Number.parseFloat(style.borderTopLeftRadius);
@@ -309,7 +326,8 @@ export function enableZoom() {
   });
 
   // Escape sends the artwork back; so does Tab, as focus leaves for content the backdrop covers.
-  // Left and right (or h and l, as in Vim) step through the page's artworks while one is enlarged.
+  // Left and right (or h and l, as in Vim) step through the page's artworks while one is enlarged;
+  // on a touch screen, a swipe to the left or right does.
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" || event.key === "Tab") shrink();
     if (!zoomed || zoomed.closing || event.altKey || event.ctrlKey || event.metaKey) return;
@@ -322,6 +340,43 @@ export function enableZoom() {
     if (direction === 0) return;
     event.preventDefault();
     step(zoomed, direction);
+  });
+
+  let touch: { x: number; y: number } | undefined;
+  document.addEventListener(
+    "touchstart",
+    (event) => {
+      const point = event.touches[0];
+      touch =
+        zoomed && !zoomed.closing && event.touches.length === 1 && point
+          ? { x: point.clientX, y: point.clientY }
+          : undefined;
+    },
+    { passive: true },
+  );
+  // Not passive (a document's touch listeners are passive unless told otherwise): a sideways move
+  // is the swipe's, not the browser's (its swipe back through the history, or a sideways pan).
+  document.addEventListener(
+    "touchmove",
+    (event) => {
+      const point = event.touches[0];
+      if (!touch || !point) return;
+      if (Math.abs(point.clientX - touch.x) > Math.abs(point.clientY - touch.y)) {
+        event.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+  // Not passive: a swipe that steps cancels the tap that would send the artwork back.
+  document.addEventListener("touchend", (event) => {
+    const start = touch;
+    const point = event.changedTouches[0];
+    touch = undefined;
+    if (!start || !point || !zoomed || zoomed.closing) return;
+    const dx = point.clientX - start.x;
+    if (Math.abs(dx) < swipeDistance || Math.abs(dx) <= Math.abs(point.clientY - start.y)) return;
+    event.preventDefault();
+    step(zoomed, dx < 0 ? 1 : -1);
   });
 
   addEventListener(
