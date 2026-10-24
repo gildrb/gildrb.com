@@ -1,16 +1,16 @@
 import * as stylex from "@stylexjs/stylex";
 import { useId } from "preact/hooks";
 import type { Project } from "./site.ts";
-import { colors, media, rowMarker, descriptorMarker, space, underline } from "./tokens.stylex.ts";
+import { colors, media, rowMarker, descriptorMarker, space, typeScale } from "./tokens.stylex.ts";
 import { Figures, ui, untranslated } from "./ui.tsx";
 
 /**
- * One project in a four-column subgrid (title, descriptor, date set right, square or arrow). The parent grid owns
- * the columns; `home` rows live in the homepage table, the others in "View next" lists.
- * The link is named by its title, descriptor and date, and described by its description. A row
- * that leaves the site underlines its title, as the article links do; the others show →. Home rows
- * show no glyph: their cell is where the table's one square lands (`portfolio.tsx`). Phones show
- * no square, so there home rows drop the cell and the date closes the row.
+ * One project in a three-column subgrid: title, descriptor, and the date set right, which closes
+ * the row on its right edge. The parent grid owns the columns; `home` rows live in the homepage
+ * table, the others in the case pages' next-project lists, and both look the same: no glyph, the
+ * row under the pointer or in focus brightens (`ui.respond`). A row that leaves the site
+ * underlines its title, as the article links do. The link is named by its title, descriptor and
+ * date, and described by its description.
  */
 export function Row({ project, first, home }: { project: Project; first: boolean; home: boolean }) {
   const Title = home ? "h3" : "span";
@@ -19,9 +19,10 @@ export function Row({ project, first, home }: { project: Project; first: boolean
     <a
       {...stylex.props(
         rowMarker,
+        ui.respond,
         styles.row,
         !first && styles.divided,
-        home ? styles.home : styles.next,
+        !home && styles.next,
       )}
       href={project.href}
       // Named by what it shows, in reading order (title, descriptor, date); the sentence describes.
@@ -29,7 +30,12 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       aria-describedby={`${id}-description`}
     >
       <Title
-        {...stylex.props(ui.text, styles.cell, styles.title, project.external && styles.outbound)}
+        {...stylex.props(
+          ui.text,
+          styles.cell,
+          styles.title,
+          project.external && [ui.respond, ui.outbound],
+        )}
         id={`${id}-title`}
         {...untranslated}
       >
@@ -45,7 +51,7 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         <span {...stylex.props(styles.track, styles.copy)}>{project.descriptor}</span>
       </span>
       <time
-        {...stylex.props(ui.text, styles.cell, styles.date, home && styles.homeDate)}
+        {...stylex.props(ui.text, styles.cell, styles.date)}
         id={`${id}-date`}
         dateTime={project.date}
       >
@@ -57,26 +63,11 @@ export function Row({ project, first, home }: { project: Project; first: boolean
       <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
         {project.description}
       </span>
-      {home ? (
-        // The cell is the square's target: 16px wide, as the → glyph's slot in other lists.
-        <span
-          {...stylex.props(ui.text, ui.sans, styles.arrow, styles.squareSlot)}
-          aria-hidden="true"
-          data-row-mark
-        >
-          {"\u00a0"}
-        </span>
-      ) : (
-        <span {...stylex.props(ui.text, ui.sans, styles.arrow)} aria-hidden="true">
-          {!project.external && <span {...stylex.props(styles.glyph)}>→</span>}
-        </span>
-      )}
     </a>
   );
 }
 
 const narrowTable = "@container (max-width: 25rem)";
-const phoneNext = "@media (max-width: 768px)";
 
 /** One round: rest a moment, then move left by one text and gap, where the copy takes over. */
 const marquee = stylex.keyframes({
@@ -104,15 +95,12 @@ const styles = stylex.create({
     touchAction: "manipulation",
     userSelect: "none",
     outline: { default: null, ":focus-visible": `1px solid ${colors.primary}` },
+    outlineOffset: space.focusOffset,
+    borderRadius: { default: null, ":focus-visible": `calc(${space.radius} / 2)` },
   },
   // A hairline drawn inside the row, so it never adds to the row's height.
   divided: { boxShadow: `inset 0 1px ${colors.hairline}` },
-  home: {
-    borderRadius: { default: "4px", [media.desktop]: 0, ":focus-visible": "2px" },
-    outlineOffset: "6px",
-  },
   next: {
-    outlineOffset: "4px",
     paddingBottom: { default: null, ":last-child": { [media.desktop]: 0 } },
   },
   cell: {
@@ -120,7 +108,10 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     paddingInlineEnd: { default: null, [media.mobile]: space.mobileCellEndSpace },
   },
-  /** Set right, as a ledger's figures: the digits line up into a column that closes the row. */
+  /**
+   * Set right, as a ledger's figures: the digits line up into a column that closes the row, the
+   * last figure on the row's right edge.
+   */
   date: {
     gridColumn: 3,
     justifySelf: "end",
@@ -128,9 +119,8 @@ const styles = stylex.create({
     display: "block",
     textAlign: "end",
     color: "inherit",
+    paddingInlineEnd: 0,
   },
-  /** Home rows: on phones the date is the last cell, flush with the row's right edge. */
-  homeDate: { paddingInlineEnd: 0 },
   /**
    * Narrow rows show the month; the day stays readable to assistive tech. The hidden day is pinned
    * inside the date: placed after the month, it would stand 1px past the row, which on phones is
@@ -145,24 +135,14 @@ const styles = stylex.create({
     clipPath: { default: null, [media.mobile]: "inset(50%)", [narrowTable]: "inset(50%)" },
   },
   dayNext: {
-    position: { default: null, [phoneNext]: "absolute" },
-    width: { default: null, [phoneNext]: "1px" },
-    height: { default: null, [phoneNext]: "1px" },
-    overflow: { default: null, [phoneNext]: "hidden" },
-    clipPath: { default: null, [phoneNext]: "inset(50%)" },
+    position: { default: null, [media.mobile]: "absolute" },
+    width: { default: null, [media.mobile]: "1px" },
+    height: { default: null, [media.mobile]: "1px" },
+    overflow: { default: null, [media.mobile]: "hidden" },
+    clipPath: { default: null, [media.mobile]: "inset(50%)" },
   },
-  title: { gridColumn: 1, margin: 0, color: colors.primary },
-  /** As `ui.outbound`, the underline raised with the row. */
-  outbound: {
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: "currentColor" },
-      [stylex.when.ancestor(":focus-visible", rowMarker)]: "currentColor",
-    },
-  },
+  /** The thing named, at the emphasis weight; the descriptor and date beside it stay at the text's. */
+  title: { gridColumn: 1, margin: 0, color: colors.primary, fontWeight: typeScale.emphasisWeight },
   descriptor: {
     gridColumn: 2,
     gridRow: 1,
@@ -180,14 +160,12 @@ const styles = stylex.create({
     maskImage: {
       default: null,
       ":is([data-marquee])": {
-        [media.motion]: "linear-gradient(to right, black calc(100% - 16px), transparent)",
+        [media.motion]: `linear-gradient(to right, black calc(100% - ${space.tableGap}), transparent)`,
       },
     },
-    color: {
-      default: colors.tertiary,
-      [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
-      [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
-    },
+    // The row's own colour (grey, full contrast on its hover or focus), inherited, so the subject
+    // fades with the row on leaving; a colour of its own here would switch at once.
+    color: "inherit",
   },
   /**
    * Phones, a descriptor wider than its cell (`descriptor.ts` sets `data-marquee` and the distance): the
@@ -227,16 +205,4 @@ const styles = stylex.create({
       },
     },
   },
-  arrow: {
-    gridColumn: 4,
-    gridRow: 1,
-    alignSelf: "baseline",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: "8px",
-  },
-  /** Home rows: phones show no square (`rows.ts`), so the slot goes and takes no column. */
-  squareSlot: { display: { default: "inline-flex", [media.mobile]: "none" } },
-  glyph: { flexShrink: 0, width: space.arrowWidth, textAlign: "center" },
 });

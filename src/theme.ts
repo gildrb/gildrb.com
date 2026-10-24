@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { dark, lightTheme } from "./tokens.stylex.ts";
+import { dark, lightTheme, pageColor } from "./tokens.stylex.ts";
 
 export type Theme = "dark" | "light";
 
@@ -9,8 +9,11 @@ export const themeClass: Record<Theme, string> = {
   light: stylex.props(lightTheme).className ?? "",
 };
 
-/** The browser chrome's color: each theme's page background, `colors.bg`. */
-export const themeColor: Record<Theme, string> = { dark: "#000000", light: "#ffffff" };
+/**
+ * The browser chrome's color: each theme's page background, the very strings `colors.bg` is set
+ * from (`pageColor`). `theme-color` takes oklch as CSS does.
+ */
+export const themeColor: Record<Theme, string> = pageColor;
 
 /**
  * Shows `theme` and points the `theme-color` tag at it. Transitions are off for the switch, so

@@ -7,7 +7,7 @@ import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { contacts, type Link, origin, person, profiles } from "./site.ts";
 import { themeColor, themeCss, themeScript } from "./theme.ts";
-import { colors, fontFeatures, media, rootMarker, space } from "./tokens.stylex.ts";
+import { colors, fontFeatures, media, rootMarker, space, typeScale } from "./tokens.stylex.ts";
 import { type Style, ui, untranslated } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -26,13 +26,13 @@ const interRanges = `${monoRanges},U+0100-017F`;
 
 // One URL per face, shared by its @font-face and its preload so the browser fetches it once.
 const interUrl = versioned("/fonts/inter.woff2");
-const monoUrl = versioned("/fonts/ioskeley-mono.woff2");
+const monoUrl = versioned("/fonts/commit-mono.woff2");
 
 /** The few rules StyleX cannot attach to an element, layered beneath StyleX's own layers. */
 const globalCss = [
   "@layer reset;",
   `@font-face{font-family:"Inter";font-weight:380 600;font-display:swap;src:url("${interUrl}") format("woff2");unicode-range:${interRanges}}`,
-  `@font-face{font-family:"Ioskeley Mono";font-weight:400;font-display:optional;src:url("${monoUrl}") format("woff2");unicode-range:${monoRanges}}`,
+  `@font-face{font-family:"Commit Mono";font-weight:400;font-display:optional;src:url("${monoUrl}") format("woff2");unicode-range:${monoRanges}}`,
   // Arial (or metric-identical Liberation Sans) scaled to Inter's metrics, so text laid out
   // before the web font arrives does not move when it does.
   '@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans");size-adjust:107.35%;ascent-override:90.24%;descent-override:22.47%;line-gap-override:0%}',
@@ -126,7 +126,7 @@ export function Document({
         {/* After the stylesheet, so the Inter @font-face exists when the gate asks for it. */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: fontGate }} />
         <script type="speculationrules" dangerouslySetInnerHTML={{ __html: speculationRules }} />
-        {/* High priority: the page reacts to the pointer (the row square, the Contents square) as
+        {/* High priority: the page reacts to the pointer (the Contents list, the enlargement) as
             soon as it shows. A module script never blocks the first paint. Preact's typings lack
             `fetchpriority` on <script> although browsers support it, hence the spread. */}
         <script
@@ -138,6 +138,7 @@ export function Document({
       </head>
       <body
         {...stylex.props(
+          ui.sans,
           styles.body,
           home ? [styles.homeBody, styles.fixedViewport] : styles.caseBody,
         )}
@@ -192,28 +193,12 @@ export function Sidebar({
   );
 }
 
-export function Main({
-  home = false,
-  wide = false,
-  reading = false,
-  children,
-}: {
-  home?: boolean;
-  /** Spans every column right of the sidebar, as the archive does. */
-  wide?: boolean;
-  /**
-   * Wide screens, with `wide`: one column across the table and the grid, for a banner image.
-   */
-  reading?: boolean;
-  children: ComponentChildren;
-}) {
+export function Main({ home = false, children }: { home?: boolean; children: ComponentChildren }) {
   return (
     <main
       {...stylex.props(
         styles.content,
-        home ? [styles.homeColumn, styles.homeContent] : styles.caseContent,
-        wide && styles.wideContent,
-        reading && styles.reading,
+        home ? [styles.homeColumn, styles.homeContent] : [ui.text, styles.caseContent],
       )}
     >
       {/* The skip link's target. `<main>` itself cannot take focus on phones, where it is
@@ -235,7 +220,7 @@ export function Name({ current, heading = false }: { current?: string; heading?:
   return current ? (
     <Tag {...stylex.props(ui.heading, styles.name, styles.caseName)}>
       <a
-        {...stylex.props(ui.target, ui.focusRing, styles.home)}
+        {...stylex.props(ui.target, ui.focusRing, ui.respond, styles.home)}
         href={`${origin}/`}
         {...untranslated}
       >
@@ -284,7 +269,7 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
   const link = (item: Link, placement: Style, me: boolean) => {
     return (
       <a
-        {...stylex.props(ui.quiet, ui.focusRing, styles.link, placement)}
+        {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, placement)}
         href={item.href}
         target="_blank"
         rel={me ? "me noopener noreferrer" : "noopener noreferrer"}
@@ -302,12 +287,12 @@ export function Links({ home = false, phone = false }: { home?: boolean; phone?:
       aria-label="Public profiles and contact"
       data-mobile-links={phone || home || undefined}
     >
-      <p {...stylex.props(styles.label, styles.contactLabel)}>
+      <p {...stylex.props(ui.label, styles.label, styles.contactLabel)}>
         <span data-nosnippet>Contact</span>
       </p>
       <Island name="email" component={Email} props={{}} />
       {contacts.map((item) => link(item, null, false))}
-      <p {...stylex.props(styles.label, styles.profileLabel, styles.profileGroup)}>
+      <p {...stylex.props(ui.label, styles.label, styles.profileLabel, styles.profileGroup)}>
         <span data-nosnippet>Links</span>
       </p>
       {profiles.map((item) => link(item, styles.profileGroup, true))}
@@ -324,7 +309,7 @@ export function Metadata({ style }: { style?: Style }) {
     <footer {...stylex.props(style)}>
       <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Metadata">
         <a
-          {...stylex.props(ui.quiet, ui.focusRing, styles.link, styles.file)}
+          {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, styles.file)}
           href="https://github.com/gildrb/gildrb.com"
           rel="noopener noreferrer"
           target="_blank"
@@ -336,7 +321,7 @@ export function Metadata({ style }: { style?: Style }) {
           { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
         ].map(({ href, label, rel, type }) => (
           <a
-            {...stylex.props(ui.quiet, ui.focusRing, styles.link, styles.file)}
+            {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, styles.file)}
             href={href}
             rel={rel}
             type={type}
@@ -349,8 +334,11 @@ export function Metadata({ style }: { style?: Style }) {
   );
 }
 
-/** The phone page's side margin; the sticky name bar bleeds across it to the viewport edge. */
-const phoneGutter = "12px";
+/**
+ * The phone page's side margin, half a line; the sticky name bar bleeds across it to the
+ * viewport edge.
+ */
+const phoneGutter = `calc(${space.sectionGap} / 2)`;
 
 const styles = stylex.create({
   // The background lives on <html> too, so the held first frame is already the theme color.
@@ -377,10 +365,8 @@ const styles = stylex.create({
     visibility: "var(--first-paint, visible)",
     backgroundColor: colors.bg,
     color: colors.primary,
-    fontFamily:
-      'Inter, "Inter Fallback", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     fontFeatureSettings: fontFeatures.interface,
-    fontWeight: 400,
+    fontWeight: typeScale.textWeight,
     // Every element sets its own size; this keeps stray whitespace from adding height.
     fontSize: "1px",
     lineHeight: 1.5,
@@ -395,26 +381,18 @@ const styles = stylex.create({
   },
   caseBody: { minHeight: "100vh" },
   wrapper: {
-    maxWidth: "1900px",
-    margin: "0 auto",
-    // A minimum margin: the layout keeps its full width until the viewport cannot fit it.
-    paddingInline: { default: "32px", [media.mobile]: phoneGutter },
+    // A minimum margin: the layout keeps its full width until the viewport cannot fit it. Four
+    // units, a sidebar pitch.
+    paddingInline: { default: `calc(4 * ${space.unit})`, [media.mobile]: phoneGutter },
   },
-  /**
-   * Desktop: sidebar and content. Wide screens add a third column, where the homepage shows the
-   * archive; the layout then spans the whole wrapper, so the sidebar holds still across pages.
-   */
+  /** Desktop: sidebar and content, one block centred in the wrapper at every width. */
   layout: {
     display: "grid",
     gridTemplateColumns: {
       default: `${space.sidebarColumn} 1fr`,
-      [media.wide]: `${space.sidebarColumn} ${space.contentColumn} 1fr`,
       [media.mobile]: `minmax(0, 1fr) ${space.toggleSize}`,
     },
-    maxWidth: {
-      default: `calc(${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn})`,
-      [media.wide]: "none",
-    },
+    maxWidth: `calc(${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn})`,
     margin: "0 auto",
     minHeight: { default: "100vh", [media.mobile]: "auto" },
     gap: { default: space.layoutGap, [media.mobile]: 0 },
@@ -484,29 +462,15 @@ const styles = stylex.create({
     clipPath: { default: "inset(50%)", ":focus-visible": "none" },
   },
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
-  wideContent: {
-    maxWidth: "none",
-    gridColumn: { default: null, [media.wide]: "2 / -1" },
-  },
-  /**
-   * Wide screens: the text starts where the homepage's table starts, so it does not move between
-   * pages. The images share its left edge and end where the homepage's archive grid starts
-   * (`figureColumn`, in `Article`); only a banner spans the whole column, table and grid.
-   */
-  reading: {
-    display: { default: "flex", [media.mobile]: "contents", [media.wide]: "grid" },
-    gridTemplateColumns: { default: null, [media.wide]: "minmax(0, 1fr)" },
-    // The article, then the next projects at the bottom of the page.
-    gridTemplateRows: { default: null, [media.wide]: "auto 1fr" },
-  },
-  caseContent: { minHeight: "100vh", fontSize: "16px", lineHeight: "24px" },
+  /** Case pages' text: `ui.text`, so it follows the reader's font size from tablets up. */
+  caseContent: { minHeight: "100vh" },
   homeToggle: {
     gridRow: { default: null, [media.mobile]: 1 },
     // Dense: centered over the table's arrows, whose column ends at the layout's right edge.
     right: {
       default: null,
       [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: `calc((${space.arrowWidth} - ${space.toggleSize}) / 2)`,
+        [media.desktop]: `calc((${space.toggleAxis} - ${space.toggleSize}) / 2)`,
       },
     },
   },
@@ -528,7 +492,7 @@ const styles = stylex.create({
     // which Safari does not sample, and the top bar follows the page background instead.
     width: { default: null, [media.mobile]: "fit-content" },
     maxWidth: { default: null, [media.mobile]: "100%" },
-    padding: { default: null, [media.mobile]: `${space.sectionGap} 0 8px` },
+    padding: { default: null, [media.mobile]: `${space.sectionGap} 0 ${space.unit}` },
     "::before": {
       content: { default: null, [media.mobile]: '""' },
       position: "absolute",
@@ -541,7 +505,6 @@ const styles = stylex.create({
     },
   },
   homeName: {
-    fontSize: { default: "19px", [media.desktop]: "1.1875rem" },
     minHeight: {
       default: null,
       [media.desktop]: "var(--desktop-intro-height, 0px)",
@@ -570,6 +533,10 @@ const styles = stylex.create({
       [media.mobile]: 0,
     },
   },
+  /**
+   * The parent: the same name, in the same type and place as on the homepage, so only its color
+   * changes between pages. Gray until hovered or focused; the page under it is in full contrast.
+   */
   home: {
     color: {
       default: colors.tertiary,
@@ -602,7 +569,7 @@ const styles = stylex.create({
     order: { default: null, [media.mobile]: 6 },
     marginTop: { default: null, [media.mobile]: space.sectionGap },
   },
-  label: { color: colors.secondary, width: "fit-content" },
+  label: { width: "fit-content" },
   profileLabel: {
     // Phones: one section gap between the two lists, as between About and the table.
     marginTop: {

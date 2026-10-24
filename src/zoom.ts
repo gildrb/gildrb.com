@@ -1,25 +1,32 @@
-import { fadeDuration, spring } from "./entry.ts";
+import { spring, zoomDuration } from "./entry.ts";
 
-// Case-study images enlarge in place: a click grows the image from the text column to span the
-// whole page container, over a backdrop in the page color; a click, Escape, scroll or resize
-// sends it back. The page keeps its own image; a fixed-position copy does the moving.
+// Case-study images and recordings enlarge in place: a click grows the artwork from the text
+// column to span the whole page container, over a backdrop in the page color; a click, Escape,
+// scroll or resize sends it back. The page keeps its own element; a fixed-position copy does the
+// moving. A recording's copy is a second `<video>` of the same file, playing from where the page's
+// one is; the page's one only turns invisible, so it plays on and is in step when the copy goes.
 //
 // The motion is CSS transitions, not keyframes, so it is interruptible both ways: a new target
-// takes over from wherever the image is, and a reversal is shortened to the distance already
+// takes over from wherever the artwork is, and a reversal is shortened to the distance already
 // travelled. Clicking away mid-opening sends it straight back; clicking it mid-return reopens it.
 
+// The enlargement's margin from the viewport edge: one line (`space.sectionGap`, three units).
 const inset = 24;
+// How far the page may scroll under an enlargement before it goes back: one table row pitch (five
+// units), so a trackpad's stray nudge keeps it open.
 const scrollTolerance = 40;
-const backdropOpacity = "0.96";
+// The backdrop ends fully opaque: the page color itself, as every other surface over the page.
+const backdropOpacity = "1";
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
 type Rect = { left: number; top: number; width: number; height: number };
 type Pose = { transform: string; clipPath: string };
+type Media = HTMLImageElement | HTMLVideoElement;
 
 type Zoomed = {
   button: HTMLButtonElement;
-  image: HTMLImageElement;
-  copy: HTMLImageElement;
+  media: Media;
+  copy: Media;
   backdrop: HTMLDivElement;
   frame: Rect;
   radius: number;
@@ -29,11 +36,22 @@ type Zoomed = {
 
 let zoomed: Zoomed | undefined;
 
+/** The artwork's own pixel size; a recording's size attributes stand in until its metadata loads. */
+function sizeOf(media: Media): { width: number; height: number } {
+  if (media instanceof HTMLImageElement) {
+    return { width: media.naturalWidth, height: media.naturalHeight };
+  }
+  return media.videoWidth === 0
+    ? { width: media.width, height: media.height }
+    : { width: media.videoWidth, height: media.videoHeight };
+}
+
 /** The largest box with the artwork's own ratio that fits the page container and the viewport. */
-function frameFor(image: HTMLImageElement): Rect | undefined {
-  const container = image.closest("main")?.parentElement?.getBoundingClientRect();
-  if (!container || image.naturalWidth === 0 || image.naturalHeight === 0) return undefined;
-  const ratio = image.naturalWidth / image.naturalHeight;
+function frameFor(media: Media): Rect | undefined {
+  const container = media.closest("main")?.parentElement?.getBoundingClientRect();
+  const size = sizeOf(media);
+  if (!container || size.width === 0 || size.height === 0) return undefined;
+  const ratio = size.width / size.height;
   const width = Math.min(
     container.width,
     innerWidth - inset * 2,
@@ -53,18 +71,19 @@ function offset(value: string, free: number): number {
 }
 
 /**
- * The whole artwork's box on the page and the part of it that shows. A banner crops its image
- * (`object-fit: cover`); the enlargement starts from that crop and opens to the whole artwork.
+ * The whole artwork's box on the page and the part of it that shows. A banner or tile crops its
+ * artwork (`object-fit: cover`); the enlargement starts from that crop and opens to the whole.
  */
-function artworkOf(image: HTMLImageElement): { artwork: Rect; shown: Rect } {
-  const shown = image.getBoundingClientRect();
-  const style = getComputedStyle(image);
+function artworkOf(media: Media): { artwork: Rect; shown: Rect } {
+  const shown = media.getBoundingClientRect();
+  const style = getComputedStyle(media);
   const fit = style.objectFit;
   if (fit !== "cover" && fit !== "contain") return { artwork: shown, shown };
-  const scales = [shown.width / image.naturalWidth, shown.height / image.naturalHeight];
+  const size = sizeOf(media);
+  const scales = [shown.width / size.width, shown.height / size.height];
   const scale = fit === "cover" ? Math.max(...scales) : Math.min(...scales);
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
+  const width = size.width * scale;
+  const height = size.height * scale;
   const [x = "50%", y = "50%"] = style.objectPosition.split(" ");
   const artwork = {
     left: shown.left + offset(x, shown.width - width),
@@ -76,11 +95,11 @@ function artworkOf(image: HTMLImageElement): { artwork: Rect; shown: Rect } {
 }
 
 /**
- * Maps the enlarged frame onto the image on the page: the whole artwork scaled onto its box
- * there, clipped to the part that shows, with the image's visible corner radius.
+ * Maps the enlarged frame onto the artwork on the page: the whole artwork scaled onto its box
+ * there, clipped to the part that shows, with the element's visible corner radius.
  */
-function poseAt(image: HTMLImageElement, frame: Rect, radius: number): Pose {
-  const { artwork, shown } = artworkOf(image);
+function poseAt(media: Media, frame: Rect, radius: number): Pose {
+  const { artwork, shown } = artworkOf(media);
   const scale = artwork.width / frame.width;
   const top = Math.max(0, shown.top - artwork.top) / scale;
   const left = Math.max(0, shown.left - artwork.left) / scale;
@@ -99,7 +118,7 @@ function openPose(radius: number): Pose {
 
 /** Moves to the given pose on the site's spring; returns once nothing is moving. */
 function settle(state: Zoomed, pose: Pose, opacity: string) {
-  const duration = reducedMotion.matches ? 0 : fadeDuration;
+  const duration = reducedMotion.matches ? 0 : zoomDuration;
   state.copy.style.transition = `transform ${duration}ms ${spring}, clip-path ${duration}ms ${spring}`;
   state.backdrop.style.transition = `opacity ${duration}ms ${spring}`;
   Object.assign(state.copy.style, pose);
@@ -108,29 +127,70 @@ function settle(state: Zoomed, pose: Pose, opacity: string) {
   if (state.closing && state.copy.getAnimations().length === 0) restore(state);
 }
 
-function enlarge(button: HTMLButtonElement) {
-  const image = button.querySelector("img");
-  if (!image) return;
-  const frame = frameFor(image);
-  if (!frame) return;
-  const { artwork, shown } = artworkOf(image);
-  const cropped = artwork.width > shown.width + 1 || artwork.height > shown.height + 1;
-  // Nothing to gain where the whole image already spans the container, as on phones.
-  if (!cropped && frame.width < artwork.width * 1.1) return;
-
-  const style = getComputedStyle(image);
-  const radius = Number.parseFloat(style.borderTopLeftRadius);
-  const start = poseAt(image, frame, radius);
-  const backdrop = document.createElement("div");
-  backdrop.style.cssText = `position:fixed;inset:0;z-index:1000;cursor:zoom-out;opacity:0;background:${
-    getComputedStyle(document.body).backgroundColor
-  }`;
-
-  // Starts from the file already on screen, then swaps in the sharpest one for the new size.
+/** A copy of the page's image: the file already on screen, then the sharpest one for the new size. */
+function copyImage(image: HTMLImageElement, width: number): HTMLImageElement {
   const copy = document.createElement("img");
   copy.alt = "";
   copy.decoding = "async";
   copy.src = image.currentSrc || image.src;
+  if (image.srcset) {
+    const sharp = new Image();
+    sharp.sizes = `${Math.ceil(width)}px`;
+    sharp.srcset = image.srcset;
+    sharp.decode().then(
+      () => {
+        if (zoomed?.copy === copy && !zoomed.closing) copy.src = sharp.currentSrc;
+      },
+      // Undecodable: the copy keeps the file already on screen.
+      () => undefined,
+    );
+  }
+  return copy;
+}
+
+/**
+ * A copy of the page's recording, taken up from where that one is. Like the page's own
+ * (`video.ts`), it stands still on its poster when reduced motion is asked for.
+ */
+function copyVideo(video: HTMLVideoElement): HTMLVideoElement {
+  const copy = document.createElement("video");
+  copy.setAttribute("aria-hidden", "true");
+  copy.src = video.currentSrc || video.src;
+  copy.poster = video.poster;
+  copy.muted = true;
+  copy.loop = true;
+  copy.playsInline = true;
+  copy.autoplay = !reducedMotion.matches;
+  copy.currentTime = video.currentTime;
+  return copy;
+}
+
+/**
+ * Enlarges the artwork in `button`. Returns whether it did: nothing happens where the whole
+ * artwork already spans the container, as on phones. Stepping from another enlargement (`over`)
+ * keeps that one's backdrop and shows the new artwork in place at once, as a slideshow does; a
+ * fresh enlargement grows out of the page.
+ */
+function enlarge(button: HTMLButtonElement, over?: Zoomed): boolean {
+  const media = button.querySelector("img, video");
+  if (!(media instanceof HTMLImageElement || media instanceof HTMLVideoElement)) return false;
+  const frame = frameFor(media);
+  if (!frame) return false;
+  const { artwork, shown } = artworkOf(media);
+  const cropped = artwork.width > shown.width + 1 || artwork.height > shown.height + 1;
+  if (!cropped && frame.width < artwork.width * 1.1) return false;
+
+  const style = getComputedStyle(media);
+  const radius = Number.parseFloat(style.borderTopLeftRadius);
+  const start = over ? openPose(radius) : poseAt(media, frame, radius);
+  const backdrop = over?.backdrop ?? document.createElement("div");
+  if (!over) {
+    backdrop.style.cssText = `position:fixed;inset:0;z-index:1000;cursor:zoom-out;opacity:0;background:${
+      getComputedStyle(document.body).backgroundColor
+    }`;
+  }
+
+  const copy = media instanceof HTMLImageElement ? copyImage(media, frame.width) : copyVideo(media);
   copy.style.cssText = [
     "position:fixed",
     "z-index:1001",
@@ -148,46 +208,69 @@ function enlarge(button: HTMLButtonElement) {
     `clip-path:${start.clipPath}`,
     `filter:${style.filter}`,
   ].join(";");
-  if (image.srcset) {
-    const sharp = new Image();
-    sharp.sizes = `${Math.ceil(frame.width)}px`;
-    sharp.srcset = image.srcset;
-    sharp.decode().then(
-      () => {
-        if (zoomed?.copy === copy && !zoomed.closing) copy.src = sharp.currentSrc;
-      },
-      // Undecodable: the copy keeps the file already on screen.
-      () => undefined,
-    );
-  }
 
-  document.body.append(backdrop, copy);
-  image.style.visibility = "hidden";
+  if (over) {
+    over.copy.replaceWith(copy);
+    if (over.copy instanceof HTMLVideoElement) over.copy.pause();
+    over.media.style.visibility = "";
+    over.button.setAttribute("aria-expanded", "false");
+  } else {
+    document.body.append(backdrop, copy);
+  }
+  media.style.visibility = "hidden";
   button.setAttribute("aria-expanded", "true");
-  // Focus stays on the image's own button (Safari does not focus buttons on click), so keys act
+  // Focus stays on the artwork's own button (Safari does not focus buttons on click), so keys act
   // on the enlargement and Tab carries on from where the reader is.
   button.focus({ preventScroll: true });
-  const state: Zoomed = { button, image, copy, backdrop, frame, radius, scrollY, closing: false };
+  const state: Zoomed = { button, media, copy, backdrop, frame, radius, scrollY, closing: false };
   zoomed = state;
-  copy.addEventListener("transitionend", (event) => {
+  copy.addEventListener("transitionend", (event: Event) => {
+    if (!(event instanceof TransitionEvent)) return;
     if (event.propertyName === "transform" && state.closing) restore(state);
   });
+  if (over) return true;
   // Commit the starting pose, so the change below transitions from it.
   copy.getBoundingClientRect();
   settle(state, openPose(radius), backdropOpacity);
+  return true;
+}
+
+/**
+ * Steps the enlargement to the next (or previous) artwork on the page, in reading order, skipping
+ * any that cannot enlarge. The page scrolls so the new artwork's own place is in view, which is
+ * where it returns to; that scroll is the enlargement's own, not a reason to close.
+ */
+function step(state: Zoomed, direction: 1 | -1) {
+  const buttons = [...document.querySelectorAll("[data-zoom]")].filter(
+    (element): element is HTMLButtonElement => element instanceof HTMLButtonElement,
+  );
+  let index = buttons.indexOf(state.button) + direction;
+  while (index >= 0 && index < buttons.length) {
+    const button = buttons[index];
+    if (button === undefined) return;
+    button.scrollIntoView({ behavior: "instant", block: "nearest" });
+    if (enlarge(button, state)) {
+      if (zoomed) zoomed.scrollY = scrollY;
+      return;
+    }
+    index += direction;
+  }
+  // No further artwork that way: the page is back where the current one is.
+  state.button.scrollIntoView({ behavior: "instant", block: "nearest" });
+  state.scrollY = scrollY;
 }
 
 function shrink() {
   if (!zoomed || zoomed.closing) return;
   const state = zoomed;
   state.closing = true;
-  // Clicks now reach the page again: the image itself to reopen it, or any other to open that.
+  // Clicks now reach the page again: the artwork itself to reopen it, or any other to open that.
   state.copy.style.pointerEvents = "none";
   state.backdrop.style.pointerEvents = "none";
-  settle(state, poseAt(state.image, state.frame, state.radius), "0");
+  settle(state, poseAt(state.media, state.frame, state.radius), "0");
 }
 
-/** Sends a returning image back out, from wherever it has got to. */
+/** Sends a returning artwork back out, from wherever it has got to. */
 function reopen(state: Zoomed) {
   state.closing = false;
   state.copy.style.pointerEvents = "";
@@ -196,16 +279,17 @@ function reopen(state: Zoomed) {
   settle(state, openPose(state.radius), backdropOpacity);
 }
 
-/** Puts the page's image back and drops the copy; safe to call twice. */
+/** Puts the page's artwork back and drops the copy; safe to call twice. */
 function restore(state: Zoomed) {
+  if (state.copy instanceof HTMLVideoElement) state.copy.pause();
   state.copy.remove();
   state.backdrop.remove();
-  state.image.style.visibility = "";
+  state.media.style.visibility = "";
   state.button.setAttribute("aria-expanded", "false");
   if (zoomed === state) zoomed = undefined;
 }
 
-/** Listens for image clicks and for everything that sends an enlarged image back. */
+/** Listens for artwork clicks and for everything that sends an enlarged artwork back. */
 export function enableZoom() {
   document.addEventListener("click", (event) => {
     if (zoomed && !zoomed.closing) {
@@ -219,14 +303,25 @@ export function enableZoom() {
       reopen(zoomed);
       return;
     }
-    // Another image cuts the previous one's return short.
+    // Another artwork cuts the previous one's return short.
     if (zoomed) restore(zoomed);
     enlarge(button);
   });
 
-  // Escape sends the image back; so does Tab, as focus leaves for content the backdrop covers.
+  // Escape sends the artwork back; so does Tab, as focus leaves for content the backdrop covers.
+  // Left and right (or h and l, as in Vim) step through the page's artworks while one is enlarged.
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" || event.key === "Tab") shrink();
+    if (!zoomed || zoomed.closing || event.altKey || event.ctrlKey || event.metaKey) return;
+    const direction =
+      event.key === "ArrowRight" || event.key === "l"
+        ? 1
+        : event.key === "ArrowLeft" || event.key === "h"
+          ? -1
+          : 0;
+    if (direction === 0) return;
+    event.preventDefault();
+    step(zoomed, direction);
   });
 
   addEventListener(

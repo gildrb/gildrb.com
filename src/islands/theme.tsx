@@ -103,7 +103,13 @@ export function ThemeToggle({ style }: { style?: Style }) {
   return (
     <button
       ref={button}
-      {...stylex.props(ui.reset, styles.toggle, !suppressHover && styles.hoverable, style)}
+      {...stylex.props(
+        ui.reset,
+        ui.respond,
+        styles.toggle,
+        !suppressHover && styles.hoverable,
+        style,
+      )}
       type="button"
       aria-label={label}
       title={label}
@@ -161,39 +167,44 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "center",
     width: space.toggleSize,
+    // Phones: as tall as the sticky name bar beside it (`layout.tsx`): its line, `sectionGap`
+    // above, a unit below.
     height: {
       default: space.toggleSize,
-      [media.mobile]: `calc(24px + ${space.linkLineHeight} + 8px)`,
+      [media.mobile]: `calc(${space.sectionGap} + ${space.linkLineHeight} + ${space.unit})`,
     },
     minHeight: { default: null, [media.mobile]: space.toggleSize },
     padding: {
       default: 0,
-      [media.mobile]: `calc(24px + ${space.toggleOpticalOffset}) 0 calc(8px - ${space.toggleOpticalOffset})`,
+      [media.mobile]: `calc(${space.sectionGap} + ${space.toggleOpticalOffset}) 0 calc(${space.unit} - ${space.toggleOpticalOffset})`,
     },
     margin: {
       default: "auto 0 0",
-      // Phones: centered over the arrows of the table below, which ends where this column does.
-      [media.mobile]: `0 calc((${space.arrowWidth} - ${space.toggleSize}) / 2) 0 16px`,
-      // Desktop: centered where a row arrow set flush against the sidebar's left edge would be,
-      // mirroring the dense placement over the table's arrows.
-      [media.desktop]: `0 0 0 calc((${space.arrowWidth} - ${space.toggleSize}) / 2)`,
+      // Phones: centered on the axis at the right edge of the table below (`space.toggleAxis`),
+      // which ends where this column does.
+      [media.mobile]: `0 calc((${space.toggleAxis} - ${space.toggleSize}) / 2) 0 calc(2 * ${space.unit})`,
+      // Desktop: the same axis at the sidebar's left edge, mirroring the dense placement over the
+      // table's right edge.
+      [media.desktop]: `0 0 0 calc((${space.toggleAxis} - ${space.toggleSize}) / 2)`,
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     color: colors.tertiary,
     borderRadius: "50%",
-    boxShadow: { default: null, ":focus-visible": `0 0 0 1px ${colors.primary}` },
-    outline: "none",
+    // The focus ring is the shared one's line (`ui.focusRing`) on the button's own round edge.
+    outline: { default: "none", ":focus-visible": `1px solid ${colors.primary}` },
     "::before": {
       content: { default: null, [media.mobile]: '""' },
       position: { default: null, [media.mobile]: "absolute" },
       // One touch target, 44 × 44. Right: it stops at the page's side padding, where the toggle
-      // overhangs the column by 8px of the 12px; the rest of the width goes on the left.
+      // overhangs the column by 8px of the 12px, so it reaches the other 4px (half a unit) past
+      // the toggle; the rest of the width goes on the left.
       inset: {
         default: null,
-        [media.mobile]: `calc((100% - ${space.touchTarget}) / 2) -4px calc((100% - ${space.touchTarget}) / 2) calc(${space.toggleSize} + 4px - ${space.touchTarget})`,
+        [media.mobile]: `calc((100% - ${space.touchTarget}) / 2) calc(${space.unit} / -2) calc((100% - ${space.touchTarget}) / 2) calc(${space.toggleSize} + ${space.unit} / 2 - ${space.touchTarget})`,
       },
     },
   },
+  /** Set with `ui.respond`. */
   hoverable: { color: { default: colors.tertiary, ":hover": { [media.hover]: colors.primary } } },
   icon: { fill: "currentColor" },
   sun: { width: "22px", height: "22px", display: colors.sunDisplay },

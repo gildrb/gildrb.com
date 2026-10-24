@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { colors } from "../tokens.stylex.ts";
+import { colors, media, space } from "../tokens.stylex.ts";
 
 type Player = { goToAndStop(frame: number, isFrame: boolean): void; destroy(): void };
 type Lottie = { loadAnimation(options: Record<string, unknown>): Player };
@@ -170,10 +170,6 @@ export function Fold({
   );
 }
 
-const small = "@container (max-width: 560px)";
-// The case pages' banner window (see `styles.window` in markdown.tsx).
-const banner = "@media (min-width: 1280px)";
-
 const styles = stylex.create({
   stage: {
     position: "relative",
@@ -183,7 +179,8 @@ const styles = stylex.create({
     overflow: "hidden",
     containerType: "size",
     backgroundColor: colors.bg,
-    borderRadius: { default: null, [small]: "15px" },
+    // The case pages' surface corner, as every banner (`styles.window` in markdown.tsx).
+    borderRadius: space.radius,
     // The banner's frame: the hairline of the homepage table's rows, drawn over the artwork.
     "::after": {
       content: '""',
@@ -194,7 +191,8 @@ const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  fill: { height: { default: null, [banner]: "100%" } },
+  // Fills the case pages' banner window on desktop (`styles.window` in markdown.tsx).
+  fill: { height: { default: null, [media.desktop]: "100%" } },
   // The animation is drawn in white; the light theme prints it black, like the other marks.
   art: {
     position: "absolute",

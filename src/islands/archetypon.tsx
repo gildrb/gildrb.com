@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { TargetedEvent } from "preact";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
-import { colors, media, space, underline } from "../tokens.stylex.ts";
+import { colors, media, space, typeScale } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
 /**
@@ -673,14 +673,18 @@ export function Converter() {
         <div {...stylex.props(styles.actions)}>
           {download && (
             <a
-              {...stylex.props(ui.focusRing, styles.download)}
+              {...stylex.props(ui.outbound, ui.respond, ui.focusRing, styles.download)}
               href={download.url}
               download={download.name}
             >
               Download {download.name} ({formatBytes(download.bytes)})
             </a>
           )}
-          <button {...stylex.props(ui.reset, ui.quiet, ui.focusRing)} type="button" onClick={clear}>
+          <button
+            {...stylex.props(ui.reset, ui.quiet, ui.respond, ui.focusRing)}
+            type="button"
+            onClick={clear}
+          >
             Clear
           </button>
         </div>
@@ -716,7 +720,7 @@ function DropZone({ dragging, onFiles }: DropZoneProps) {
           <>
             Drop SVG files on this page, or{" "}
             <button
-              {...stylex.props(ui.reset, ui.focusRing, styles.choose)}
+              {...stylex.props(ui.reset, ui.outbound, ui.respond, ui.focusRing, styles.choose)}
               type="button"
               onClick={() => picker.current?.click()}
             >
@@ -786,7 +790,7 @@ function OptionsPanel({
   function toggle(key: Key, label: string, on: boolean, style: stylex.StyleXStyles) {
     return (
       <button
-        {...stylex.props(ui.reset, ui.focusRing, styles.toggle, style, on && styles.on)}
+        {...stylex.props(ui.reset, ui.respond, ui.focusRing, styles.toggle, style, on && styles.on)}
         type="button"
         data-toggle={`${key.group}:${key.value}`}
         aria-pressed={on}
@@ -852,7 +856,7 @@ function OptionsPanel({
   return (
     <div {...stylex.props(ui.text, styles.panel)} role="group" aria-label="Options">
       <div {...stylex.props(styles.options)}>
-        <div {...stylex.props(styles.row, styles.header)} aria-hidden="true">
+        <div {...stylex.props(ui.label, styles.row, styles.header)} aria-hidden="true">
           <span>Format</span>
           <span>Size</span>
           <span>Background</span>
@@ -873,7 +877,7 @@ function OptionsPanel({
                 empty
               ) : (
                 <button
-                  {...stylex.props(ui.reset, ui.focusRing, styles.setting)}
+                  {...stylex.props(ui.reset, ui.outbound, ui.respond, ui.focusRing, styles.setting)}
                   type="button"
                   aria-label={`${labels[format]} background: ${backgroundLabels[backgrounds[format]]}`}
                   onClick={() =>
@@ -914,7 +918,7 @@ function OptionsPanel({
         })}
       </div>
       <div {...stylex.props(styles.sizes)} role="group" aria-labelledby="archetypon-sizes">
-        <span {...stylex.props(styles.sizesLabel)} id="archetypon-sizes">
+        <span {...stylex.props(ui.label, styles.sizesLabel)} id="archetypon-sizes">
           Sizes
         </span>
         <div {...stylex.props(styles.sizeList)}>
@@ -934,21 +938,21 @@ function ResultList({ results }: { results: readonly Result[] }) {
         <li {...stylex.props(styles.result, index > 0 && styles.divided)}>
           {result.preview ? (
             <img
-              {...stylex.props(styles.preview)}
+              {...stylex.props(ui.codeSurface, ui.edge, styles.preview)}
               src={result.preview}
               alt=""
               width={48}
               height={48}
             />
           ) : (
-            <span {...stylex.props(styles.preview)} />
+            <span {...stylex.props(ui.codeSurface, ui.edge, styles.preview)} />
           )}
           <div {...stylex.props(styles.body)}>
             <p {...stylex.props(styles.name)}>{result.name}</p>
             {result.size && <p {...stylex.props(styles.meta)}>{result.size}</p>}
             <ol {...stylex.props(styles.steps)} aria-label="Formats">
               {result.steps.map(({ format, state }) => (
-                <li {...stylex.props(styles.step, styles[state])}>
+                <li {...stylex.props(styles[state])}>
                   {labels[format]}
                   <span {...stylex.props(ui.srOnly)}>
                     {state === "done" ? ", done" : state === "running" ? ", running" : ""}
@@ -959,7 +963,7 @@ function ResultList({ results }: { results: readonly Result[] }) {
             {result.error && <p {...stylex.props(styles.meta, styles.problem)}>{result.error}</p>}
             {result.files.length > 0 && (
               <details {...stylex.props(styles.details)}>
-                <summary {...stylex.props(ui.quiet, ui.focusRing, styles.summary)}>
+                <summary {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.summary)}>
                   {count(result.files.length, "file")},{" "}
                   {formatBytes(result.files.reduce((sum, file) => sum + file.size, 0))}
                 </summary>
@@ -986,40 +990,42 @@ const styles = stylex.create({
   intake: { margin: 0, color: colors.article, fontWeight: colors.proseWeight },
   /** Files hover over the page: the line says where they go, at full contrast. */
   dragging: { color: colors.primary },
-  /** Set like the article links (`markdown.tsx`), inside the sentence. */
+  /** Set like the article links (`markdown.tsx`), inside the sentence, with `ui.outbound`. */
   choose: {
     display: "inline",
     color: { default: colors.article, ":focus-visible": colors.primary },
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      ":hover": { [media.hover]: colors.article },
-    },
   },
   panel: { display: "flex", flexDirection: "column", gap: space.sectionGap },
-  /** The homepage table's grid (`space.tableColumns`): a header over a hairline, then one row per format. */
+  /**
+   * The project table's system (`portfolio.tsx`, `row.tsx`) on a settings table's columns
+   * (`space.settingsColumns`): a label header over a hairline, then one row per format.
+   */
   options: {
     display: "grid",
-    gridTemplateColumns: space.tableColumns,
+    gridTemplateColumns: space.settingsColumns,
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
   },
-  /** A row on the table's columns and pitch, as the homepage's (`row.tsx`). */
+  /** A row on the table's columns and pitch, as the homepage's (`row.tsx`): a line and its padding. */
   row: {
     display: "grid",
     gridColumn: "1 / -1",
     gridTemplateColumns: "subgrid",
     // Centered, as the name is: it fills the row's height to be easy to hit.
     alignItems: "center",
-    minHeight: { default: "40px", [media.mobile]: space.touchTarget },
+    minHeight: {
+      default: `calc(${space.linkLineHeight} + 2 * ${space.portfolioRowPadding})`,
+      [media.mobile]: space.touchTarget,
+    },
     color: colors.secondary,
   },
+  /** As the project table's header: labels (`ui.label`) on the text's line, a hairline under. */
   header: {
-    alignItems: "start",
+    alignItems: "baseline",
     minHeight: 0,
-    paddingBottom: { default: space.portfolioRowPadding, [media.mobile]: space.touchInset },
+    paddingBlock: { default: `0 ${space.portfolioRowPadding}`, [media.mobile]: space.touchInset },
     boxShadow: `inset 0 -1px ${colors.hairline}`,
+    // The row's own colour would override the label's.
+    color: colors.tertiary,
   },
   /** A format that is off: its whole row goes dark grey, settings included. */
   off: { color: colors.tertiary },
@@ -1034,25 +1040,16 @@ const styles = stylex.create({
     touchAction: "manipulation",
   },
   on: { color: colors.primary },
-  /** The format's name: the row's switch, as tall as the row so it is easy to hit. */
+  /** The format's name, at the project names' weight: the row's switch, as tall as the row. */
   formatName: {
     alignSelf: "stretch",
     justifySelf: "start",
     display: "flex",
     alignItems: "center",
+    fontWeight: typeScale.emphasisWeight,
   },
-  /** A setting in a row, named by its value; pressing it switches to the other value. */
-  setting: {
-    justifySelf: "start",
-    color: "inherit",
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      ":hover": { [media.hover]: "currentColor" },
-    },
-  },
+  /** A setting in a row, named by its value (`ui.outbound`); pressing it switches to the other value. */
+  setting: { justifySelf: "start", color: "inherit" },
   percent: {
     display: "flex",
     alignItems: "baseline",
@@ -1065,23 +1062,23 @@ const styles = stylex.create({
    */
   sizes: {
     display: "grid",
-    gridTemplateColumns: { default: space.tableColumns, [media.mobile]: "minmax(0, 1fr)" },
+    gridTemplateColumns: { default: space.settingsColumns, [media.mobile]: "minmax(0, 1fr)" },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     alignItems: "baseline",
   },
-  sizesLabel: { gridColumn: 1, color: colors.secondary },
+  sizesLabel: { gridColumn: 1 },
   sizeList: {
     gridColumn: { default: "2 / -1", [media.mobile]: 1 },
     display: "flex",
     flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
-    columnGap: { default: "12px", [media.mobile]: 0 },
+    columnGap: { default: space.tableGap, [media.mobile]: 0 },
   },
   /**
    * Phones: each figure takes an equal share of the line and centers in it (the first starts at
    * the edge, the last ends at it), so the touch targets meet with no gap between them.
    */
   size: {
-    minHeight: { default: "24px", [media.mobile]: space.touchTarget },
+    minHeight: { default: space.linkLineHeight, [media.mobile]: space.touchTarget },
     // Each takes its width plus an equal share of what is left, the first and last half a share:
     // centered in its share, every figure stands the same distance from the next.
     flexGrow: {
@@ -1137,37 +1134,30 @@ const styles = stylex.create({
     margin: 0,
     marginTop: { default: 0, ":empty": `calc(${space.sectionGap} * -1)` },
     color: colors.secondary,
-    minHeight: { default: "24px", ":empty": 0 },
+    minHeight: { default: space.linkLineHeight, ":empty": 0 },
   },
   problem: { color: colors.primary },
-  /** Set like the article links (`markdown.tsx`): hover turns the underline the text color. */
+  /** Set like the article links (`markdown.tsx`), with `ui.outbound`. */
   download: {
     width: "fit-content",
     color: { default: colors.article, ":focus-visible": colors.primary },
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      ":hover": { [media.hover]: colors.article },
-    },
   },
   list: { margin: 0, padding: 0, listStyle: "none" },
+  /** Two units above and below; the preview is two lines tall, the name and its size beside it. */
   result: {
     display: "grid",
-    gridTemplateColumns: "48px minmax(0, 1fr)",
+    gridTemplateColumns: `calc(2 * ${space.linkLineHeight}) minmax(0, 1fr)`,
     columnGap: space.tableGap,
     alignItems: "start",
-    paddingBlock: "16px",
+    paddingBlock: `calc(2 * ${space.unit})`,
   },
   divided: { boxShadow: `inset 0 1px ${colors.hairline}` },
+  /** On the code surface (`ui.codeSurface`, `ui.edge`), as code is. */
   preview: {
     display: "block",
-    width: "48px",
-    height: "48px",
+    width: `calc(2 * ${space.linkLineHeight})`,
+    height: `calc(2 * ${space.linkLineHeight})`,
     objectFit: "contain",
-    borderRadius: "2px",
-    backgroundColor: colors.codeBg,
   },
   body: { minWidth: 0 },
   name: { margin: 0, color: colors.primary, overflowWrap: "anywhere" },
@@ -1175,25 +1165,28 @@ const styles = stylex.create({
   steps: {
     display: "flex",
     flexWrap: "wrap",
-    columnGap: "12px",
+    columnGap: space.tableGap,
     margin: 0,
     padding: 0,
     listStyle: "none",
   },
-  step: {
-    transitionProperty: "color",
-    transitionDuration: { default: "0s", [media.motion]: "200ms" },
-  },
   pending: { color: colors.tertiary },
   running: { color: colors.secondary },
   done: { color: colors.primary },
-  details: { marginTop: "4px" },
+  details: { marginTop: `calc(${space.unit} / 2)` },
   summary: {
     cursor: "pointer",
     listStyle: "none",
     "::-webkit-details-marker": { display: "none" },
   },
-  files: { margin: "8px 0 0", padding: 0, listStyle: "none", fontSize: "14px", lineHeight: "22px" },
+  files: {
+    margin: `${space.unit} 0 0`,
+    padding: 0,
+    listStyle: "none",
+    fontSize: typeScale.labelSize,
+    lineHeight: typeScale.labelLeading,
+    letterSpacing: typeScale.labelTracking,
+  },
   file: {
     display: "flex",
     justifyContent: "space-between",

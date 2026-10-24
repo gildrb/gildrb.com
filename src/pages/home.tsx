@@ -1,7 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
-import { SideArchive, type Work } from "../archive.tsx";
+import type { Work } from "../archive.tsx";
 import { profile } from "../files.ts";
-import { media as artwork } from "../media.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
 import {
@@ -16,7 +15,7 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { developers, origin, person, profiles, projects } from "../site.ts";
-import { colors, media, rootMarker, space } from "../tokens.stylex.ts";
+import { media, rootMarker, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
@@ -87,7 +86,7 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
         </Sidebar>
         <Main home>
           <section {...stylex.props(styles.summary)} aria-labelledby="profile-summary-title">
-            <h2 {...stylex.props(ui.text, styles.heading)} id="profile-summary-title">
+            <h2 {...stylex.props(ui.label, styles.heading)} id="profile-summary-title">
               About
             </h2>
             <p {...stylex.props(ui.text)}>{person.about}</p>
@@ -99,7 +98,6 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
           />
           <Metadata style={styles.footer} />
         </Main>
-        <SideArchive work={work.filter(({ id }) => artwork[id]?.home === true)} home />
       </Shell>
     </Document>
   );
@@ -114,7 +112,7 @@ const styles = stylex.create({
     minHeight: { default: null, [media.desktop]: "var(--desktop-intro-height, 0px)" },
     marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
   },
-  heading: { color: colors.secondary, marginBottom: space.sectionContentGap },
+  heading: { marginBottom: space.sectionContentGap },
   footer: {
     display: {
       default: null,

@@ -5,7 +5,7 @@ export const spring =
 
 // The length of an image's enlargement: at most 200ms, so the interaction feels immediate
 // (interfaces.rauno.me), and the spring carries the distance.
-export const fadeDuration = 200;
+export const zoomDuration = 200;
 
 /**
  * Runs in every page's `<head>`, right after the stylesheet: on the first page of a visit, until

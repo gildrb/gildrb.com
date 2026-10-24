@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { colors } from "../tokens.stylex.ts";
+import { colors, media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
 /**
@@ -326,7 +326,7 @@ export function Specimen({ fill, font }: { fill: boolean; font: string }) {
               aria-selected={selected}
               aria-label={`${cell.name}, ${codeOf(cell)}`}
               onPointerEnter={() => choose(index)}
-              {...stylex.props(styles.cell, selected && styles.selected)}
+              {...stylex.props(ui.respond, styles.cell, selected && styles.selected)}
             >
               {text === "" ? (
                 cell.label === undefined ? (
@@ -345,11 +345,6 @@ export function Specimen({ fill, font }: { fill: boolean; font: string }) {
   );
 }
 
-const small = "@container (max-width: 560px)";
-// The case pages' banner window (see `styles.window` in markdown.tsx).
-const banner = "@media (min-width: 1280px)";
-const hover = "@media (hover: hover)";
-
 // Each cell draws the hairline on its right and bottom; the frame draws the outer edge.
 const grid = `1px 0 0 ${colors.hairline}, 0 1px 0 ${colors.hairline}`;
 
@@ -364,7 +359,8 @@ const styles = stylex.create({
     display: "grid",
     placeItems: "center",
     backgroundColor: colors.bg,
-    borderRadius: { default: null, [small]: "15px" },
+    // The case pages' surface corner, as every banner (`styles.window` in markdown.tsx).
+    borderRadius: space.radius,
     // The banner's frame: the hairline of the homepage table's rows, drawn over the artwork.
     "::after": {
       content: '""',
@@ -375,7 +371,8 @@ const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  fill: { height: { default: null, [banner]: "100%" } },
+  // Fills the case pages' banner window on desktop (`styles.window` in markdown.tsx).
+  fill: { height: { default: null, [media.desktop]: "100%" } },
   // 4:3 inside whatever window the banner leaves: as wide as fits, never cropped.
   panel: {
     width: "min(100cqw, calc(100cqh * 4 / 3))",
@@ -460,12 +457,12 @@ const styles = stylex.create({
     boxShadow: grid,
     color: {
       default: colors.secondary,
-      ":hover": { [hover]: colors.primary },
+      ":hover": { [media.hover]: colors.primary },
     },
   },
   // The chosen glyph: the cell turns over, page colour on full contrast.
   selected: {
-    color: { default: colors.bg, ":hover": { [hover]: colors.bg } },
+    color: { default: colors.bg, ":hover": { [media.hover]: colors.bg } },
     backgroundColor: colors.primary,
   },
   character: {

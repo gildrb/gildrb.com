@@ -1,29 +1,33 @@
 import * as stylex from "@stylexjs/stylex";
 import type { Heading } from "./markdown.tsx";
 import type { Link } from "./site.ts";
-import { colors, media, space, underline } from "./tokens.stylex.ts";
+import { colors, media, space } from "./tokens.stylex.ts";
 import { type Style, ui } from "./ui.tsx";
 
 /**
- * The page's parts, to jump to. `contents.ts` marks the part being read with a square just right of
- * its link; without JavaScript the list still links every part.
+ * The page's parts, to jump to. `contents.ts` marks the part being read (`aria-current`), and its
+ * link turns to full contrast: color is the indicator, as everywhere on the site. Without
+ * JavaScript the list still links every part.
  */
 function Contents({ parts }: { parts: readonly Heading[] }) {
   return (
     <nav {...stylex.props(styles.group)} aria-label="Contents" data-contents>
-      <p {...stylex.props(styles.label)}>Contents</p>
-      <div {...stylex.props(styles.track)}>
-        <span {...stylex.props(styles.marker)} aria-hidden="true" data-contents-marker />
-        <ol {...stylex.props(styles.list)}>
-          {parts.map(({ id, text }) => (
-            <li {...stylex.props(styles.item)}>
-              <a {...stylex.props(ui.focusRing, styles.link, styles.part)} href={`#${id}`}>
-                {text}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </div>
+      <p {...stylex.props(ui.label)}>Contents</p>
+      <ol {...stylex.props(styles.list)}>
+        {parts.map(({ id, text }, index) => (
+          <li {...stylex.props(styles.item)}>
+            <a
+              {...stylex.props(ui.focusRing, ui.respond, styles.link, styles.part)}
+              href={`#${id}`}
+              // A page opens on its first part: marked in the HTML, so it is lit from the first
+              // paint, before `contents.ts` takes over.
+              aria-current={index === 0 ? "location" : undefined}
+            >
+              {text}
+            </a>
+          </li>
+        ))}
+      </ol>
     </nav>
   );
 }
@@ -47,7 +51,7 @@ export function ElsewhereLine({ links, style }: { links: readonly Link[]; style?
         <>
           {index > 0 && ", "}
           <a
-            {...stylex.props(ui.focusRing, ui.outbound, styles.address)}
+            {...stylex.props(ui.focusRing, ui.outbound, ui.respond, styles.address)}
             href={href}
             target="_blank"
             rel="noopener noreferrer"
@@ -80,18 +84,8 @@ const styles = stylex.create({
   label: { color: colors.secondary },
   /** The Elsewhere line: running text, an address may break anywhere rather than overflow. */
   line: { margin: 0, color: colors.article, overflowWrap: "anywhere" },
-  /** Set like the article links (`markdown.tsx`). */
-  address: {
-    color: { default: colors.article, ":focus-visible": colors.primary },
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      ":hover": { [media.hover]: colors.article },
-    },
-  },
-  track: { position: "relative" },
+  /** Set like the article links (`markdown.tsx`), with `ui.outbound`. */
+  address: { color: { default: colors.article, ":focus-visible": colors.primary } },
   list: {
     margin: 0,
     display: "flex",
@@ -109,24 +103,6 @@ const styles = stylex.create({
     width: "fit-content",
     paddingBlock: `calc(${space.linkGap} / 2)`,
     marginBlock: `calc(${space.linkGap} / -2)`,
-  },
-  /**
-   * The square for the part being read, just right of its link's words. `contents.ts` measures each
-   * link and moves it there; it stays hidden until then, since without JavaScript no part is
-   * marked. Decorative, so it never takes a pointer.
-   */
-  marker: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    // `contents.ts` draws the square from its top-left corner.
-    transformOrigin: "0 0",
-    visibility: "hidden",
-    /** 4:3, a little wider than tall. */
-    width: "8px",
-    height: "6px",
-    backgroundColor: colors.primary,
-    pointerEvents: "none",
   },
   part: {
     display: "block",

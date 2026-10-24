@@ -71,7 +71,7 @@ export function render(assets: Assets): Record<string, string> {
     ...Object.fromEntries(
       pages.map((page) => [
         `${page.slug}.html`,
-        html(<DocPage assets={assets} page={page} markdown={text(page.slug)} work={work} />),
+        html(<DocPage assets={assets} page={page} markdown={text(page.slug)} />),
       ]),
     ),
     ...Object.fromEntries(

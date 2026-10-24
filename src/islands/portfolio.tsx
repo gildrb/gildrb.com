@@ -19,11 +19,10 @@ function describe(key: SortKey, direction: SortDirection): string {
 
 /**
  * The homepage project table: project, subject, then the date set right. Project and date sort,
- * the subject is plain text. The archive
- * is the table's footer, whatever the order: "Archive" in the project column, the count in the subject column. Edge fades show while the list scrolls on phones.
- * One square marks the row under the pointer or in focus, in the column where other lists show →;
- * it smears from row to row as the Contents square does and leaves with the pointer (`rows.ts`).
- * Phones show no square: the table drops its column, and the date ends at the table's right edge.
+ * the subject is plain text. The archive is the table's footer, whatever the order: "Archive" in
+ * the project column, the count in the subject column. Edge fades show while the list scrolls on
+ * phones. The row under the pointer or in focus brightens; nothing else appears. Phones drop the
+ * last column, and the date ends at the table's right edge.
  */
 export function Portfolio({ more }: { more: number }) {
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
@@ -70,7 +69,7 @@ export function Portfolio({ more }: { more: number }) {
         edges.bottom && styles.fadeBottom,
       )}
     >
-      <table {...stylex.props(ui.text, ui.sans, styles.header)} aria-label="Project columns">
+      <table {...stylex.props(ui.label, ui.sans, styles.header)} aria-label="Project columns">
         {/* The wrappers take no box, so the buttons stay on the subgrid. */}
         <thead {...stylex.props(styles.contents)}>
           <tr {...stylex.props(styles.contents)}>
@@ -89,6 +88,7 @@ export function Portfolio({ more }: { more: number }) {
                       ui.target,
                       ui.reset,
                       ui.focusRing,
+                      ui.respond,
                       styles.sort,
                       styles[key],
                       active && styles.active,
@@ -119,20 +119,16 @@ export function Portfolio({ more }: { more: number }) {
           Projects
         </h2>
         <div data-rows {...stylex.props(styles.list)}>
-          <span {...stylex.props(styles.marker)} data-row-square aria-hidden="true" />
           {rows.map((project, index) => (
             <Row key={project.href} project={project} first={index === 0} home />
           ))}
           <a
-            {...stylex.props(rowMarker, styles.archive)}
+            {...stylex.props(rowMarker, ui.respond, styles.archive)}
             href={`/all?sort=${sort.key}&direction=${sort.direction}`}
           >
-            <span {...stylex.props(ui.text, styles.title)}>Archive</span>
-            <span {...stylex.props(ui.text, styles.more)}>
+            <span {...stylex.props(ui.text, ui.emphasis, styles.title)}>Archive</span>
+            <span {...stylex.props(ui.text, ui.respond, styles.more)}>
               <Figures text={String(more)} /> more
-            </span>
-            <span {...stylex.props(ui.text, styles.archiveGlyph)} aria-hidden="true" data-row-mark>
-              {"\u00a0"}
             </span>
           </a>
         </div>
@@ -150,10 +146,7 @@ const hideBottom = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opaci
 const styles = stylex.create({
   frame: {
     display: "grid",
-    gridTemplateColumns: {
-      default: space.projectColumns,
-      [media.mobile]: "max-content minmax(0, 1fr) max-content",
-    },
+    gridTemplateColumns: space.projectColumns,
     // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls under
     // the header, between edge fades.
     gridTemplateRows: {
@@ -183,7 +176,7 @@ const styles = stylex.create({
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
     marginBottom: {
-      default: "32px",
+      default: space.textMediaGap,
       [media.mobile]: space.sectionGap,
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
     },
@@ -206,7 +199,8 @@ const styles = stylex.create({
       position: "absolute",
       insetInline: 0,
       zIndex: 2,
-      height: "56px",
+      // One row (a touch target): what passes under the fade is at most one row.
+      height: space.touchTarget,
       pointerEvents: "none",
       animationName: { default: null, [scrollDriven]: revealTop },
       animationTimeline: "--portfolio",
@@ -225,7 +219,7 @@ const styles = stylex.create({
       position: "absolute",
       insetInline: 0,
       zIndex: 2,
-      height: "56px",
+      height: space.touchTarget,
       pointerEvents: "none",
       animationName: { default: null, [scrollDriven]: hideBottom },
       animationTimeline: "--portfolio",
@@ -249,7 +243,7 @@ const styles = stylex.create({
     position: { default: null, [media.mobile]: "relative" },
     zIndex: { default: null, [media.mobile]: 3 },
     backgroundColor: { default: null, [media.mobile]: colors.bg },
-    color: colors.secondary,
+    color: colors.tertiary,
     // A hairline drawn inside the header, so it never adds to the header's height.
     boxShadow: `inset 0 -1px ${colors.hairline}`,
   },
@@ -258,7 +252,7 @@ const styles = stylex.create({
     gridRow: 1,
     justifySelf: "start",
     color: {
-      default: colors.secondary,
+      default: colors.tertiary,
       ":hover": { [media.hover]: colors.primary },
     },
   },
@@ -270,7 +264,7 @@ const styles = stylex.create({
   /** Header cells read as the row's text, not bold and centred. */
   cellText: { fontWeight: "inherit", textAlign: "start" },
   label: { gridRow: 1, justifySelf: "start" },
-  /** The table's footer: "Archive" under the projects, the count under the subjects, the row square's place at the right end. */
+  /** The table's footer: "Archive" under the projects, the count under the subjects. */
   archive: {
     display: "grid",
     gridColumn: "1 / -1",
@@ -282,9 +276,9 @@ const styles = stylex.create({
     textDecoration: "none",
     touchAction: "manipulation",
     userSelect: "none",
-    borderRadius: { default: "4px", [media.desktop]: 0, ":focus-visible": "2px" },
     outline: { default: null, ":focus-visible": `1px solid ${colors.primary}` },
-    outlineOffset: "6px",
+    outlineOffset: space.focusOffset,
+    borderRadius: { default: null, ":focus-visible": `calc(${space.radius} / 2)` },
   },
   /** As a row's subject: dim until the footer is hovered or focused. */
   more: {
@@ -294,12 +288,6 @@ const styles = stylex.create({
       [stylex.when.ancestor(":hover", rowMarker)]: { [media.hover]: colors.primary },
       [stylex.when.ancestor(":focus-visible", rowMarker)]: colors.primary,
     },
-  },
-  archiveGlyph: {
-    display: { default: null, [media.mobile]: "none" },
-    gridColumn: 4,
-    width: space.arrowWidth,
-    textAlign: "center",
   },
   section: {
     display: {
@@ -330,10 +318,13 @@ const styles = stylex.create({
     // The list scrolls inside a page that does not: reaching its end must not drag the page.
     overscrollBehavior: "contain",
     scrollTimeline: "--portfolio y",
+    // One row padding below the last row, as above each row's text.
     paddingBottom: {
       default: null,
-      [media.mobile]: "8px",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "8px" },
+      [media.mobile]: space.portfolioRowPadding,
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
+        [media.desktop]: space.portfolioRowPadding,
+      },
     },
     "::-webkit-scrollbar": { display: "none" },
   },
@@ -342,24 +333,5 @@ const styles = stylex.create({
     gridColumn: "1 / -1",
     gridTemplateColumns: "subgrid",
     position: "relative",
-  },
-  /**
-   * The row square: the Contents square's size and colour (`aside.tsx`). Hidden until a row is
-   * pointed at or focused, and on phones; decorative, so it never takes a pointer.
-   */
-  marker: {
-    display: { default: null, [media.mobile]: "none" },
-    position: "absolute",
-    top: 0,
-    left: 0,
-    zIndex: 1,
-    transformOrigin: "0 0",
-    width: "8px",
-    height: "6px",
-    backgroundColor: colors.primary,
-    opacity: 0,
-    transitionProperty: "opacity",
-    transitionDuration: "0.2s",
-    pointerEvents: "none",
   },
 });

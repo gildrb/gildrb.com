@@ -271,8 +271,8 @@ export const products: readonly Product[] = [
 const externals: readonly External[] = [];
 
 /**
- * `external`: the row leaves Gil's own pages (underlined title, no arrow). Products live on
- * their own hosts but are his pages too, so they read as subpages (→).
+ * `external`: the row leaves Gil's own pages (underlined title). Products live on their own
+ * hosts but are his pages too, so they read as subpages (no underline).
  */
 export type Project = Row & { href: string; external: boolean };
 

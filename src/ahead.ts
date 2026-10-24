@@ -7,7 +7,7 @@
  * a prerender leaves for later.
  */
 
-/** The images a page shows first: enough for a tall screen of the article and the side archive. */
+/** The images a page shows first: enough for a tall screen of the article. */
 const firstScreen = 6;
 
 const fetched = new Set<string>();
@@ -47,7 +47,7 @@ async function loadAhead(url: URL): Promise<void> {
 }
 
 /**
- * Images further down (and the side archive's tiles) wait for the reader to scroll near them, and
+ * Images further down wait for the reader to scroll near them, and
  * would appear while they scroll. Once the page has loaded and the browser is idle, they load all
  * at once, lowest priority, so scrolling finds them in place.
  */

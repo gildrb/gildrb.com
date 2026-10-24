@@ -1,9 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
-import { ArchiveGrid, SideArchive, type Work } from "../archive.tsx";
+import { ArchiveGrid, type Work } from "../archive.tsx";
 import { Aside, ElsewhereLine } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
-import { media as artwork } from "../media.ts";
 import {
   Article,
   bannerOf,
@@ -89,14 +88,10 @@ function Frame({
   head: preact.ComponentChildren;
   mono: boolean;
   /**
-   * The page's contents, shown in the sidebar instead of the links; the curated archive beside a
-   * plain page without parts; or the page's own content spanning the wide screens' third column
-   * (the archive page).
+   * The page's contents, shown in the sidebar instead of the links; the links on a plain page
+   * without parts; or the links with the breadcrumb as the page's heading (the archive page).
    */
-  third:
-    | { $: "Aside"; markdown: string }
-    | { $: "Archive"; work: readonly Work[] }
-    | { $: "Content" };
+  third: { $: "Aside"; markdown: string } | { $: "Links" } | { $: "Content" };
   children: preact.ComponentChildren;
 }) {
   const parts = third.$ === "Aside" ? contents(third.markdown) : [];
@@ -134,15 +129,7 @@ function Frame({
           <Name current={current} heading={third.$ === "Content"} />
           {parts.length > 0 ? <Aside parts={parts} /> : <PageLinks phone={false} />}
         </Sidebar>
-        <Main wide={third.$ !== "Archive"} reading={third.$ === "Aside"}>
-          {children}
-        </Main>
-        {third.$ === "Archive" && (
-          <SideArchive
-            work={third.work.filter(({ id }) => artwork[id]?.home === true)}
-            home={false}
-          />
-        )}
+        <Main>{children}</Main>
         <PageLinks phone />
       </Shell>
     </Document>
@@ -245,7 +232,7 @@ export function CasePage({
         </>
       }
     >
-      <article {...stylex.props(styles.article, styles.phoneItem)}>
+      <article {...stylex.props(styles.column, styles.phoneItem)}>
         <Article
           markdown={markdown}
           eager
@@ -320,31 +307,27 @@ export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[
 }
 
 const styles = stylex.create({
-  column: {
-    width: `min(100%, ${space.contentColumn})`,
-    marginInline: { default: "auto", [media.wide]: 0 },
-  },
-  /** Its text keeps the column's width; on wide screens its images grow past it (`Main`). */
-  article: {
-    width: { default: `min(100%, ${space.contentColumn})`, [media.wide]: "100%" },
-    marginInline: "auto",
-  },
+  column: { width: `min(100%, ${space.contentColumn})`, marginInline: "auto" },
   phoneItem: {
-    gridColumn: { default: null, [media.mobile]: "1 / -1", [media.wide]: 1 },
+    gridColumn: { default: null, [media.mobile]: "1 / -1" },
     order: { default: null, [media.mobile]: 5 },
   },
+  /**
+   * The next projects: one layout gap below the text. On desktop at the column's foot, their last
+   * line centred on the theme toggle beside it (half the toggle less half a line).
+   */
   next: {
-    marginTop: { default: "48px", "@media (min-width: 769px)": "auto" },
-    paddingTop: { default: null, "@media (min-width: 769px)": "48px" },
+    marginTop: { default: space.layoutGap, [media.desktop]: "auto" },
+    paddingTop: { default: null, [media.desktop]: space.layoutGap },
     paddingBottom: {
       default: null,
-      "@media (min-width: 769px)": `calc(${space.toggleSize} / 2 - 12px)`,
+      [media.desktop]: `calc(${space.toggleSize} / 2 - ${space.linkLineHeight} / 2)`,
     },
   },
   nextList: {
     display: "grid",
     gridTemplateColumns: space.projectColumns,
-    columnGap: { default: space.tableGap, "@media (max-width: 768px)": space.mobileTableGap },
+    columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
   },
 });
 
@@ -353,12 +336,10 @@ export function DocPage({
   assets,
   page,
   markdown,
-  work,
 }: {
   assets: Assets;
   page: (typeof pages)[number];
   markdown: string;
-  work: readonly Work[];
 }) {
   const parts = contents(markdown);
   return (
@@ -369,7 +350,7 @@ export function DocPage({
       description={page.description}
       current={page.name}
       mono={monoBlocks(markdown)}
-      third={parts.length > 0 ? { $: "Aside", markdown } : { $: "Archive", work }}
+      third={parts.length > 0 ? { $: "Aside", markdown } : { $: "Links" }}
       head={
         <>
           <Alternates slug={page.slug} name={page.name} />
@@ -393,7 +374,7 @@ export function DocPage({
         </>
       }
     >
-      <article {...stylex.props(styles.article, styles.phoneItem)}>
+      <article {...stylex.props(styles.column, styles.phoneItem)}>
         <Article markdown={markdown} eager reading={parts.length > 0} />
       </article>
     </Frame>
@@ -454,7 +435,7 @@ export function ProductPage({
         </>
       }
     >
-      <article {...stylex.props(styles.article, styles.phoneItem)}>
+      <article {...stylex.props(styles.column, styles.phoneItem)}>
         <Article
           markdown={markdown}
           eager

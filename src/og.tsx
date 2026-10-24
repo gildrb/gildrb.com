@@ -3,7 +3,7 @@ import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import { decompress } from "wawoff2";
 import { contacts, email, person, profiles, projects } from "./site.ts";
-import { colors, figureUnits, space } from "./tokens.stylex.ts";
+import { colors, figureUnits, space, typeScale } from "./tokens.stylex.ts";
 
 /**
  * The link-preview image: the desktop homepage as it first appears, drawn at build time. The
@@ -163,9 +163,9 @@ function Page({ css }: { css: string }) {
   const link = (label: string) => (
     <span style={{ ...text, color: color(colors.tertiary) }}>{label}</span>
   );
-  // One column per table column, at the page's widths: project and the square's slot are fixed,
+  // One column per table column, at the page's widths: project and the end slot are fixed,
   // subject takes the rest, the date sets its cells flush right. Date is the active sort, so its
-  // head is full contrast. The slot stays empty: the square only shows under a pointer.
+  // head is full contrast. The end slot is empty, as on the page.
   const column = (
     head: preact.ComponentChildren,
     headColor: string,
@@ -216,12 +216,13 @@ function Page({ css }: { css: string }) {
           marginBottom: length(space.textMediaGap),
         }}
       >
+        {/* The heading size, as on the page; the weight stays 400, the one instance the share font carries. */}
         <div
           style={{
             display: "flex",
             width: length(space.sidebarColumn),
-            fontSize: 19,
-            letterSpacing: "-0.02em",
+            fontSize: px(typeScale.headingSize),
+            letterSpacing: typeScale.headingTracking,
             lineHeight: `${line}px`,
           }}
         >
@@ -310,7 +311,6 @@ function Page({ css }: { css: string }) {
             length(space.dateColumn),
             true,
           )}
-          <div style={{ width: length(space.arrowWidth), flexShrink: 0 }} />
         </div>
       </div>
     </div>

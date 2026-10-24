@@ -16,3 +16,4 @@ doctor.config.json
 credentials.json
 secrets.json
 .idea/
+.vitest/

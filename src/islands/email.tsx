@@ -26,6 +26,7 @@ export function Email() {
         ui.reset,
         ui.text,
         ui.quiet,
+        ui.respond,
         ui.focusRing,
         styles.email,
         state === "failed" && styles.failed,

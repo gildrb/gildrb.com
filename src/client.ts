@@ -8,18 +8,14 @@ import { compareRows, origin, products, type SortDirection, type SortKey } from 
 import { space } from "./tokens.stylex.ts";
 import { loadPagesAhead } from "./ahead.ts";
 import { toggleLinks } from "./links.ts";
-import { trackRows } from "./rows.ts";
 import { trackContents } from "./contents.ts";
 import { loopDescriptors } from "./descriptor.ts";
 import { autoplayVideos } from "./video.ts";
-import { routeWheel } from "./wheel.ts";
 import { enableZoom } from "./zoom.ts";
 
-trackRows();
 toggleLinks();
 enableZoom();
 autoplayVideos();
-routeWheel();
 trackContents();
 loopDescriptors();
 loadPagesAhead();

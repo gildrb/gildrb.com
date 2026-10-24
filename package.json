@@ -20,13 +20,13 @@
     "happy-dom": "^20.14.6",
     "preact-render-to-string": "^6.7.0",
     "satori": "^0.33.5",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
-    "vite-plus": "1.0.0",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0",
+    "vite-plus": "1.4.0",
     "wawoff2": "^2.0.1"
   },
   "overrides": {
     "fflate": "0.7.5",
-    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.4.0"
   },
   "browserslist": [
     "baseline widely available"

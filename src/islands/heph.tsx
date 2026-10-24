@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { InputHTMLAttributes } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { colors } from "../tokens.stylex.ts";
+import { colors, media, space, typeScale } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import {
   type Block,
@@ -800,7 +800,7 @@ function Lights({ onZoom }: { onZoom: () => void }) {
           onClick={light.tone === "green" ? onZoom : undefined}
         >
           <svg
-            {...stylex.props(styles.glyph, over && styles.shown)}
+            {...stylex.props(ui.respond, styles.glyph, over && styles.shown)}
             viewBox="0 0 13 13"
             fill="none"
             aria-hidden="true"
@@ -1003,8 +1003,6 @@ function SourcesView({ run, only }: { run: Run | null; only: string | null }) {
 }
 
 const small = "@container (max-width: 560px)";
-// The case pages' banner window (see `styles.window` in markdown.tsx).
-const banner = "@media (min-width: 1280px)";
 
 const styles = stylex.create({
   desktop: {
@@ -1015,7 +1013,8 @@ const styles = stylex.create({
     overflow: "hidden",
     containerType: "size",
     backgroundColor: colors.bg,
-    borderRadius: { default: null, [small]: "15px" },
+    // The case pages' surface corner, as every banner (`styles.window` in markdown.tsx).
+    borderRadius: space.radius,
     // The banner's frame: the hairline of the homepage table's rows, drawn over the artwork.
     "::after": {
       content: '""',
@@ -1026,7 +1025,8 @@ const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  fill: { height: { default: null, [banner]: "100%" } },
+  // Fills the case pages' banner window on desktop (`styles.window` in markdown.tsx).
+  fill: { height: { default: null, [media.desktop]: "100%" } },
   wallpaper: {
     position: "absolute",
     inset: 0,
@@ -1048,9 +1048,11 @@ const styles = stylex.create({
   },
   placed: { inset: "auto", margin: 0 },
   /*
-   * Liquid glass: the wallpaper comes through, blurred and a little more saturated, under a
-   * tint of the terminal colour. The rim is light caught on the edge of the glass, brightest at
-   * the top, and a glare fades down from the top edge. The shadow is deep and soft.
+   * Liquid glass: the wallpaper comes through, blurred and a little more saturated, under the
+   * glass tint (`colors.glass`). The rim is light caught on the edge of the glass, brightest at
+   * the top, and a glare fades down from the top edge, both in `colors.glint`. The shadow is deep
+   * and soft (`colors.shadow`): the one lifted surface on the site. The corner is a macOS
+   * window's, not `space.radius`: the window imitates macOS, as its lights do.
    */
   shell: {
     position: "relative",
@@ -1062,14 +1064,14 @@ const styles = stylex.create({
     gridTemplateColumns: "minmax(0, 1fr)",
     overflow: "hidden",
     borderRadius: "18px",
-    backgroundColor: `color-mix(in oklch, ${colors.terminalBg} 62%, transparent)`,
+    backgroundColor: colors.glass,
     backdropFilter: "blur(36px) saturate(1.5)",
     boxShadow: [
-      `inset 0 0 0 1px color-mix(in oklch, ${colors.primary} 22%, transparent)`,
-      `inset 0 1px 0 color-mix(in oklch, ${colors.primary} 34%, transparent)`,
-      "0 0 0 0.5px oklch(0% 0 0 / 0.35)",
-      "0 2px 6px oklch(0% 0 0 / 0.18)",
-      "0 40px 90px -20px oklch(0% 0 0 / 0.6)",
+      `inset 0 0 0 1px color-mix(in oklch, ${colors.glint} 22%, transparent)`,
+      `inset 0 1px 0 color-mix(in oklch, ${colors.glint} 34%, transparent)`,
+      `0 0 0 0.5px color-mix(in oklch, ${colors.shadow} 35%, transparent)`,
+      `0 2px 6px color-mix(in oklch, ${colors.shadow} 18%, transparent)`,
+      `0 40px 90px -20px color-mix(in oklch, ${colors.shadow} 60%, transparent)`,
     ].join(", "),
     color: colors.article,
     fontSize: { default: "13px", [small]: "10px" },
@@ -1081,7 +1083,7 @@ const styles = stylex.create({
       inset: 0,
       borderRadius: "inherit",
       pointerEvents: "none",
-      backgroundImage: `linear-gradient(180deg, color-mix(in oklch, ${colors.primary} 14%, transparent), transparent 38%), radial-gradient(120% 60% at 0% 0%, color-mix(in oklch, ${colors.primary} 10%, transparent), transparent 60%)`,
+      backgroundImage: `linear-gradient(180deg, color-mix(in oklch, ${colors.glint} 14%, transparent), transparent 38%), radial-gradient(120% 60% at 0% 0%, color-mix(in oklch, ${colors.glint} 10%, transparent), transparent 60%)`,
     },
   },
   titlebar: {
@@ -1100,6 +1102,8 @@ const styles = stylex.create({
   },
   // Shading after the lights of macOS 26: a top-to-bottom gradient, a glow low inside, a thin
   // edge, and a darker rim on the sides only (the conic mask hides it at the top and bottom).
+  // A press brightens and swells the light at once, with no transition: nothing on the page
+  // animates toward the pointer (`motion`).
   light: {
     position: "relative",
     width: { default: "13px", [small]: "11px" },
@@ -1108,9 +1112,6 @@ const styles = stylex.create({
     cursor: "default",
     transform: { default: "scale(1)", ":active": "scale(1.12)" },
     filter: { default: "brightness(1) saturate(1)", ":active": "brightness(1.2) saturate(1.1)" },
-    transitionProperty: "transform, filter",
-    transitionDuration: "0.3s",
-    transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
     "::after": {
       content: "",
       position: "absolute",
@@ -1144,16 +1145,16 @@ const styles = stylex.create({
       "inset 0 0 0 0.5px rgb(0 90 0 / 0.2), inset 0 0.75px 0 rgb(255 255 255 / 0.3), inset 0 -0.75px 0 rgb(255 255 255 / 0.16)",
     "::after": { boxShadow: "inset 0 0 0 0.75px rgb(25 105 5 / 0.7)" },
   },
+  // Over the lights, their glyphs show at once and fade on leaving (`ui.respond`); `shown` holds
+  // the entry at 0s, since the hover is the lights group's, not the glyph's own.
   glyph: {
     position: "absolute",
     inset: 0,
     width: "100%",
     height: "100%",
     opacity: 0,
-    transitionProperty: "opacity",
-    transitionDuration: "0.1s",
   },
-  shown: { opacity: 1 },
+  shown: { opacity: 1, transitionDuration: "0s" },
   // Invisible grips on the window's edges and corners, a little outside the glass.
   handle: { position: "absolute", zIndex: 1, touchAction: "none" },
   n: { top: "-4px", left: "14px", right: "14px", height: "8px", cursor: "ns-resize" },
@@ -1179,7 +1180,7 @@ const styles = stylex.create({
   option: { cursor: "default" },
   title: {
     fontSize: { default: "12px", [small]: "10px" },
-    fontWeight: 500,
+    fontWeight: typeScale.emphasisWeight,
     color: colors.terminalMuted,
     whiteSpace: "pre",
   },
@@ -1213,22 +1214,28 @@ const styles = stylex.create({
   answer: { paddingLeft: "1ch" },
   item: { display: "grid", gridTemplateColumns: "2ch minmax(0, 1fr)" },
   passage: { paddingLeft: "4ch" },
-  strong: { color: colors.primary, fontWeight: 600 },
+  // Emphasis is color: the face ships weight 400 only, so a bolder weight would be synthesized.
+  strong: { color: colors.primary, fontWeight: typeScale.textWeight },
   accent: { color: colors.primary },
   dim: { color: colors.terminalMuted },
   code: { color: colors.secondary },
-  // Working label: a shine sweeps through the text (after AICSS's Thinking State, MIT).
+  // Working label: a shine sweeps through the text (after AICSS's Thinking State, MIT). With
+  // reduced motion it rests on its last frame, the label in one color.
   shine: {
     color: "transparent",
     backgroundImage: `linear-gradient(90deg, ${colors.secondary} 0%, ${colors.secondary} 30%, ${colors.terminalMuted} 45%, ${colors.terminalMuted} 55%, ${colors.secondary} 70%, ${colors.secondary} 100%)`,
     backgroundSize: "300% 100%",
+    backgroundPosition: "0% 0",
     backgroundClip: "text",
-    animationName: stylex.keyframes({
-      "0%, 18%": { backgroundPosition: "100% 0" },
-      "82%, 100%": { backgroundPosition: "0% 0" },
-    }),
+    animationName: {
+      default: null,
+      [media.motion]: stylex.keyframes({
+        "0%, 18%": { backgroundPosition: "100% 0" },
+        "82%, 100%": { backgroundPosition: "0% 0" },
+      }),
+    },
     animationDuration: "2.25s",
-    animationTimingFunction: "cubic-bezier(0.25, 0.1, 0.25, 1)",
+    animationTimingFunction: "ease",
     animationIterationCount: "infinite",
   },
   // The block caret after the text being written (after AICSS's Streaming Text, MIT).

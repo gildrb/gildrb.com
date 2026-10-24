@@ -7,7 +7,7 @@ import { Fold } from "./islands/ben-davis.tsx";
 import { Specimen } from "./islands/curves.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
-import { colors, space, underline } from "./tokens.stylex.ts";
+import { colors, media as breakpoints, space, typeScale } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -22,7 +22,7 @@ export const demos = new Set(["heph-demo", "curves-demo", "ben-davis-demo"]);
 
 const mediaLine = /^!\[(.*)\]\(media:([a-z0-9-]+)\)$/;
 
-/** The images a page opens with, before any text: wide screens show them as a banner. */
+/** The images a page opens with, before any text: a banner, framed by the table's hairline. */
 export function bannerOf(blocks: Block[]): Extract<Block, { type: "media" }> | undefined {
   const [first] = blocks;
   return first?.type === "media" ? first : undefined;
@@ -85,11 +85,18 @@ function Inline({ text }: { text: string }) {
     const [whole, code, label, href = "", strong, em] = match;
     nodes.push(source.slice(last, match.index));
     last = match.index + whole.length;
-    if (code) nodes.push(<code {...stylex.props(ui.mono, styles.code)}>{code}</code>);
+    if (code)
+      nodes.push(
+        <code {...stylex.props(ui.mono, ui.codeSurface, ui.edge, styles.code)}>{code}</code>,
+      );
     else if (label) {
       const external = href.startsWith("http") && { target: "_blank", rel: "noopener noreferrer" };
       nodes.push(
-        <a {...stylex.props(styles.link, ui.focusRing)} href={href} {...external}>
+        <a
+          {...stylex.props(ui.outbound, styles.link, ui.respond, ui.focusRing)}
+          href={href}
+          {...external}
+        >
           {label}
         </a>,
       );
@@ -133,6 +140,7 @@ function Image({
     >
       <img
         {...stylex.props(
+          !item.mark && ui.edge,
           styles.image,
           item.mark && styles.markImage,
           fill && (item.mark ? styles.contain : styles.cover),
@@ -151,39 +159,48 @@ function Image({
 
 /**
  * A recording: a still poster until `video.ts` plays it, silently and on a loop, while it is on
- * screen and motion is allowed. Not enlargeable; it already spans its column.
+ * screen and motion is allowed. It enlarges as an image does (`zoom.ts`), the copy playing on
+ * from the same moment.
  */
 function Video({ id, fill }: { id: string; fill: boolean }) {
   const item = media[id];
   if (!item) throw new Error(`Unknown media id: ${id}`);
   return (
-    <video
-      {...stylex.props(styles.image, fill && styles.cover)}
-      width={item.width}
-      height={item.height}
-      poster={sources(id).src}
-      src={versioned(`/videos/gil-rodrigues-${id}.mp4`)}
-      muted
-      loop
-      playsInline
-      preload="none"
-      aria-label={item.alt}
-      data-autoplay
-    />
+    <button
+      type="button"
+      {...stylex.props(ui.reset, ui.focusRing, styles.zoom, fill && styles.fill)}
+      aria-label={`Enlarge: ${item.alt}`}
+      aria-expanded="false"
+      data-zoom
+    >
+      <video
+        {...stylex.props(ui.edge, styles.image, fill && styles.cover)}
+        width={item.width}
+        height={item.height}
+        poster={sources(id).src}
+        src={versioned(`/videos/gil-rodrigues-${id}.mp4`)}
+        muted
+        loop
+        playsInline
+        preload="none"
+        aria-label={item.alt}
+        data-autoplay
+      />
+    </button>
   );
 }
 
-// Wide screens: the case pages' reading column, 592px. Two images in a row share it, less their
-// 24px gap. A banner spans the table and the grid: the wrapper (at most 1900px, 32px padding)
-// less the sidebar and its gap.
+// The case pages' column, 544px. Two images in a row share it, less their 24px gap. From 944px
+// (`media.banner`) a banner is one layout gap wider on each side (`space.bannerColumn`), 640px.
+// Phones (`media.mobile`, to 767px) take the viewport less the two 12px gutters.
 const singleSizes =
-  "(min-width: 1280px) 592px, (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
+  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 544px";
 const gridSizes =
-  "(min-width: 1280px) 284px, (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
+  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
 const bannerSizes =
-  "(min-width: 1280px) calc(min(100vw, 1900px) - 352px), (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 540px";
+  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), (max-width: 943px) 544px, 640px";
 const bannerGridSizes =
-  "(min-width: 1280px) calc((min(100vw, 1900px) - 376px) / 2), (max-width: 768px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
+  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), (max-width: 943px) 260px, 308px";
 
 /** The `sizes` of an image in a banner or not, alone or one of a row of two. */
 export function sizesFor(banner: boolean, grid: boolean): string {
@@ -219,7 +236,7 @@ function Figures({
 }) {
   const grid = items.length > 1;
   return (
-    <div {...stylex.props(styles.media, grid && styles.grid)}>
+    <div {...stylex.props(styles.media, grid && styles.grid, banner && styles.bleed)}>
       {items.map(({ id, caption }, index) => (
         <figure
           {...stylex.props(
@@ -346,7 +363,7 @@ function Code({ language, title, code }: { language: string; title: string; code
   return (
     <>
       {label}
-      <pre {...stylex.props(ui.mono, styles.pre)}>
+      <pre {...stylex.props(ui.mono, ui.codeSurface, ui.edge, styles.pre)}>
         <code>
           {tokens.map(([kind, text]) =>
             text
@@ -433,8 +450,7 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
  * it), then the blocks. The first paragraph is the opening, at full contrast, wherever it stands
  * (n0thing opens with an image and a part). `elsewhere` (the Elsewhere line) follows it, then
  * `tool` (Archetypon's converter). `eager` gives the first image high fetch priority. `reading`
- * (`Main`'s reading layout): images keep the reading column, and the images a page opens with
- * span the homepage's table and grid as a banner.
+ * (a page with contents): the images a page opens with are a banner, framed by a hairline.
  */
 export function Article({
   markdown,
@@ -457,16 +473,12 @@ export function Article({
   const nodes: ComponentChildren[] = [];
   let previous: Kind | null = null;
   let pendingTool = tool;
-  /** Text keeps its measure; images may be wider, up to the whole article for a banner. */
   const place = (
     kind: Kind,
     render: (
-      layout: readonly [
-        false | (typeof styles)[Spacing],
-        false | typeof styles.measure | typeof styles.figureMeasure,
-      ],
+      layout: readonly [false | (typeof styles)[Spacing], false | typeof styles.measure],
     ) => ComponentChildren,
-    width: false | typeof styles.measure | typeof styles.figureMeasure = styles.measure,
+    width: false | typeof styles.measure = styles.measure,
   ) => {
     const spacing = gap(kind, previous);
     nodes.push(render([spacing !== null && styles[spacing], width]));
@@ -493,7 +505,7 @@ export function Article({
             {...stylex.props(
               ui.prose,
               styles.heading,
-              top ? [ui.heading, styles.part] : styles.subheading,
+              top ? [ui.heading, styles.part] : [ui.text, styles.subheading],
               spacing,
             )}
             id={anchor?.id}
@@ -540,7 +552,7 @@ export function Article({
               />
             </div>
           ),
-          block === banner ? false : reading && styles.figureMeasure,
+          false,
         );
         break;
       case "code":
@@ -568,72 +580,90 @@ export function Article({
 }
 
 export const styles = stylex.create({
-  /** Every heading: on the page's 24px line, clear of the top when jumped to. */
+  /**
+   * Every heading: on the page's line, clear of the top when jumped to. Phones: below the sticky
+   * name bar (a line, padded by `sectionGap` above and a unit below, `layout.tsx`), then two units
+   * clear of it.
+   */
   heading: {
     color: colors.primary,
-    lineHeight: "24px",
-    scrollMarginTop: { default: space.pageInset, "@media (max-width: 767px)": "72px" },
+    lineHeight: space.linkLineHeight,
+    scrollMarginTop: {
+      default: space.pageInset,
+      [breakpoints.mobile]: `calc(${space.sectionGap} + ${space.linkLineHeight} + 3 * ${space.unit})`,
+    },
   },
   /** A part of the page: as large as the name and the breadcrumb, never larger. */
-  part: { fontWeight: 400 },
-  /** A step inside a part: running-text size, set apart by weight. */
-  subheading: { fontSize: "16px", fontWeight: 500 },
+  part: { fontWeight: typeScale.textWeight },
+  /** A step inside a part: running-text size (`ui.text`), set apart by weight. */
+  subheading: { fontWeight: typeScale.emphasisWeight },
   prose: { color: colors.article, fontWeight: colors.proseWeight },
   /** The opening paragraph: what the work is, at full contrast. */
   lede: { color: colors.primary },
   /** The text's width. */
   measure: { maxWidth: space.contentColumn },
-  /** An image's width in the case pages' reading column. */
-  figureMeasure: { maxWidth: space.figureColumn },
-  partGap: { marginTop: "48px" },
-  headingGap: { marginTop: "8px" },
-  lineGap: { marginTop: "24px" },
-  list: { paddingLeft: "20px", listStyleType: "square" },
+  partGap: { marginTop: `calc(2 * ${space.linkLineHeight})` },
+  headingGap: { marginTop: space.unit },
+  lineGap: { marginTop: space.linkLineHeight },
+  /** Three units: room for the square marker and its space outside the text. */
+  list: { paddingLeft: `calc(3 * ${space.unit})`, listStyleType: "square" },
   item: { "::marker": { color: colors.tertiary } },
-  nextItem: { marginTop: "8px" },
-  link: {
-    color: { default: colors.article, ":focus-visible": colors.primary },
-    textDecorationLine: "underline",
-    textDecorationThickness: underline.thickness,
-    textUnderlineOffset: underline.offset,
-    textDecorationColor: {
-      default: colors.tertiary,
-      ":hover": { "@media (hover: hover)": colors.article },
-    },
-  },
+  nextItem: { marginTop: space.unit },
+  /** Set with `ui.outbound` and `ui.respond`. */
+  link: { color: { default: colors.article, ":focus-visible": colors.primary } },
+  /**
+   * Inline code: the code size on its sentence's line (`line-height: inherit`), so it never spreads
+   * the lines. On `ui.codeSurface` with `ui.edge`. An inline box is as tall as its font's glyph
+   * box: Commit Mono's ascent and descent are 0.9em and 0.2em, which browsers round to whole
+   * pixels at 16px (14.4 → 14, 3.2 → 3), so 17px, and the descenders of g and y would touch the
+   * edge. The padding fills it to the label's line, 20px: (20 - 17) / 2 = 1.5px each way, which
+   * leaves 2px of the 24px line above and below, so chips on two lines never meet. Half a unit at
+   * each side, half the surface corner: a chip at text size. A chip that breaks over two lines
+   * closes at both ends.
+   */
   code: {
-    fontSize: "14px",
-    fontWeight: 400,
-    lineHeight: "18px",
-    padding: "1px 5px",
-    borderRadius: "2px",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: colors.codeBorder,
-    backgroundColor: colors.codeBg,
+    fontSize: typeScale.monoSize,
+    fontWeight: typeScale.textWeight,
+    lineHeight: "inherit",
+    paddingBlock: `calc((${typeScale.labelLeading} - 17px) / 2)`,
+    paddingInline: `calc(${space.unit} / 2)`,
+    borderRadius: `calc(${space.radius} / 2)`,
+    boxDecorationBreak: "clone",
+    WebkitBoxDecorationBreak: "clone",
     color: colors.primary,
   },
-  strong: { color: colors.primary, fontWeight: 500 },
-  small: { color: colors.tertiary, fontSize: "14px", lineHeight: "20px" },
+  strong: { color: colors.primary, fontWeight: typeScale.emphasisWeight },
+  small: {
+    color: colors.tertiary,
+    fontSize: typeScale.labelSize,
+    lineHeight: typeScale.labelLeading,
+    letterSpacing: typeScale.labelTracking,
+  },
   media: { width: "100%" },
+  /** A banner where it fits (`media.banner`): one layout gap past the text on each side. */
+  bleed: {
+    width: { default: null, [breakpoints.banner]: space.bannerColumn },
+    marginInline: { default: null, [breakpoints.banner]: `calc(-1 * ${space.layoutGap})` },
+  },
   grid: {
     display: "grid",
     gridTemplateColumns: {
       default: "repeat(2, minmax(0, 1fr))",
-      "@media (max-width: 768px)": "1fr",
+      [breakpoints.mobile]: "1fr",
     },
-    gap: "24px",
+    gap: space.sectionGap,
   },
   figure: { minWidth: 0 },
   /**
-   * A banner's window on wide screens, where banners span the table and grid: 4:3, but never so
-   * tall that the first heading leaves the first screen. Every case page's text starts at the
-   * same height; the artwork is cut at the window's edge and keeps going past it.
+   * A banner's window on desktop: 4:3, but never so tall that the first heading leaves the first
+   * screen. Every case page's text starts at the same height; the artwork is cut at the window's
+   * edge and keeps going past it.
    */
   window: {
-    aspectRatio: { default: null, "@media (min-width: 1280px)": "4 / 3" },
-    maxHeight: { default: null, "@media (min-width: 1280px)": "calc(100svh - 240px)" },
+    aspectRatio: { default: null, [breakpoints.desktop]: "4 / 3" },
+    maxHeight: { default: null, [breakpoints.desktop]: "calc(100svh - 240px)" },
     overflow: "hidden",
+    borderRadius: space.radius,
   },
   /** A banner's frame: the homepage table's hairline, over the artwork. */
   frame: {
@@ -647,21 +677,23 @@ export const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  /** Fills the banner window on wide screens: artwork is cropped, a mark is shown whole. */
-  fill: { height: { default: null, "@media (min-width: 1280px)": "100%" } },
+  /** Fills the banner window on desktop: artwork is cropped, a mark is shown whole. */
+  fill: { height: { default: null, [breakpoints.desktop]: "100%" } },
   cover: {
-    height: { default: "auto", "@media (min-width: 1280px)": "100%" },
+    height: { default: "auto", [breakpoints.desktop]: "100%" },
     objectFit: "cover",
     objectPosition: "50% 0",
   },
   contain: {
-    height: { default: "auto", "@media (min-width: 1280px)": "100%" },
+    height: { default: "auto", [breakpoints.desktop]: "100%" },
     objectFit: "contain",
   },
+  /** Every image and recording takes the surface corner; `zoom.ts` carries it into the enlargement. */
   image: {
     display: "block",
     width: "100%",
     height: "auto",
+    borderRadius: space.radius,
     userSelect: "none",
     WebkitUserDrag: "none",
   },
@@ -669,24 +701,25 @@ export const styles = stylex.create({
   zoom: {
     display: "block",
     width: "100%",
-    cursor: { default: "auto", "@media (min-width: 768px)": "zoom-in" },
+    borderRadius: space.radius,
+    cursor: { default: "auto", [breakpoints.desktop]: "zoom-in" },
   },
   mark: { width: "88%" },
   markImage: { filter: colors.artworkFilter },
   centered: { marginInline: "auto" },
-  caption: { marginTop: "8px" },
-  codeLabel: { marginBottom: "8px" },
+  caption: { marginTop: space.unit },
+  codeLabel: { marginBottom: space.unit },
+  /**
+   * A code block, on `ui.codeSurface` with `ui.edge`. A unit above and below the lines, two units at the sides,
+   * the shell block's inset (`command.tsx`).
+   */
   pre: {
     overflowX: "auto",
-    padding: "12px 16px",
-    borderRadius: "4px",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: colors.codeBorder,
-    backgroundColor: colors.codeBg,
+    paddingBlock: space.unit,
+    paddingInline: `calc(2 * ${space.unit})`,
     color: colors.primary,
-    fontSize: "14px",
-    lineHeight: "24px",
+    fontSize: typeScale.monoSize,
+    lineHeight: typeScale.monoLeading,
     tabSize: 4,
   },
 });
