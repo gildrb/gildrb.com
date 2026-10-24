@@ -579,7 +579,6 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: { default: "column", [media.mobile]: "row" },
     rowGap: space.linkGap,
-    columnGap: { default: null, [media.mobile]: space.mobileTableGap },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
   },
   /** Phones: hidden until the name is tapped (`links.ts`), then right under it, above About. */
@@ -593,7 +592,10 @@ const styles = stylex.create({
     alignSelf: { default: null, [media.desktop]: "start" },
     marginBottom: { default: null, [media.mobile]: space.sectionGap },
   },
-  /** Desktop: one list, as if ungrouped. Phones: one column each, side by side. */
+  /**
+   * Desktop: one list, as if ungrouped. Phones: side by side; Contact takes the rest of the row
+   * after Links (`profiles`).
+   */
   linkGroup: {
     display: { default: "contents", [media.mobile]: "flex" },
     flexDirection: "column",
@@ -601,8 +603,11 @@ const styles = stylex.create({
     flex: { default: null, [media.mobile]: "1 1 0" },
     minWidth: 0,
   },
-  /** Phones: Links first, on the left. */
-  profiles: { order: { default: null, [media.mobile]: -1 } },
+  /** Phones: Links first, on the left, as wide as the table's Project column and its gap. */
+  profiles: {
+    order: { default: null, [media.mobile]: -1 },
+    flex: { default: null, [media.mobile]: "0 0 var(--subject-start, 50%)" },
+  },
   label: { width: "fit-content" },
   profileLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
   /** The project table's columns, so the links line up with its Project column. */
