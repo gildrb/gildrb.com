@@ -13,8 +13,7 @@ export const person = {
   handle: "gildrb",
   alternateNames: ["Gil", "gildrb", "Gil Rodrigues Barbosa", "Gil Domingos Rodrigues Barbosa"],
   role: "Designer",
-  summary: "Designer based in Germany.",
-  /** The homepage About text. `summary` stays the description in metadata, feeds and llms.txt. */
+  /** The About text: the homepage, metadata, feeds and llms.txt. */
   about: "Based in Germany.",
 } as const;
 
@@ -78,7 +77,7 @@ export const cases: readonly Case[] = [
     date: "2026-07-25",
     title: "T3",
     name: "T3",
-    headline: "T3: a self-initiated logomark exploration by Gil Rodrigues",
+    headline: "T3: logomark studies by Gil Rodrigues",
     descriptor: "Coding agent client",
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2080990301208952994" }],
     description: "T3 logomark studies: product marks, icons and rejected directions.",
@@ -120,7 +119,7 @@ export const cases: readonly Case[] = [
     date: "2026-01-14",
     title: "Filen",
     name: "Filen",
-    headline: "Filen: a self-initiated identity concept by Gil Rodrigues",
+    headline: "Filen: identity concept by Gil Rodrigues",
     descriptor: "Encrypted cloud storage",
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2021242178727452998" }],
     description: "Identity concept for Filen: wordmark, app icon and campaign.",

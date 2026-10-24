@@ -35,7 +35,7 @@ export const profile = {
       url: url("/"),
       name: person.name,
       alternateName: person.alternateNames,
-      description: person.summary,
+      description: person.about,
       inLanguage: "en",
       publisher: { "@id": url("/#person") },
       about: { "@id": url("/#person") },
@@ -49,7 +49,7 @@ export const profile = {
       "@id": url("/#profile"),
       url: url("/"),
       name: person.name,
-      description: person.summary,
+      description: person.about,
       isPartOf: { "@id": url("/#website") },
       mainEntity: { "@id": url("/#person") },
     },
@@ -61,7 +61,7 @@ export const profile = {
       additionalName: person.additionalName,
       familyName: person.familyName,
       alternateName: person.alternateNames,
-      description: person.summary,
+      description: person.about,
       jobTitle: person.role,
       url: url("/"),
       email: `mailto:${email}`,
@@ -141,7 +141,7 @@ const contactList = [
 
 const llms = `# ${person.name} (${person.handle})
 
-> ${person.summary} Canonical LLM reference for ${url("/")}.
+> ${person.about} Canonical LLM reference for ${url("/")}.
 
 ${identity} Only the profiles listed here belong to this person.
 
@@ -189,7 +189,7 @@ ${identity}
 
 ## About
 
-${person.summary}
+${person.about}
 
 ## Portfolio
 
@@ -224,7 +224,7 @@ const feed = `<?xml version="1.0" encoding="UTF-8"?>
   <channel>
     <title>${person.name}</title>
     <link>${url("/")}</link>
-    <description>${person.summary}</description>
+    <description>${person.about}</description>
     <language>en</language>
     <atom:link href="${url("/feed.xml")}" rel="self" type="application/rss+xml" />
 ${cases
