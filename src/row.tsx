@@ -1,7 +1,15 @@
 import * as stylex from "@stylexjs/stylex";
 import { useId } from "preact/hooks";
 import type { Project } from "./site.ts";
-import { colors, media, rowMarker, descriptorMarker, space, typeScale } from "./tokens.stylex.ts";
+import {
+  colors,
+  descriptorMarker,
+  fade,
+  media,
+  rowMarker,
+  space,
+  typeScale,
+} from "./tokens.stylex.ts";
 import { Figures, ui, untranslated } from "./ui.tsx";
 
 /**
@@ -160,7 +168,7 @@ const styles = stylex.create({
     maskImage: {
       default: null,
       ":is([data-marquee])": {
-        [media.motion]: `linear-gradient(to right, black calc(100% - ${space.tableGap}), transparent)`,
+        [media.motion]: fade.end,
       },
     },
     // The row's own colour (grey, full contrast on its hover or focus), inherited, so the subject

@@ -12,6 +12,15 @@ const unit = 8;
 /** The share image's date column (`og.tsx`), which cannot size to its figures as the page does. */
 const dateColumn = `${12 * unit}px`;
 const titleColumn = `${14 * unit}px`;
+const tableGap = `${2 * unit}px`;
+
+/**
+ * Text cut by its box's right edge fades out over the last table gap instead: a looping
+ * descriptor (`row.tsx`), a command wider than its block (`command.tsx`). A `mask-image`.
+ */
+export const fade = stylex.defineConsts({
+  end: `linear-gradient(to right, black calc(100% - ${tableGap}), transparent)`,
+});
 
 export const media = stylex.defineConsts({
   mobile: "@media (max-width: 767px)",
@@ -314,7 +323,7 @@ export const space = stylex.defineVars({
    */
   radius: `${unit}px`,
   tileGap: `${4 * unit}px`,
-  tableGap: `${2 * unit}px`,
+  tableGap,
   mobileTableGap: "clamp(8px, 3vw, 16px)",
   mobileCellEndSpace: "10px",
   dateColumn,

@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { useRef, useState } from "preact/hooks";
 import { announce } from "../announce.ts";
-import { colors, media, space, typeScale } from "../tokens.stylex.ts";
+import { colors, fade, media, space, typeScale } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 
 /**
@@ -36,34 +36,31 @@ export function Command({ commands }: { commands: readonly string[] }) {
           </span>
         ))}
       </code>
-      {/* Over the commands' right end: a long command scrolls on under it. */}
-      <span {...stylex.props(styles.rail)}>
-        <button
-          {...stylex.props(
-            ui.reset,
-            ui.respond,
-            ui.focusRing,
-            styles.copy,
-            state === "copied" && styles.done,
-          )}
-          type="button"
-          aria-label={
-            state === "failed" ? "Copy failed" : single ? `Copy ${text}` : "Copy the commands"
-          }
-          onClick={() => void copy()}
-        >
-          {state === "copied" ? (
-            <svg {...stylex.props(styles.icon)} viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M3 8.5 6.5 12 13 4.5" />
-            </svg>
-          ) : (
-            <svg {...stylex.props(styles.icon)} viewBox="0 0 16 16" aria-hidden="true">
-              <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
-              <path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" />
-            </svg>
-          )}
-        </button>
-      </span>
+      <button
+        {...stylex.props(
+          ui.reset,
+          ui.respond,
+          ui.focusRing,
+          styles.copy,
+          state === "copied" && styles.done,
+        )}
+        type="button"
+        aria-label={
+          state === "failed" ? "Copy failed" : single ? `Copy ${text}` : "Copy the commands"
+        }
+        onClick={() => void copy()}
+      >
+        {state === "copied" ? (
+          <svg {...stylex.props(styles.icon)} viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 8.5 6.5 12 13 4.5" />
+          </svg>
+        ) : (
+          <svg {...stylex.props(styles.icon)} viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+            <path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 }
@@ -75,55 +72,42 @@ export function Command({ commands }: { commands: readonly string[] }) {
  * - The button is a 32px target (four units); the block pads half a unit around it, so a one-line
  *   block is 40px, the table's row pitch. The lines take the same half unit above and below, so
  *   they sit a unit in from the edge, with two units at the left, as a code block's do.
- * - Each command stays on one line. A command wider than the block scrolls sideways, under the
- *   button. Copying gives one command per line.
+ * - Each command stays on one line. A command wider than the lines scrolls sideways and fades out
+ *   before the button, as a looping descriptor in the table does (`fade.end`). Copying gives one
+ *   command per line.
  */
 const styles = stylex.create({
   block: {
-    position: "relative",
+    display: "grid",
+    gridTemplateColumns: `minmax(0, 1fr) ${space.toggleSize}`,
+    alignItems: "start",
     width: "100%",
-    paddingBlock: `calc(${space.unit} / 2)`,
+    padding: `calc(${space.unit} / 2)`,
+    paddingLeft: 0,
   },
   lines: {
     display: "grid",
     paddingBlock: `calc(${space.unit} / 2)`,
     overflowX: "auto",
     scrollbarWidth: "none",
+    maskImage: fade.end,
     color: colors.primary,
     fontSize: typeScale.monoSize,
     lineHeight: typeScale.monoLeading,
   },
   /**
    * The `$` and the space after it (one advance: `1ch` in a monospace font), then the command on
-   * one line. The block's two-unit left inset and the rail's width are padding inside the
-   * scrolling lines, so a scrolled command runs to the edge on the left and clears the button at
-   * its end.
+   * one line. The two-unit left inset and the fade's width are padding inside the scrolling
+   * lines, so a scrolled command runs to the edge on the left and its end clears the fade.
    */
   line: {
     display: "grid",
     gridTemplateColumns: "2ch max-content",
     paddingLeft: `calc(2 * ${space.unit})`,
-    paddingRight: `calc(${space.unit} * 1.5 + ${space.toggleSize})`,
+    paddingRight: space.tableGap,
   },
   prompt: { color: colors.tertiary, userSelect: "none" },
   command: { whiteSpace: "pre" },
-  /**
-   * The copy button's strip down the block's right side, on the code fill: the commands pass
-   * under it. Its one-unit left padding, the gap beside the text, fades them out; the rest is the
-   * block's half unit, so the button sits at the end of the first line.
-   */
-  rail: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    display: "flex",
-    alignItems: "flex-start",
-    padding: `calc(${space.unit} / 2)`,
-    paddingLeft: space.unit,
-    borderRadius: `0 ${space.radius} ${space.radius} 0`,
-    backgroundImage: `linear-gradient(to right, transparent, ${colors.codeBg} ${space.unit})`,
-  },
   /** A 32px target; hover and focus raise the icon to full contrast, as a quiet link (`ui.quiet`). */
   copy: {
     display: "flex",
