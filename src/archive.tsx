@@ -84,9 +84,10 @@ function sortData(work: Work) {
   }
 }
 
-// Two tiles a row in the content column, less half the gap between them.
+// Two tiles a row in the content column, less half the gap between them; phones stop at the
+// column's 544px, where the page centres on it (`layout.tsx`).
 const tileSizes =
-  "(max-width: 767px) calc(50vw - 20px), (max-width: 876px) calc(50vw - 184px), 256px";
+  "(max-width: 767px) min(calc(50vw - 20px), 264px), (max-width: 876px) calc(50vw - 184px), 256px";
 
 /**
  * How a tile's image loads: the archive's first image is its largest paint, so it comes first;

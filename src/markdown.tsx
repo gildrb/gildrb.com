@@ -192,15 +192,16 @@ function Video({ id, fill }: { id: string; fill: boolean }) {
 
 // The case pages' column, 544px. Two images in a row share it, less their 24px gap. From 944px
 // (`media.banner`) a banner is one layout gap wider on each side (`space.bannerColumn`), 640px.
-// Phones (`media.mobile`, to 767px) take the viewport less the two 12px gutters.
+// Phones (`media.mobile`, to 767px) take the viewport less the two 12px gutters, up to the
+// column's 544px, where the page centres on it (`layout.tsx`).
 const singleSizes =
-  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), 544px";
+  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(100vw - 336px), 544px";
 const gridSizes =
-  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), 260px";
+  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(50vw - 178px), 260px";
 const bannerSizes =
-  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(100vw - 336px), (max-width: 943px) 544px, 640px";
+  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(100vw - 336px), (max-width: 943px) 544px, 640px";
 const bannerGridSizes =
-  "(max-width: 767px) calc(100vw - 24px), (max-width: 876px) calc(50vw - 178px), (max-width: 943px) 260px, 308px";
+  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(50vw - 178px), (max-width: 943px) 260px, 308px";
 
 /** The `sizes` of an image in a banner or not, alone or one of a row of two. */
 export function sizesFor(banner: boolean, grid: boolean): string {

@@ -350,6 +350,19 @@ export function Metadata({ style }: { style?: Style }) {
 const phoneGutter = `calc(${space.sectionGap} / 2)`;
 /** The left one, wider beside a notch. */
 const phoneGutterLeft = `max(${phoneGutter}, env(safe-area-inset-left))`;
+/**
+ * Phones wider than the text's column (tablets, narrow windows) centre the whole page on it, name
+ * bar and theme toggle included, so nothing stands apart at the viewport's edges. In the wrapper
+ * and on fixed elements `100%` is the viewport's width.
+ */
+const phoneMargin = `calc((100% - ${space.contentColumn}) / 2)`;
+const phoneInsetLeft = `max(${phoneGutterLeft}, ${phoneMargin})`;
+const phoneInsetRight = `max(${phoneGutter}, env(safe-area-inset-right), ${phoneMargin})`;
+/**
+ * The same left inset from inside the name bar, whose own percentages are its width: `100vw`
+ * instead, which beside a classic scrollbar starts the fade half a scrollbar off screen.
+ */
+const phoneBarInset = `max(${phoneGutterLeft}, calc((100vw - ${space.contentColumn}) / 2))`;
 
 const styles = stylex.create({
   // The background lives on <html> too, so the held first frame is already the theme color.
@@ -396,11 +409,11 @@ const styles = stylex.create({
     // units, a sidebar pitch. Beside a notch the margin grows to clear it (`viewport-fit=cover`).
     paddingLeft: {
       default: `max(calc(4 * ${space.unit}), env(safe-area-inset-left))`,
-      [media.mobile]: phoneGutterLeft,
+      [media.mobile]: phoneInsetLeft,
     },
     paddingRight: {
       default: `max(calc(4 * ${space.unit}), env(safe-area-inset-right))`,
-      [media.mobile]: `max(${phoneGutter}, env(safe-area-inset-right))`,
+      [media.mobile]: phoneInsetRight,
     },
   },
   /** Desktop: sidebar and content, one block centred in the wrapper at every width. */
@@ -482,7 +495,7 @@ const styles = stylex.create({
   skip: {
     position: { default: "absolute", [media.mobile]: "fixed" },
     top: { default: space.pageInset, [media.mobile]: space.sectionGap },
-    left: { default: 0, [media.mobile]: phoneGutterLeft },
+    left: { default: 0, [media.mobile]: phoneInsetLeft },
     zIndex: 102,
     lineHeight: space.linkLineHeight,
     textDecoration: "none",
@@ -527,7 +540,7 @@ const styles = stylex.create({
       zIndex: -1,
       top: 0,
       bottom: 0,
-      left: `calc(${phoneGutterLeft} * -1)`,
+      left: `calc(${phoneBarInset} * -1)`,
       width: "100vw",
       backgroundImage: `linear-gradient(to bottom, ${colors.bg} 60%, transparent)`,
     },

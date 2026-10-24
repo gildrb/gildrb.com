@@ -1069,9 +1069,14 @@ const styles = stylex.create({
   sizesLabel: { gridColumn: 1 },
   sizeList: {
     gridColumn: { default: "2 / -1", [media.mobile]: 1 },
+    // No width of its own, so the columns size to the table's settings, not to the ten figures on
+    // one line. The figures spread from the column's start to the table's right edge, as on
+    // phones, at least a unit apart; text too large for one line wraps within the columns.
+    contain: { default: "inline-size", [media.mobile]: null },
     display: "flex",
     flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
-    columnGap: { default: space.tableGap, [media.mobile]: 0 },
+    justifyContent: { default: "space-between", [media.mobile]: null },
+    columnGap: { default: space.unit, [media.mobile]: 0 },
   },
   /**
    * Phones: each figure takes an equal share of the line and centers in it (the first starts at
