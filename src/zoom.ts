@@ -37,6 +37,8 @@ type Zoomed = {
   frame: Rect;
   radius: number;
   scrollY: number;
+  /** Where the page stood when the return began; null while open. */
+  returnY: number | null;
   closing: boolean;
 };
 
@@ -239,7 +241,17 @@ function enlarge(button: HTMLButtonElement, over?: Zoomed): boolean {
   // Focus stays on the artwork's own button (Safari does not focus buttons on click), so keys act
   // on the enlargement and Tab carries on from where the reader is.
   button.focus({ preventScroll: true });
-  const state: Zoomed = { button, media, copy, backdrop, frame, radius, scrollY, closing: false };
+  const state: Zoomed = {
+    button,
+    media,
+    copy,
+    backdrop,
+    frame,
+    radius,
+    scrollY,
+    returnY: null,
+    closing: false,
+  };
   zoomed = state;
   copy.addEventListener("transitionend", (event: Event) => {
     if (!(event instanceof TransitionEvent)) return;
@@ -277,23 +289,41 @@ function step(state: Zoomed, direction: 1 | -1) {
   state.scrollY = scrollY;
 }
 
+/**
+ * Sends the artwork back to its place on the page. The copy leaves the viewport for the page
+ * itself: it scrolls with the page, so a scroll during the return (or the one that set it off)
+ * carries the copy along and it lands on its artwork wherever that has gone.
+ */
 function shrink() {
   if (!zoomed || zoomed.closing) return;
   const state = zoomed;
   state.closing = true;
+  state.returnY = scrollY;
   // Clicks now reach the page again: the artwork itself to reopen it, or any other to open that.
   state.copy.style.pointerEvents = "none";
   state.backdrop.style.pointerEvents = "none";
+  state.copy.style.position = "absolute";
+  state.copy.style.left = `${state.frame.left + scrollX}px`;
+  state.copy.style.top = `${state.frame.top + scrollY}px`;
   settle(state, poseAt(state.media, state.frame, state.radius), "0");
 }
 
-/** Sends a returning artwork back out, from wherever it has got to. */
-function reopen(state: Zoomed) {
+/**
+ * Sends a returning artwork back out, from wherever it has got to. Returns whether it could: once
+ * the page has scrolled, the copy no longer stands where the enlargement opens.
+ */
+function reopen(state: Zoomed): boolean {
+  if (state.returnY !== scrollY) return false;
   state.closing = false;
+  state.returnY = null;
   state.copy.style.pointerEvents = "";
   state.backdrop.style.pointerEvents = "";
+  state.copy.style.position = "fixed";
+  state.copy.style.left = `${state.frame.left}px`;
+  state.copy.style.top = `${state.frame.top}px`;
   state.button.setAttribute("aria-expanded", "true");
   settle(state, openPose(state.radius), backdropOpacity);
+  return true;
 }
 
 /** Puts the page's artwork back and drops the copy; safe to call twice. */
@@ -316,11 +346,8 @@ export function enableZoom() {
     }
     const button = event.target instanceof Element ? event.target.closest("[data-zoom]") : null;
     if (!(button instanceof HTMLButtonElement)) return;
-    if (zoomed?.button === button) {
-      reopen(zoomed);
-      return;
-    }
-    // Another artwork cuts the previous one's return short.
+    if (zoomed?.button === button && reopen(zoomed)) return;
+    // Another artwork, or this one once the page has moved, cuts the previous return short.
     if (zoomed) restore(zoomed);
     enlarge(button);
   });
