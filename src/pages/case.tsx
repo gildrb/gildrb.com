@@ -306,7 +306,12 @@ export function AllPage({ assets, work }: { assets: Assets; work: readonly Work[
 }
 
 const styles = stylex.create({
-  column: { width: `min(100%, ${space.contentColumn})`, marginInline: "auto" },
+  // Phones span the gutters as the name bar and the homepage do (and as `markdown.tsx`'s image
+  // `sizes` assume); only desktop caps the column at the text's width.
+  column: {
+    width: { default: null, [media.desktop]: `min(100%, ${space.contentColumn})` },
+    marginInline: { default: null, [media.desktop]: "auto" },
+  },
   phoneItem: {
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
     order: { default: null, [media.mobile]: 5 },
