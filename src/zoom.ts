@@ -210,6 +210,8 @@ function enlarge(button: HTMLButtonElement, over?: Zoomed): boolean {
   }
 
   const copy = media instanceof HTMLImageElement ? copyImage(media, frame.width) : copyVideo(media);
+  // As the page's own artwork (`markdown.tsx`): it cannot be dragged off the page.
+  copy.draggable = false;
   copy.style.cssText = [
     "position:fixed",
     "z-index:1001",
