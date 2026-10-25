@@ -449,20 +449,23 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
 /**
  * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
  * it), then the blocks. The first paragraph is the opening, at full contrast, wherever it stands
- * (n0thing opens with an image and a part). `sourceLine` (the Sources line) follows it, then
- * `tool` (Archetypon's converter). `eager` gives the first image high fetch priority. `reading`
- * (a page with contents): the images a page opens with are a banner, framed by a hairline.
+ * (n0thing opens with an image and a part). `codeLine` (the source code) follows it, then `tool`
+ * (Archetypon's converter); `sourcesLine` (where else the work lives) ends the page. `eager`
+ * gives the first image high fetch priority. `reading` (a page with contents): the images a page
+ * opens with are a banner, framed by a hairline.
  */
 export function Article({
   markdown,
   eager,
-  sourceLine = null,
+  codeLine = null,
+  sourcesLine = null,
   tool = null,
   reading = false,
 }: {
   markdown: string;
   eager: boolean;
-  sourceLine?: ComponentChildren;
+  codeLine?: ComponentChildren;
+  sourcesLine?: ComponentChildren;
   tool?: ComponentChildren;
   reading?: boolean;
 }) {
@@ -493,8 +496,8 @@ export function Article({
   };
   for (const [index, block] of blocks.entries()) {
     const anchor = found.get(index);
-    if (index === opening + 1 && opening !== -1 && sourceLine !== null)
-      place("text", (spacing) => <div {...stylex.props(spacing)}>{sourceLine}</div>);
+    if (index === opening + 1 && opening !== -1 && codeLine !== null)
+      place("text", (spacing) => <div {...stylex.props(spacing)}>{codeLine}</div>);
     if (anchor?.top === true) placeTool();
     switch (block.type) {
       case "h2":
@@ -570,6 +573,8 @@ export function Article({
     }
   }
   placeTool();
+  if (sourcesLine !== null)
+    place("text", (spacing) => <div {...stylex.props(spacing)}>{sourcesLine}</div>);
   return (
     <>
       <h1 {...stylex.props(ui.prose, styles.heading, ui.srOnly)}>

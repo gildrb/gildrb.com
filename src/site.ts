@@ -42,7 +42,9 @@ type Row = {
   descriptor: string;
   /** Facts, no tense, no narration; homepage and "View next" rows carry it as the link's description. */
   description: string;
-  /** Where the work lives or was posted: the page's Links list. */
+  /** The source code, shown right under the opening: it says the work is open source. */
+  repository: `https://github.com/${string}` | null;
+  /** Where else the work lives or was posted (site, posts, people): the end of the page. */
   links: readonly Link[];
 };
 
@@ -67,6 +69,7 @@ export const cases: readonly Case[] = [
     name: "Local Studio",
     headline: "Local Studio: brand and website for private AI on your Mac",
     descriptor: "On-device AI for Mac",
+    repository: null,
     links: [{ label: "Site", href: "https://localstudio.gildrb.com/" }],
     description: "Brand and website for Local Studio, private AI on a Mac.",
     ogDescription: "Brand and website for Local Studio, private AI on a Mac.",
@@ -79,6 +82,7 @@ export const cases: readonly Case[] = [
     name: "T3",
     headline: "T3: logomark studies by Gil Rodrigues",
     descriptor: "Coding agent client",
+    repository: null,
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2080990301208952994" }],
     description: "T3 logomark studies: product marks, icons and rejected directions.",
     ogDescription: "T3 logomark studies: product marks, icons and rejected directions.",
@@ -91,6 +95,7 @@ export const cases: readonly Case[] = [
     name: "Ben Davis",
     headline: "Ben Davis: a db monogram and the davis7.sh website",
     descriptor: "Developer and YouTuber",
+    repository: null,
     links: [
       { label: "Site", href: "https://davis7.gildrb.com/" },
       { label: "Ben Davis", href: "https://x.com/davis7" },
@@ -108,7 +113,8 @@ export const cases: readonly Case[] = [
     name: "Heph",
     headline: "Heph: answers from your files, with every quote checked",
     descriptor: "Local document agent",
-    links: [{ label: "Source", href: "https://github.com/gildrb/heph-agent" }],
+    repository: "https://github.com/gildrb/heph-agent",
+    links: [],
     description:
       "Answers from the files in a folder. Every cited quote is checked against its source.",
     ogDescription: "Answers from the files in a folder, every quote checked.",
@@ -121,6 +127,7 @@ export const cases: readonly Case[] = [
     name: "Filen",
     headline: "Filen: identity concept by Gil Rodrigues",
     descriptor: "Encrypted cloud storage",
+    repository: null,
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2021242178727452998" }],
     description: "Identity concept for Filen: wordmark, app icon and campaign.",
     ogDescription: "Filen identity concept: sketches, scale tests, app icon and privacy campaign.",
@@ -133,6 +140,7 @@ export const cases: readonly Case[] = [
     name: "Jordan Gilbert",
     headline: "Jordan Gilbert: a pixel wordmark for n0thing",
     descriptor: "Counter-Strike player",
+    repository: null,
     links: [{ label: "n0thing", href: "https://www.n0thing.gg/" }],
     description:
       "Pixel wordmark for Jordan “n0thing” Gilbert: typewriter study, exports and animation.",
@@ -146,6 +154,7 @@ export const cases: readonly Case[] = [
     name: "CURVES",
     headline: "CURVES: a free geometric display typeface by Gil Rodrigues",
     descriptor: "Geometric display typeface",
+    repository: null,
     links: [
       { label: "DaFont", href: "https://www.dafont.com/curves.font" },
       { label: "Behance", href: "https://www.behance.net/gallery/75409663/CURVES-Free-Font" },
@@ -161,6 +170,7 @@ export const cases: readonly Case[] = [
     name: "Mihai Lupascu",
     headline: "Mihai Lupascu: a compact channel logo by Gil Rodrigues",
     descriptor: "Overwatch streamer",
+    repository: null,
     links: [{ label: "Twitch", href: "https://www.twitch.tv/ml7support" }],
     description: "Channel logo for Overwatch streamer mL7.",
     ogDescription: "mL7 channel logo: black wordmark and orange stroke.",
@@ -212,7 +222,7 @@ export const products: readonly Product[] = [
     title: "Eukhe",
     name: "Eukhe",
     descriptor: "Coding agent",
-    links: [{ label: "Source", href: "https://github.com/gildrb/eukhe" }],
+    links: [],
     home: "https://eukhe.com",
     aliases: ["eukhe.gildrb.com", "www.eukhe.com"],
     headline: "Eukhe: a coding agent that remembers every chat",
@@ -232,7 +242,7 @@ export const products: readonly Product[] = [
     title: "Archetypon",
     name: "Archetypon",
     descriptor: "SVG asset converter",
-    links: [{ label: "Source", href: "https://github.com/gildrb/archetypon" }],
+    links: [],
     home: "https://archetypon.gildrb.com",
     aliases: [],
     headline: "Archetypon: convert SVG to PNG, ICO, WebP, JPEG and PDF in your browser",
@@ -249,7 +259,7 @@ export const products: readonly Product[] = [
     title: "Poros",
     name: "Poros",
     descriptor: "Remote dev servers",
-    links: [{ label: "Source", href: "https://github.com/gildrb/poros" }],
+    links: [],
     home: "https://poros.gildrb.com",
     aliases: [],
     headline: "Poros: open your server's dev server on your Mac or phone over Tailscale",

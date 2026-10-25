@@ -40,8 +40,8 @@ function destination(href: string): string {
 }
 
 /**
- * One line right under the opening sentence: "Source" or "Sources", then the address each link
- * goes to, so the parties involved (posts, a site, the code) are seen first, not at the end.
+ * "Source" or "Sources", then the address each link goes to, so the parties involved (the code, a
+ * site, posts) are named. The source code sits under the opening; other links end the page.
  */
 export function SourcesLine({ links, style }: { links: readonly Link[]; style?: Style }) {
   return (

@@ -236,7 +236,12 @@ export function CasePage({
           markdown={markdown}
           eager
           reading
-          sourceLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
+          codeLine={
+            item.repository === null ? null : (
+              <SourcesLine links={[{ label: "Source code", href: item.repository }]} />
+            )
+          }
+          sourcesLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
         />
       </article>
       <Next projects={others} />
@@ -439,7 +444,8 @@ export function ProductPage({
           markdown={markdown}
           eager
           reading
-          sourceLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
+          codeLine={<SourcesLine links={[{ label: "Source code", href: item.repository }]} />}
+          sourcesLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
           }

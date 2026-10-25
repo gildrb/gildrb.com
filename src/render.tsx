@@ -38,12 +38,17 @@ const projectsBySlug = new Map<string, Case | Product>(
 );
 
 /**
- * The Markdown a reader or agent receives: a project's page as written, then its links, as the
- * HTML page lists them beside the text. Plain pages are served as written.
+ * The Markdown a reader or agent receives: a project's page as written, then its source code and
+ * links, as the HTML page lists them around the text. Plain pages are served as written.
  */
 function published(slug: string): string {
   const body = text(slug);
-  const links = projectsBySlug.get(slug)?.links ?? [];
+  const item = projectsBySlug.get(slug);
+  if (item === undefined) return body;
+  const links = [
+    ...(item.repository === null ? [] : [{ label: "Source code", href: item.repository }]),
+    ...item.links,
+  ];
   if (links.length === 0) return body;
   const list = links.map(({ label, href }) => `- [${label}](${href})`).join("\n");
   return `${body.trimEnd()}\n\n## ${links.length === 1 ? "Source" : "Sources"}\n\n${list}\n`;
