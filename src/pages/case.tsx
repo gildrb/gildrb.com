@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { ArchiveGrid, type Work } from "../archive.tsx";
-import { Aside, ElsewhereLine } from "../aside.tsx";
+import { Aside, SourcesLine } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
 import {
@@ -236,7 +236,7 @@ export function CasePage({
           markdown={markdown}
           eager
           reading
-          elsewhere={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
+          sourceLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
         />
       </article>
       <Next projects={others} />
@@ -439,7 +439,7 @@ export function ProductPage({
           markdown={markdown}
           eager
           reading
-          elsewhere={item.links.length > 0 ? <ElsewhereLine links={item.links} /> : null}
+          sourceLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
           }

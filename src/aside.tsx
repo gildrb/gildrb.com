@@ -40,13 +40,13 @@ function destination(href: string): string {
 }
 
 /**
- * One line right under the opening sentence, naming the address each link goes to, so it is seen
- * first instead of at the end of the page.
+ * One line right under the opening sentence: "Source" or "Sources", then the address each link
+ * goes to, so the parties involved (posts, a site, the code) are seen first, not at the end.
  */
-export function ElsewhereLine({ links, style }: { links: readonly Link[]; style?: Style }) {
+export function SourcesLine({ links, style }: { links: readonly Link[]; style?: Style }) {
   return (
     <p {...stylex.props(ui.prose, styles.line, style)}>
-      <span {...stylex.props(styles.label)}>Elsewhere: </span>
+      <span {...stylex.props(styles.label)}>{links.length === 1 ? "Source: " : "Sources: "}</span>
       {links.map(({ label, href }, index) => (
         <>
           {index > 0 && ", "}
@@ -82,7 +82,7 @@ const styles = stylex.create({
   group: { display: "flex", flexDirection: "column", rowGap: space.linkGap },
   /** As the sidebar's "Contact" and "Links". */
   label: { color: colors.secondary },
-  /** The Elsewhere line: running text, an address may break anywhere rather than overflow. */
+  /** The Sources line: running text, an address may break anywhere rather than overflow. */
   line: { margin: 0, color: colors.article, overflowWrap: "anywhere" },
   /** Set like the article links (`markdown.tsx`), with `ui.outbound`. */
   address: { color: { default: colors.article, ":focus-visible": colors.primary } },

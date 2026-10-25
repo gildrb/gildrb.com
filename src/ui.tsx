@@ -171,7 +171,7 @@ export const ui = stylex.create({
     userSelect: "none",
   },
   /**
-   * The site's one underline: article links, the Elsewhere line, external project names,
+   * The site's one underline: article links, the Sources line, external project names,
    * Archetypon's links and settings. Set with `respond`.
    * - At rest the line is the link's own text colour at `colors.underlineRest` (50% dark, 25%
    *   light), so it follows any link colour and never drifts to a grey of its own.

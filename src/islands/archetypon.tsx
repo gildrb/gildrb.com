@@ -640,10 +640,11 @@ export function Converter() {
   }, []);
 
   const empty = svgs.length === 0 && fonts.length === 0;
+  const picker = useRef<HTMLInputElement>(null);
 
   return (
     <div {...stylex.props(styles.tool)}>
-      <DropZone dragging={dragging} onFiles={add} />
+      <Intake dragging={dragging} />
 
       <OptionsPanel
         selected={selected}
@@ -656,21 +657,24 @@ export function Converter() {
         onQualityChange={setQuality}
       />
 
-      <p {...stylex.props(styles.status, status?.error === true && styles.problem)} role="status">
-        {status?.text ?? ""}
-      </p>
-
-      {!empty && (
-        <div {...stylex.props(styles.actions)}>
-          {download && (
-            <a
-              {...stylex.props(ui.outbound, ui.respond, ui.focusRing, styles.download)}
-              href={download.url}
-              download={download.name}
-            >
-              Download {download.name} ({formatBytes(download.bytes)})
-            </a>
-          )}
+      <div {...stylex.props(styles.actions)}>
+        <button
+          {...stylex.props(ui.reset, ui.outbound, ui.respond, ui.focusRing, styles.choose)}
+          type="button"
+          onClick={() => picker.current?.click()}
+        >
+          Choose files
+        </button>
+        {download && (
+          <a
+            {...stylex.props(ui.outbound, ui.respond, ui.focusRing, styles.download)}
+            href={download.url}
+            download={download.name}
+          >
+            Download {download.name} ({formatBytes(download.bytes)})
+          </a>
+        )}
+        {!empty && (
           <button
             {...stylex.props(ui.reset, ui.quiet, ui.respond, ui.focusRing)}
             type="button"
@@ -678,8 +682,26 @@ export function Converter() {
           >
             Clear
           </button>
-        </div>
-      )}
+        )}
+      </div>
+      <input
+        ref={picker}
+        {...stylex.props(ui.srOnly)}
+        type="file"
+        multiple
+        tabIndex={-1}
+        aria-hidden="true"
+        accept=".svg,.svgz,.ttf,.otf,.ttc,image/svg+xml"
+        onChange={(event) => {
+          const input = event.currentTarget;
+          add([...(input.files ?? [])]);
+          input.value = "";
+        }}
+      />
+
+      <p {...stylex.props(styles.status, status?.error === true && styles.problem)} role="status">
+        {status?.text ?? ""}
+      </p>
 
       {fontList.length > 0 && (
         <ul {...stylex.props(styles.list)} aria-label="Fonts">
@@ -694,48 +716,17 @@ export function Converter() {
   );
 }
 
-type DropZoneProps = { dragging: boolean; onFiles: (files: readonly File[]) => void };
-
 /**
- * The whole page takes dropped files (`Converter`); this line says so and opens the file picker.
- * While files hover over the page, it says where they go.
+ * The whole page takes dropped files (`Converter`); this line says so. While files hover over the
+ * page, it says where they go. The file picker is the action under the options.
  */
-function DropZone({ dragging, onFiles }: DropZoneProps) {
-  const picker = useRef<HTMLInputElement>(null);
+function Intake({ dragging }: { dragging: boolean }) {
   return (
-    <>
-      <p {...stylex.props(ui.prose, styles.intake, dragging && styles.dragging)}>
-        {dragging ? (
-          "Drop the files to add them."
-        ) : (
-          <>
-            Drop SVG files on this page, or{" "}
-            <button
-              {...stylex.props(ui.reset, ui.outbound, ui.respond, ui.focusRing, styles.choose)}
-              type="button"
-              onClick={() => picker.current?.click()}
-            >
-              choose them
-            </button>
-            . Add the .ttf, .otf or .ttc fonts that their text uses.
-          </>
-        )}
-      </p>
-      <input
-        ref={picker}
-        {...stylex.props(ui.srOnly)}
-        type="file"
-        multiple
-        tabIndex={-1}
-        aria-hidden="true"
-        accept=".svg,.svgz,.ttf,.otf,.ttc,image/svg+xml"
-        onChange={(event) => {
-          const input = event.currentTarget;
-          onFiles([...(input.files ?? [])]);
-          input.value = "";
-        }}
-      />
-    </>
+    <p {...stylex.props(ui.prose, styles.intake, dragging && styles.dragging)}>
+      {dragging
+        ? "Drop the files to add them."
+        : "Drop SVG files on this page, with the .ttf, .otf or .ttc fonts that their text uses."}
+    </p>
   );
 }
 
@@ -957,11 +948,8 @@ const styles = stylex.create({
   intake: { margin: 0, color: colors.article, fontWeight: colors.proseWeight },
   /** Files hover over the page: the line says where they go, at full contrast. */
   dragging: { color: colors.primary },
-  /** Set like the article links (`markdown.tsx`), inside the sentence, with `ui.outbound`. */
-  choose: {
-    display: "inline",
-    color: { default: colors.article, ":focus-visible": colors.primary },
-  },
+  /** The page's one call to action, at full contrast, with `ui.outbound`. */
+  choose: { color: colors.primary },
   panel: { display: "flex", flexDirection: "column", gap: space.sectionGap },
   /**
    * The project table's system (`portfolio.tsx`, `row.tsx`) on a settings table's columns

@@ -46,7 +46,7 @@ function published(slug: string): string {
   const links = projectsBySlug.get(slug)?.links ?? [];
   if (links.length === 0) return body;
   const list = links.map(({ label, href }) => `- [${label}](${href})`).join("\n");
-  return `${body.trimEnd()}\n\n## Elsewhere\n\n${list}\n`;
+  return `${body.trimEnd()}\n\n## ${links.length === 1 ? "Source" : "Sources"}\n\n${list}\n`;
 }
 
 // Cloudflare email obfuscation would rewrite the visible address, so opt the copy button out.

@@ -206,7 +206,7 @@ if (document.getElementById("site-title")) {
   });
 }
 
-// Other pages: inside a list of links (Contact, Links, Contents, Elsewhere), ↑ and ↓ step through
+// Other pages: inside a list of links (Contact, Links, Contents, Sources), ↑ and ↓ step through
 // that list; anywhere else the keys scroll the page as usual.
 if (!document.getElementById("site-title")) {
   document.addEventListener("keydown", (event) => {
