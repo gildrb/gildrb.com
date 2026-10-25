@@ -21,12 +21,24 @@ const labels: Record<Format, string> = {
   jpeg: "JPEG",
   ico: "ICO",
 };
-const raster: readonly Format[] = ["png", "webp", "jpeg"];
 
 /** The engine's exit code for an SVG with text but no fonts to set it in. */
 const noFonts = 2;
-/** The raster sizes on offer, in pixels; all picked to start with. */
-const sizeOptions = [16, 32, 48, 64, 128, 256, 512, 1024, 2048, 4096] as const;
+/** The raster sizes, in pixels: every PNG, WebP and JPEG export has all of them. */
+const rasterSizes = [16, 32, 48, 64, 128, 256, 512, 1024, 2048, 4096] as const;
+const rasterRange = `${rasterSizes[0]}–${rasterSizes[rasterSizes.length - 1]} px`;
+/**
+ * What each format's file is made of, as the engine makes it (archetypon `lib.rs`): SVG and PDF
+ * stay vector; PNG, WebP and JPEG take every raster size; ICO always packs 16, 32 and 48.
+ */
+const sizeText: Record<Format, string> = {
+  svg: "Vector",
+  pdf: "Vector",
+  png: rasterRange,
+  webp: rasterRange,
+  jpeg: rasterRange,
+  ico: "16, 32, 48",
+};
 /** What fills behind the artwork of a raster format or the ICO. */
 type Background = "transparent" | "white" | "black";
 const fills: Record<Background, string> = { transparent: "", white: "#ffffff", black: "#000000" };
@@ -53,16 +65,6 @@ const startBackgrounds: Readonly<Record<Filled, Background>> = {
   jpeg: "white",
   ico: "transparent",
 };
-
-/** One toggle: a format, or a size. Its `data-toggle` reads `group:value`. */
-type Key = { group: "format"; value: Format } | { group: "size"; value: number };
-
-function keyOf(text: string | undefined): Key | null {
-  const [group, value] = text?.split(":") ?? [];
-  if (group === "format" && isFormat(value)) return { group, value };
-  const size = sizeOptions.find((option) => String(option) === value);
-  return group === "size" && size !== undefined ? { group, value: size } : null;
-}
 
 type Step = "pending" | "running" | "done";
 type Output = { path: string; size: number };
@@ -209,21 +211,18 @@ type Options = { formats: Format[]; passes: Pass[] } | { errors: string[] };
 /** The options as picked; a new object whenever one of them changes. */
 type Settings = {
   selected: ReadonlySet<Format>;
-  sizes: ReadonlySet<number>;
   backgrounds: Readonly<Record<Filled, Background>>;
   quality: string;
 };
 
-function readOptions({ selected, sizes, backgrounds, quality }: Settings): Options {
+function readOptions({ selected, backgrounds, quality }: Settings): Options {
   const chosen = formats.filter((format) => selected.has(format));
   const errors: string[] = [];
-  // The sizes are never empty: the last one cannot be turned off (`paint`).
   if (chosen.includes("jpeg") && (quality === "" || Number(quality) < 1)) {
     errors.push("JPEG quality runs from 1% to 100%.");
   }
   if (chosen.length === 0) errors.push("Pick at least one format.");
   if (errors.length > 0) return { errors };
-  const picked = sizeOptions.filter((size) => sizes.has(size));
   // Formats grouped by their fill; SVG and PDF have none and join the first pass.
   const groups = new Map<string, Format[]>();
   for (const format of chosen) {
@@ -236,7 +235,7 @@ function readOptions({ selected, sizes, backgrounds, quality }: Settings): Optio
   groups.set(firstFill, [...vector, ...firstFormats]);
   const passes = [...groups].map(([fill, group]) => ({
     formats: group,
-    config: `sizes=${picked.join(",")}\nbackground=${fill}\njpeg-quality=${quality || "100"}\n`,
+    config: `sizes=${rasterSizes.join(",")}\nbackground=${fill}\njpeg-quality=${quality || "100"}\n`,
   }));
   return { formats: chosen, passes };
 }
@@ -471,7 +470,6 @@ export function Converter() {
   const [svgs, setSvgs] = useState<File[]>([]);
   const [fonts, setFonts] = useState<File[]>([]);
   const [selected, setSelected] = useState<ReadonlySet<Format>>(() => new Set(formats));
-  const [sizes, setSizes] = useState<ReadonlySet<number>>(() => new Set(sizeOptions));
   const [backgrounds, setBackgrounds] = useState(startBackgrounds);
   const [quality, setQuality] = useState("100");
   const [results, setResults] = useState<Result[]>([]);
@@ -481,8 +479,8 @@ export function Converter() {
   const [dragging, setDragging] = useState(false);
   const worker = useRef<Worker | null>(null);
   const settings = useMemo<Settings>(
-    () => ({ selected, sizes, backgrounds, quality }),
-    [selected, sizes, backgrounds, quality],
+    () => ({ selected, backgrounds, quality }),
+    [selected, backgrounds, quality],
   );
   // The settings of the last conversion: once they differ, the options have changed since.
   const [applied, setApplied] = useState(settings);
@@ -630,21 +628,15 @@ export function Converter() {
     return () => clearTimeout(timer);
   }, [applied, settings, svgs, fonts, convert]);
 
-  /** Gives one toggle a state; a set keeps its identity when nothing changes. */
-  const paint = useCallback((key: Key, on: boolean) => {
-    const change = <T,>(current: ReadonlySet<T>, value: T): ReadonlySet<T> => {
-      if (current.has(value) === on) return current;
+  /** Gives one format a state; the set keeps its identity when nothing changes. */
+  const paint = useCallback((format: Format, on: boolean) => {
+    setSelected((current) => {
+      if (current.has(format) === on) return current;
       const next = new Set(current);
-      if (on) next.add(value);
-      else next.delete(value);
+      if (on) next.add(format);
+      else next.delete(format);
       return next;
-    };
-    if (key.group === "format") setSelected((current) => change(current, key.value));
-    // An export always has at least one size: the last one picked cannot be turned off.
-    else
-      setSizes((current) =>
-        !on && current.size === 1 && current.has(key.value) ? current : change(current, key.value),
-      );
+    });
   }, []);
 
   const empty = svgs.length === 0 && fonts.length === 0;
@@ -655,7 +647,6 @@ export function Converter() {
 
       <OptionsPanel
         selected={selected}
-        sizes={sizes}
         backgrounds={backgrounds}
         quality={quality}
         onPaint={paint}
@@ -749,23 +740,22 @@ function DropZone({ dragging, onFiles }: DropZoneProps) {
 }
 
 type OptionsPanelProps = Settings & {
-  onPaint: (key: Key, on: boolean) => void;
+  onPaint: (format: Format, on: boolean) => void;
   onBackgroundChange: (format: Filled, background: Background) => void;
   onQualityChange: (quality: string) => void;
 };
 
 function OptionsPanel({
   selected,
-  sizes,
   backgrounds,
   quality,
   onPaint,
   onBackgroundChange,
   onQualityChange,
 }: OptionsPanelProps) {
-  // Like selecting in Photos: press one toggle and drag across the others in its row to give
-  // them all the state the first one took.
-  const painting = useRef<{ group: Key["group"]; on: boolean } | null>(null);
+  // Like selecting in Photos: press one toggle and drag across the others to give them all the
+  // state the first one took.
+  const painting = useRef<{ on: boolean } | null>(null);
   // A finger picks on release (click), so dragging across the table still scrolls the page.
   const tapping = useRef(false);
   useEffect(() => {
@@ -773,8 +763,8 @@ function OptionsPanel({
       const stroke = painting.current;
       if (stroke === null) return;
       const target = document.elementFromPoint(event.clientX, event.clientY);
-      const key = keyOf(target?.closest<HTMLElement>("[data-toggle]")?.dataset.toggle);
-      if (key && key.group === stroke.group) onPaint(key, stroke.on);
+      const format = target?.closest<HTMLElement>("[data-toggle]")?.dataset.toggle;
+      if (isFormat(format)) onPaint(format, stroke.on);
     };
     const end = () => (painting.current = null);
     addEventListener("pointermove", move);
@@ -787,12 +777,19 @@ function OptionsPanel({
     };
   }, [onPaint]);
 
-  function toggle(key: Key, label: string, on: boolean, style: stylex.StyleXStyles) {
+  function toggle(format: Format, on: boolean) {
     return (
       <button
-        {...stylex.props(ui.reset, ui.respond, ui.focusRing, styles.toggle, style, on && styles.on)}
+        {...stylex.props(
+          ui.reset,
+          ui.respond,
+          ui.focusRing,
+          styles.toggle,
+          styles.formatName,
+          on && styles.on,
+        )}
         type="button"
-        data-toggle={`${key.group}:${key.value}`}
+        data-toggle={format}
         aria-pressed={on}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
@@ -800,17 +797,17 @@ function OptionsPanel({
           if (tapping.current) return;
           // No focus or text selection from a pointer; the press itself picks.
           event.preventDefault();
-          painting.current = { group: key.group, on: !on };
-          onPaint(key, !on);
+          painting.current = { on: !on };
+          onPaint(format, !on);
         }}
         // Keyboard, or a finger: a mouse or pen already picked on press.
         onClick={(event) => {
           if (event.detail !== 0 && !tapping.current) return;
           tapping.current = false;
-          onPaint(key, !on);
+          onPaint(format, !on);
         }}
       >
-        {label}
+        {labels[format]}
       </button>
     );
   }
@@ -823,25 +820,6 @@ function OptionsPanel({
     onQualityChange(value);
   }
 
-  const ranged = sizeOptions.filter((size) => sizes.has(size));
-  const first = ranged[0];
-  const last = ranged.at(-1);
-  // What each format's file is made of, as the engine makes it (archetypon `lib.rs`): SVG and PDF
-  // stay vector; PNG, WebP and JPEG take the picked sizes; ICO always packs 16, 32 and 48.
-  const sizeText: Record<Format, string> = {
-    svg: "Vector",
-    pdf: "Vector",
-    png: "",
-    webp: "",
-    jpeg: "",
-    ico: "16, 32, 48",
-  };
-  const rasterSizes =
-    first === undefined || last === undefined
-      ? "None"
-      : first === last
-        ? `${first} px`
-        : `${first}–${last} px`;
   const empty = (
     <span {...stylex.props(styles.none)}>
       <span aria-hidden="true">—</span>
@@ -851,8 +829,7 @@ function OptionsPanel({
 
   // A table like the homepage's: one row per file type, its settings beside it. A cell that does
   // not apply to the format shows a dash. Each format has its own background; JPEG has no
-  // transparency, so it is white or black. The sizes apply to every raster format at once, so
-  // they are one line below.
+  // transparency, so it is white or black.
   return (
     <div {...stylex.props(ui.text, styles.panel)} role="group" aria-label="Options">
       <div {...stylex.props(styles.options)}>
@@ -871,8 +848,8 @@ function OptionsPanel({
               role="group"
               aria-label={labels[format]}
             >
-              {toggle({ group: "format", value: format }, labels[format], on, styles.formatName)}
-              <span>{raster.includes(format) ? rasterSizes : sizeText[format]}</span>
+              {toggle(format, on)}
+              <span>{sizeText[format]}</span>
               {!isFilled(format) ? (
                 empty
               ) : (
@@ -916,16 +893,6 @@ function OptionsPanel({
             </div>
           );
         })}
-      </div>
-      <div {...stylex.props(styles.sizes)} role="group" aria-labelledby="archetypon-sizes">
-        <span {...stylex.props(ui.label, styles.sizesLabel)} id="archetypon-sizes">
-          Sizes
-        </span>
-        <div {...stylex.props(styles.sizeList)}>
-          {sizeOptions.map((size) =>
-            toggle({ group: "size", value: size }, String(size), sizes.has(size), styles.size),
-          )}
-        </div>
       </div>
     </div>
   );
@@ -1054,52 +1021,6 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "baseline",
     color: "inherit",
-  },
-  /**
-   * The sizes for every raster format: a label and one line of figures. Desktop: on the table's
-   * columns, like a row. Phones: the label above and the ten figures spread across the full width
-   * on one line, so no figure is left alone on a second line.
-   */
-  sizes: {
-    display: "grid",
-    gridTemplateColumns: { default: space.settingsColumns, [media.mobile]: "minmax(0, 1fr)" },
-    columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
-    alignItems: "baseline",
-  },
-  sizesLabel: { gridColumn: 1 },
-  sizeList: {
-    gridColumn: { default: "2 / -1", [media.mobile]: 1 },
-    // No width of its own, so the columns size to the table's settings, not to the ten figures on
-    // one line. The figures spread from the column's start to the table's right edge, as on
-    // phones, at least a unit apart; text too large for one line wraps within the columns.
-    contain: { default: "inline-size", [media.mobile]: null },
-    display: "flex",
-    flexWrap: { default: "wrap", [media.mobile]: "nowrap" },
-    justifyContent: { default: "space-between", [media.mobile]: null },
-    columnGap: { default: space.unit, [media.mobile]: 0 },
-  },
-  /**
-   * Phones: each figure takes an equal share of the line and centers in it (the first starts at
-   * the edge, the last ends at it), so the touch targets meet with no gap between them.
-   */
-  size: {
-    minHeight: { default: space.linkLineHeight, [media.mobile]: space.touchTarget },
-    // Each takes its width plus an equal share of what is left, the first and last half a share:
-    // centered in its share, every figure stands the same distance from the next.
-    flexGrow: {
-      default: 0,
-      [media.mobile]: { default: 1, ":first-child": 0.5, ":last-child": 0.5 },
-    },
-    display: { default: null, [media.mobile]: "flex" },
-    alignItems: "center",
-    justifyContent: {
-      default: null,
-      [media.mobile]: {
-        default: "center",
-        ":first-child": "flex-start",
-        ":last-child": "flex-end",
-      },
-    },
   },
   /** The field over its zero padding; both are set in the same three tabular columns. */
   digits: { position: "relative", display: "inline-block" },
