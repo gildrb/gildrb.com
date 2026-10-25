@@ -1,5 +1,7 @@
 # Eukhe: a coding agent that remembers every chat
 
+## Context that lasts
+
 A coding agent with one endless chat as its memory, so it never loses the context of your work.
 
 ```sh

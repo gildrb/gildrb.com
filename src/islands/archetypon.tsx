@@ -644,8 +644,6 @@ export function Converter() {
 
   return (
     <div {...stylex.props(styles.tool)}>
-      <Intake dragging={dragging} />
-
       <OptionsPanel
         selected={selected}
         backgrounds={backgrounds}
@@ -699,8 +697,13 @@ export function Converter() {
         }}
       />
 
-      <p {...stylex.props(styles.status, status?.error === true && styles.problem)} role="status">
-        {status?.text ?? ""}
+      {/* The page's opening says to drop files; while they hover over the page, this line says
+          where they go. */}
+      <p
+        {...stylex.props(styles.status, (dragging || status?.error === true) && styles.problem)}
+        role="status"
+      >
+        {dragging ? "Drop the files to add them." : (status?.text ?? "")}
       </p>
 
       {fontList.length > 0 && (
@@ -713,20 +716,6 @@ export function Converter() {
 
       {results.length > 0 && <ResultList results={results} />}
     </div>
-  );
-}
-
-/**
- * The whole page takes dropped files (`Converter`); this line says so. While files hover over the
- * page, it says where they go. The file picker is the action under the options.
- */
-function Intake({ dragging }: { dragging: boolean }) {
-  return (
-    <p {...stylex.props(ui.prose, styles.intake, dragging && styles.dragging)}>
-      {dragging
-        ? "Drop the files to add them."
-        : "Drop SVG files on this page, with the .ttf, .otf or .ttc fonts that their text uses."}
-    </p>
   );
 }
 
@@ -944,10 +933,6 @@ function ResultList({ results }: { results: readonly Result[] }) {
 
 const styles = stylex.create({
   tool: { display: "flex", flexDirection: "column", gap: space.sectionGap },
-  /** The line that takes files; the whole page takes dropped ones. */
-  intake: { margin: 0, color: colors.article, fontWeight: colors.proseWeight },
-  /** Files hover over the page: the line says where they go, at full contrast. */
-  dragging: { color: colors.primary },
   /** The page's one call to action, at full contrast, with `ui.outbound`. */
   choose: { color: colors.primary },
   panel: { display: "flex", flexDirection: "column", gap: space.sectionGap },

@@ -1,6 +1,8 @@
 # Archetypon: convert SVG to PNG, ICO, WebP, JPEG and PDF
 
-Turn one SVG into every file that a logo or an icon needs, in your browser.
+## Every logo file from one SVG
+
+Drop SVG files on this page, with the .ttf, .otf or .ttc fonts that their text uses.
 
 ![](media:archetypon-finder)
 

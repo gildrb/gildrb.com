@@ -1,5 +1,7 @@
 # Poros: open a dev server that runs on your server, on your Mac or phone
 
+## Dev servers on every device
+
 Open the dev server of your server on your Mac or phone, through a private HTTPS link on your Tailscale network.
 
 ```sh
