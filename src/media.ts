@@ -183,6 +183,11 @@ export const media: Readonly<Record<string, Media>> = {
     width: 3940,
     height: 2260,
   },
+  "archetypon-finder": {
+    alt: "Finder window of one Archetypon export: favicon.ico, a PDF and an SVG, then JPEG, PNG and WebP folders with ten sizes each from 16 to 4096 pixels",
+    width: 1476,
+    height: 1662,
+  },
   "heph-answer": {
     alt: "Heph answering how to add your own files, with one cited passage and four quotes verified",
     width: 1682,

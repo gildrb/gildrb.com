@@ -2,6 +2,8 @@
 
 Turn one SVG into every file that a logo or an icon needs, in your browser.
 
+![](media:archetypon-finder)
+
 ## Too many exports
 
 A logo needs favicons, app icons, PNG for slides, PDF for print and WebP for the web. Each export by hand can get a size or a background wrong.

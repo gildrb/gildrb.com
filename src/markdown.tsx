@@ -450,9 +450,9 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
  * Renders a page's Markdown, every page alike: the title for screen readers (the breadcrumb shows
  * it), then the blocks. The first paragraph is the opening, at full contrast, wherever it stands
  * (n0thing opens with an image and a part). `codeLine` (the source code) follows it, then `tool`
- * (Archetypon's converter); `sourcesLine` (where else the work lives) ends the page. `eager`
- * gives the first image high fetch priority. `reading` (a page with contents): the images a page
- * opens with are a banner, framed by a hairline.
+ * (Archetypon's converter), then the rest; `sourcesLine` (where else the work lives) ends the
+ * page. `eager` gives the first image high fetch priority. `reading` (a page with contents): the
+ * images a page opens with are a banner, framed by a hairline.
  */
 export function Article({
   markdown,
@@ -496,9 +496,11 @@ export function Article({
   };
   for (const [index, block] of blocks.entries()) {
     const anchor = found.get(index);
-    if (index === opening + 1 && opening !== -1 && codeLine !== null)
-      place("text", (spacing) => <div {...stylex.props(spacing)}>{codeLine}</div>);
-    if (anchor?.top === true) placeTool();
+    if (index === opening + 1 && opening !== -1) {
+      if (codeLine !== null)
+        place("text", (spacing) => <div {...stylex.props(spacing)}>{codeLine}</div>);
+      placeTool();
+    }
     switch (block.type) {
       case "h2":
       case "h3": {
