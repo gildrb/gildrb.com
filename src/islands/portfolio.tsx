@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { TargetedMouseEvent } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { announce } from "../announce.ts";
 import { Row } from "../row.tsx";
 import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
@@ -20,37 +20,16 @@ function describe(key: SortKey, direction: SortDirection): string {
 /**
  * The homepage project table: project, subject, then the date set right. Project and date sort,
  * the subject is plain text. The archive is the table's footer, whatever the order: "Archive" in
- * the project column, the count in the subject column. Edge fades show while the list scrolls on
- * phones. The row under the pointer or in focus brightens; nothing else appears. Phones drop the
- * last column, and the date ends at the table's right edge.
+ * the project column, the count in the subject column. The page scrolls like every other page,
+ * so the browser's own gestures (pull to refresh) stay available. The row under the pointer or
+ * in focus brightens; nothing else appears. Phones drop the last column, and the date ends at
+ * the table's right edge.
  */
 export function Portfolio({ more }: { more: number }) {
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
     key: "date",
     direction: "descending",
   });
-  const [edges, setEdges] = useState({ top: false, bottom: false });
-  const section = useRef<HTMLElement>(null);
-
-  // Browsers with scroll-driven animations tie the edge fades to the scroll position in CSS, so
-  // they are right from the first frame; this fallback only serves the others.
-  useEffect(() => {
-    const element = section.current;
-    if (!element || CSS.supports("animation-timeline: scroll()")) return undefined;
-    const update = () =>
-      setEdges({
-        top: element.scrollTop > 1,
-        bottom: element.scrollHeight - element.clientHeight - element.scrollTop > 1,
-      });
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    element.addEventListener("scroll", update, { passive: true });
-    return () => {
-      observer.disconnect();
-      element.removeEventListener("scroll", update);
-    };
-  }, []);
 
   function select(key: SortKey, event: TargetedMouseEvent<HTMLButtonElement>) {
     const direction =
@@ -62,13 +41,7 @@ export function Portfolio({ more }: { more: number }) {
 
   const rows = projects.toSorted(compareRows(sort.key, sort.direction));
   return (
-    <div
-      {...stylex.props(
-        styles.frame,
-        edges.top && styles.fadeTop,
-        edges.bottom && styles.fadeBottom,
-      )}
-    >
+    <div {...stylex.props(styles.frame)}>
       <table {...stylex.props(ui.label, ui.sans, styles.header)} aria-label="Project columns">
         {/* The wrappers take no box, so the buttons stay on the subgrid. */}
         <thead {...stylex.props(styles.contents)}>
@@ -109,12 +82,7 @@ export function Portfolio({ more }: { more: number }) {
           </tr>
         </thead>
       </table>
-      <section
-        data-scroll-list
-        ref={section}
-        {...stylex.props(styles.section)}
-        aria-labelledby="portfolio-title"
-      >
+      <section {...stylex.props(styles.section)} aria-labelledby="portfolio-title">
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
           Projects
         </h2>
@@ -137,99 +105,21 @@ export function Portfolio({ more }: { more: number }) {
   );
 }
 
-const scrollDriven = "@supports (animation-timeline: scroll())";
-
-// Scroll-linked: the top fade appears once the list scrolls, the bottom one leaves at the end.
-const revealTop = stylex.keyframes({ "0%": { opacity: 0 }, "4%, 100%": { opacity: 1 } });
-const hideBottom = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opacity: 0 } });
-
 const styles = stylex.create({
   frame: {
     display: "grid",
     gridTemplateColumns: space.projectColumns,
-    // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls under
-    // the header, between edge fades.
-    gridTemplateRows: {
-      default: null,
-      [media.mobile]: "auto minmax(0, 1fr)",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: "auto minmax(0, 1fr)",
-      },
-    },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
     gridRow: { default: null, [media.mobile]: 4, [media.desktop]: 2 },
-    alignSelf: {
-      default: null,
-      [media.desktop]: "start",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "stretch" },
-    },
+    alignSelf: { default: null, [media.desktop]: "start" },
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     containerType: "inline-size",
-    position: {
-      default: null,
-      [media.mobile]: "relative",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "relative" },
-    },
-    minHeight: {
-      default: null,
-      [media.mobile]: 0,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
-    },
     marginBottom: {
       default: space.textMediaGap,
       // Phones: above Safari's bottom bar too, which floats over the page.
       [media.mobile]: `calc(${space.sectionGap} + env(safe-area-inset-bottom))`,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
-    },
-    timelineScope: "--portfolio",
-    "::before": {
-      content: {
-        default: null,
-        [media.mobile]: '""',
-        [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: '""' },
-      },
-      // Just below the header: one touch target on phones.
-      top: {
-        default: space.touchTarget,
-        [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-          [media.desktop]: `calc(${space.linkLineHeight} + ${space.portfolioRowPadding})`,
-        },
-      },
-      backgroundImage: `linear-gradient(to bottom, ${colors.bg}, transparent)`,
-      opacity: 0,
-      position: "absolute",
-      insetInline: 0,
-      zIndex: 2,
-      // One row (a touch target): what passes under the fade is at most one row.
-      height: space.touchTarget,
-      pointerEvents: "none",
-      animationName: { default: null, [scrollDriven]: revealTop },
-      animationTimeline: "--portfolio",
-      animationTimingFunction: "linear",
-      animationFillMode: "both",
-    },
-    "::after": {
-      content: {
-        default: null,
-        [media.mobile]: '""',
-        [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: '""' },
-      },
-      bottom: 0,
-      backgroundImage: `linear-gradient(to top, ${colors.bg}, transparent)`,
-      opacity: "var(--list-overflows, 0)",
-      position: "absolute",
-      insetInline: 0,
-      zIndex: 2,
-      height: space.touchTarget,
-      pointerEvents: "none",
-      animationName: { default: null, [scrollDriven]: hideBottom },
-      animationTimeline: "--portfolio",
-      animationTimingFunction: "linear",
-      animationFillMode: "both",
     },
   },
-  fadeTop: { "::before": { opacity: 1 } },
-  fadeBottom: { "::after": { opacity: 1 } },
   header: {
     display: "grid",
     gridColumn: "1 / -1",
@@ -294,40 +184,14 @@ const styles = stylex.create({
     display: {
       default: "grid",
       [media.desktop]: "contents",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "grid" },
     },
     gridTemplateColumns: "subgrid",
     gridColumn: "1 / -1",
-    gridRow: {
-      default: null,
-      [media.mobile]: 2,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 2 },
-    },
+    gridRow: { default: null, [media.mobile]: 2 },
     minWidth: 0,
-    minHeight: {
-      default: null,
-      [media.mobile]: 0,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 0 },
-    },
     alignContent: "start",
-    overflowY: {
-      default: null,
-      [media.mobile]: "auto",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto" },
-    },
-    scrollbarWidth: "none",
-    // The list scrolls inside a page that does not: reaching its end must not drag the page.
-    overscrollBehavior: "contain",
-    scrollTimeline: "--portfolio y",
     // One row padding below the last row, as above each row's text.
-    paddingBottom: {
-      default: null,
-      [media.mobile]: space.portfolioRowPadding,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: space.portfolioRowPadding,
-      },
-    },
-    "::-webkit-scrollbar": { display: "none" },
+    paddingBottom: { default: null, [media.mobile]: space.portfolioRowPadding },
   },
   list: {
     display: "grid",
