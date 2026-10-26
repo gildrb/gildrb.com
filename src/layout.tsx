@@ -100,7 +100,10 @@ export function Document({
   children: ComponentChildren;
 }) {
   return (
-    <html lang="en" {...stylex.props(rootMarker, styles.html)}>
+    <html
+      lang="en"
+      {...stylex.props(rootMarker, styles.html, home && [styles.fixedViewport, styles.homeRoot])}
+    >
       <head>
         <meta charset="UTF-8" />
         {/* `viewport-fit=cover`: Safari reports its bottom bar and the notch as safe-area insets,
@@ -136,7 +139,11 @@ export function Document({
         />
       </head>
       <body
-        {...stylex.props(ui.sans, styles.body, home ? styles.homeBody : styles.caseBody)}
+        {...stylex.props(
+          ui.sans,
+          styles.body,
+          home ? [styles.homeBody, styles.fixedViewport] : styles.caseBody,
+        )}
         id="top"
         data-intro={person.about}
       >
@@ -359,6 +366,19 @@ const styles = stylex.create({
     backgroundColor: colors.bg,
     colorScheme: colors.scheme,
   },
+  /**
+   * The homepage fits the viewport; only the project list scrolls. On phones it always does; on
+   * desktop the content fits until `data-dense` (see `align.ts`) holds it to the viewport.
+   * Clipping covers heights too short for even its compact sidebar, so a scrollbar never appears.
+   */
+  fixedViewport: { height: "100dvh", overflow: "hidden" },
+  /**
+   * The homepage never scrolls, so the gutter that keeps it as wide as the scrolling pages is on
+   * <body>, under its own background, not on the root. The browser paints an empty root gutter
+   * apart from the page, and it can lag a theme change: a black or white strip flickers at the
+   * window's edge.
+   */
+  homeRoot: { scrollbarGutter: "auto" },
   body: {
     // Held hidden by the font gate until Inter is ready; see `fontGate`.
     visibility: "var(--first-paint, visible)",
@@ -417,12 +437,22 @@ const styles = stylex.create({
     gridTemplateRows: {
       default: null,
       [media.desktop]: "auto minmax(min-content, 1fr) auto",
+      [media.mobile]: "auto auto auto minmax(0, 1fr)",
+      // Dense: like on phones, the page holds to the viewport and the project list scrolls. The
+      // list's row still grows to fit the sidebar links, so those are never cut off.
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto 1fr auto" },
     },
     rowGap: 0,
     paddingBlock: { default: null, [media.desktop]: space.pageInset },
-    // The positioning box for the theme toggle on dense desktops (see `align.ts`).
+    height: {
+      default: null,
+      [media.mobile]: "100dvh",
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "100dvh" },
+    },
+    // The positioning box for the theme toggle once the viewport is dense.
     position: { default: null, [media.desktop]: "relative" },
     minHeight: "100dvh",
+    alignContent: { default: null, [media.mobile]: "start" },
   },
   sidebar: {
     position: { default: "sticky", [media.mobile]: "relative" },
@@ -493,12 +523,10 @@ const styles = stylex.create({
     top: { default: null, [media.mobile]: 0 },
     zIndex: { default: null, [media.mobile]: 100 },
     // iOS Safari tints its top bar from a fixed or sticky element at least 90% of the viewport
-    // wide, then keeps that color after any tap, so the bar would hold the old theme until a
-    // reload. The bar is therefore only as wide as its text and carries the page background
-    // there: content scrolls past it fully visible, with no fade over it.
+    // wide, then keeps that color after any tap, so the bar is only as wide as its text. It has
+    // no background of its own: content passes behind it and the top bar follows the page.
     width: { default: null, [media.mobile]: "fit-content" },
     maxWidth: { default: null, [media.mobile]: "100%" },
-    backgroundColor: { default: null, [media.mobile]: colors.bg },
     padding: { default: null, [media.mobile]: `${space.sectionGap} 0 ${space.unit}` },
   },
   homeName: {

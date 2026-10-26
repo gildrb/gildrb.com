@@ -4,6 +4,8 @@
  * - Desktop: sizes the sidebar intro to the homepage summary as it wraps in the content column,
  *   on every page, so the sidebar links line up with the project table and stay put across pages.
  *   Marks short viewports as dense (see below).
+ * - Phones: shows the project list's bottom fade in the first frame when it overflows (the
+ *   scroll-driven animation takes over from the next frame).
  *
  * Self-contained on purpose: `alignScript` inlines its source at the end of `<body>`.
  */
@@ -36,9 +38,10 @@ export function align(gapProperty: string): void {
     body.style.removeProperty("--desktop-intro-height");
   }
 
-  // Desktop, short viewports: the footer metadata and the theme toggle hang from the bottom of
-  // the viewport, so once the content reaches them `data-dense` drops the metadata and moves the
-  // toggle up level with the name. When even the sidebar links outgrow the dense homepage,
+  // Desktop, short viewports: the footer metadata and the theme toggle hang from the bottom of the
+  // viewport, so once the content reaches them `data-dense` drops the metadata, moves the toggle
+  // up level with the name and, on the homepage, holds the page to the viewport and scrolls the
+  // project list instead, as on phones. When even the sidebar links outgrow the dense homepage,
   // `data-compact` drops the profile links too, keeping contact.
   // Each step is measured in the layout before it, so neither flip-flops.
   const root = document.documentElement;
@@ -64,4 +67,10 @@ export function align(gapProperty: string): void {
       if (sidebarLinks.getBoundingClientRect().bottom > end + 0.5) root.dataset.compact = "";
     }
   }
+
+  const list = document.querySelector<HTMLElement>("[data-scroll-list]");
+  list?.parentElement?.style.setProperty(
+    "--list-overflows",
+    list.scrollHeight - list.clientHeight - list.scrollTop > 1 ? "1" : "0",
+  );
 }
