@@ -383,7 +383,9 @@ const phoneGutterLeft = `max(${phoneGutter}, env(safe-area-inset-left))`;
  */
 const phoneMargin = `calc((100% - ${space.contentColumn}) / 2)`;
 const phoneInsetLeft = `max(${phoneGutterLeft}, ${phoneMargin})`;
-const phoneInsetRight = `max(${phoneGutter}, env(safe-area-inset-right), ${phoneMargin})`;
+// The scrollbar's widest thumb (9px hovered at its 4px inset) plus a clear unit beside the text.
+const pagebarRoom = `calc(${space.unit} + 13px)`;
+const phoneInsetRight = `max(${phoneGutter}, env(safe-area-inset-right), ${phoneMargin}, ${pagebarRoom})`;
 
 const styles = stylex.create({
   // The background lives on <html> too, so the held first frame is already the theme color.
