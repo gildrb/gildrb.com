@@ -146,22 +146,22 @@ export const typeScale = stylex.defineConsts({
  * <html> and in `theme-color` before any CSS loads, so the first frame and the browser chrome are
  * the page itself.
  */
-export const pageColor = { dark: "oklch(17% 0.003 235)", light: "oklch(97.5% 0.005 80)" };
+export const pageColor = { dark: "oklch(17% 0.005 25)", light: "oklch(97.5% 0.005 235)" };
 
 /**
- * Monochrome, tinted: a cold night page and a warm paper page. Each theme sits on one hue with a
- * trace of chroma, below the point where a reader names a color and above the point where a page
- * reads as the browser's own black and white; pure 0 and 100 lightness are what makes a
- * monochrome page look unstyled.
+ * Monochrome, tinted: an ember forge page in the dark, a cold paper page in the light. Each
+ * theme sits on one hue with a trace of chroma, below the point where a reader names a color
+ * and above the point where a page reads as the browser's own black and white; pure 0 and 100
+ * lightness are what makes a monochrome page look unstyled.
  *
- * Dark: hue 235 (blue, short of violet), chroma 0.003 on surfaces and 0.003 to 0.005 on text.
- * Chroma reads stronger on a dark page, so it is held lower there: at 0.006 the page read as
- * purple. Light: hue 80 (the yellow of paper), chroma 0.005 on surfaces and 0.01 on text, where
- * a cold tint read as a blue screen.
+ * Dark: hue 25 (ember red, the forge), chroma 0.005 on surfaces and 0.005 to 0.007 on text.
+ * Chroma reads stronger on a dark page, so it is held low there: at 0.006 the old blue read as
+ * purple, and the red keeps the same ceiling. Light: hue 235 (the blue of a cold page), chroma
+ * 0.005 on surfaces and 0.01 on text.
  *
- * Both ends are pulled in from the extremes: the dark page is 17% lightness (about #0e1011),
- * its text 94% (about #e9ebed), so white text no longer glares against true black; the light
- * page is 97.5% (about #f8f6f3), its text 18% (about #14110d).
+ * Both ends are pulled in from the extremes: the dark page is 17% lightness (about #120f0e),
+ * its text 94% (about #eeeae9), so white text no longer glares against true black; the light
+ * page is 97.5% (about #f4f7fa), its text 18% (about #0d1215).
  *
  * The text ladder keeps its steps in APCA. Dark, on the page: primary Lc 94, article 78,
  * secondary 56, tertiary 37 (WCAG 5.3:1). Light: primary Lc 100, article 96, secondary 84,
@@ -176,15 +176,15 @@ export const colors = stylex.defineVars({
    */
   scheme: "light dark",
   bg: { default: pageColor.dark, [light]: pageColor.light },
-  primary: { default: "oklch(94% 0.003 235)", [light]: "oklch(18% 0.01 80)" },
-  secondary: { default: "oklch(74% 0.004 235)", [light]: "oklch(42% 0.01 80)" },
+  primary: { default: "oklch(94% 0.005 25)", [light]: "oklch(18% 0.01 235)" },
+  secondary: { default: "oklch(74% 0.006 25)", [light]: "oklch(42% 0.01 235)" },
   /** One more step down the text ladder: labels, dates, descriptors, quiet links at rest. */
-  tertiary: { default: "oklch(62% 0.005 235)", [light]: "oklch(53% 0.01 80)" },
-  article: { default: "oklch(86% 0.003 235)", [light]: "oklch(28% 0.01 80)" },
+  tertiary: { default: "oklch(62% 0.007 25)", [light]: "oklch(53% 0.01 235)" },
+  article: { default: "oklch(86% 0.005 25)", [light]: "oklch(28% 0.01 235)" },
   /** Rules: the page's text at 12% opacity, so they take the tint of whatever is under them. */
-  hairline: { default: "oklch(94% 0.003 235 / 0.12)", [light]: "oklch(18% 0.01 80 / 0.12)" },
-  codeBg: { default: "oklch(23% 0.004 235)", [light]: "oklch(92.5% 0.006 80)" },
-  terminalBg: { default: "oklch(19.5% 0.004 235)", [light]: "oklch(95.5% 0.005 80)" },
+  hairline: { default: "oklch(94% 0.005 25 / 0.12)", [light]: "oklch(18% 0.01 235 / 0.12)" },
+  codeBg: { default: "oklch(23% 0.006 25)", [light]: "oklch(92.5% 0.006 235)" },
+  terminalBg: { default: "oklch(19.5% 0.006 25)", [light]: "oklch(95.5% 0.005 235)" },
   /**
    * Heph's glass window (`heph.tsx`), the one lifted surface on the site; flat surfaces take a
    * line (`ui.edge`), not a shadow. `glass` is the terminal colour the wallpaper shows through:
@@ -193,11 +193,11 @@ export const colors = stylex.defineVars({
    * the text it went near-black on the light page. `shadow` is the dark under the window, on
    * each theme's own hue rather than pure black, which reads as a hole in a tinted page.
    */
-  glass: { default: "oklch(19.5% 0.004 235 / 0.62)", [light]: "oklch(95.5% 0.005 80 / 0.82)" },
+  glass: { default: "oklch(19.5% 0.006 25 / 0.62)", [light]: "oklch(95.5% 0.005 235 / 0.82)" },
   glint: { default: "oklch(100% 0 0)", [light]: "oklch(100% 0 0)" },
-  shadow: { default: "oklch(8% 0.003 235)", [light]: "oklch(12% 0.01 80)" },
+  shadow: { default: "oklch(8% 0.005 25)", [light]: "oklch(12% 0.01 235)" },
   /** Muted text on terminal surfaces: 4.6:1 on the dark terminal, 5.0:1 on the light one. */
-  terminalMuted: { default: "oklch(60% 0.005 235)", [light]: "oklch(51% 0.01 80)" },
+  terminalMuted: { default: "oklch(60% 0.007 25)", [light]: "oklch(51% 0.01 235)" },
   proseWeight: { default: "380", [light]: "400" },
   /**
    * How strong an underline is at rest, as a share of its link's text colour (`ui.outbound`); on
@@ -215,17 +215,17 @@ export const colors = stylex.defineVars({
 export const dark = stylex.createTheme(colors, {
   scheme: "dark",
   bg: pageColor.dark,
-  primary: "oklch(94% 0.003 235)",
-  secondary: "oklch(74% 0.004 235)",
-  tertiary: "oklch(62% 0.005 235)",
-  article: "oklch(86% 0.003 235)",
-  hairline: "oklch(94% 0.003 235 / 0.12)",
-  codeBg: "oklch(23% 0.004 235)",
-  terminalBg: "oklch(19.5% 0.004 235)",
-  glass: "oklch(19.5% 0.004 235 / 0.62)",
+  primary: "oklch(94% 0.005 25)",
+  secondary: "oklch(74% 0.006 25)",
+  tertiary: "oklch(62% 0.007 25)",
+  article: "oklch(86% 0.005 25)",
+  hairline: "oklch(94% 0.005 25 / 0.12)",
+  codeBg: "oklch(23% 0.006 25)",
+  terminalBg: "oklch(19.5% 0.006 25)",
+  glass: "oklch(19.5% 0.006 25 / 0.62)",
   glint: "oklch(100% 0 0)",
-  shadow: "oklch(8% 0.003 235)",
-  terminalMuted: "oklch(60% 0.005 235)",
+  shadow: "oklch(8% 0.005 25)",
+  terminalMuted: "oklch(60% 0.007 25)",
   proseWeight: "380",
   underlineRest: "50%",
   artworkFilter: "none",
@@ -236,17 +236,17 @@ export const dark = stylex.createTheme(colors, {
 export const lightTheme = stylex.createTheme(colors, {
   scheme: "light",
   bg: pageColor.light,
-  primary: "oklch(18% 0.01 80)",
-  secondary: "oklch(42% 0.01 80)",
-  tertiary: "oklch(53% 0.01 80)",
-  article: "oklch(28% 0.01 80)",
-  hairline: "oklch(18% 0.01 80 / 0.12)",
-  codeBg: "oklch(92.5% 0.006 80)",
-  terminalBg: "oklch(95.5% 0.005 80)",
-  glass: "oklch(95.5% 0.005 80 / 0.82)",
+  primary: "oklch(18% 0.01 235)",
+  secondary: "oklch(42% 0.01 235)",
+  tertiary: "oklch(53% 0.01 235)",
+  article: "oklch(28% 0.01 235)",
+  hairline: "oklch(18% 0.01 235 / 0.12)",
+  codeBg: "oklch(92.5% 0.006 235)",
+  terminalBg: "oklch(95.5% 0.005 235)",
+  glass: "oklch(95.5% 0.005 235 / 0.82)",
   glint: "oklch(100% 0 0)",
-  shadow: "oklch(12% 0.01 80)",
-  terminalMuted: "oklch(51% 0.01 80)",
+  shadow: "oklch(12% 0.01 235)",
+  terminalMuted: "oklch(51% 0.01 235)",
   proseWeight: "400",
   underlineRest: "25%",
   artworkFilter: "brightness(0)",
