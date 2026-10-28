@@ -27,8 +27,8 @@ export const media = stylex.defineConsts({
   desktop: "@media (min-width: 768px)",
   /**
    * Room for the banner to break out (`space.bannerColumn`): the centred block (832px) plus one
-   * layout gap on each side (928px) plus a classic scrollbar's gutter (16px). Narrower, the banner
-   * keeps the text's width rather than running past the viewport.
+   * layout gap on each side (928px) plus the 16px a classic scrollbar once took. Narrower, the
+   * banner keeps the text's width rather than running past the viewport.
    */
   banner: "@media (min-width: 944px)",
   hover: "@media (hover: hover)",

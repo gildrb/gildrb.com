@@ -5,6 +5,7 @@ import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
+import { pageScrollbar } from "./scrollbar.ts";
 import { contacts, type Link, origin, person, profiles } from "./site.ts";
 import { themeColor, themeCss, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space, typeScale } from "./tokens.stylex.ts";
@@ -37,6 +38,10 @@ const globalCss = [
   // before the web font arrives does not move when it does.
   '@font-face{font-family:"Inter Fallback";src:local("Arial"),local("Liberation Sans");size-adjust:107.35%;ascent-override:90.24%;descent-override:22.47%;line-gap-override:0%}',
   "@layer reset{*{margin:0;padding:0;box-sizing:border-box}}",
+  // The browser's own scrollbar never shows, in any frame: the page keeps one width everywhere
+  // and never shifts when it becomes scrollable. The site's own scrollbar takes its place
+  // (`scrollbar.ts`), and without JavaScript the page still scrolls by wheel, touch and keys.
+  "html{scrollbar-width:none}html::-webkit-scrollbar{display:none}",
   `::selection{color:${colors.bg};background:${colors.primary}}`,
   // A touch shows nothing: no grey tap flash, and no press state takes its place.
   "a,button{-webkit-tap-highlight-color:transparent}",
@@ -45,10 +50,32 @@ const globalCss = [
   // another click during it cannot cancel it and shows a flash. The browser swaps pages at once,
   // and the sidebar, the same on every page, stays as it is.
   "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
+  // The site's own scrollbar (`scrollbar.ts`): a thumb at rest only while the page scrolls, on
+  // hover, in focus or dragged, fading out 0.6s after it stops; resting on it or dragging it
+  // widens it a little over 0.14s. States follow superlogical.com's; the resting width is the
+  // sun core in the theme toggle (radius 3 of a 20-unit box at 22px: 6.6px).
+  "[data-pagebar]{position:fixed;inset-block:2px;inset-inline-end:4px;width:10px;z-index:200;opacity:0;pointer-events:none;touch-action:none;user-select:none;outline:none}",
+  "[data-pagebar][data-scrollable]{opacity:1;pointer-events:auto}",
+  "[data-pagebar][data-dragging]{cursor:ns-resize}",
+  [
+    "[data-pagebar] .thumb{position:absolute;inset-block-start:0;inset-inline:auto 2px;width:6.6px;height:var(--pagebar-thumb,0px);min-height:32px;border-radius:999px;",
+    "background:color-mix(in oklab,currentColor,transparent 45%);box-shadow:0 0 0 1px rgb(0 0 0 / 0.06);",
+    "opacity:0;will-change:width,height,margin-block-start,transform;",
+    "transition-property:width,height,margin-block-start,background-color,opacity;",
+    "transition-duration:.14s,.14s,.14s,.14s,.6s;transition-timing-function:cubic-bezier(.2,.8,.2,1)}",
+  ].join(""),
+  "[data-pagebar][data-shown] .thumb{opacity:1;transition-duration:.14s,.14s,.14s,.14s,90ms}",
+  "[data-pagebar]:hover .thumb,[data-pagebar]:focus-visible .thumb,[data-pagebar][data-dragging] .thumb{opacity:1;width:9px;height:calc(var(--pagebar-thumb,0px) + 2px);margin-block-start:-1px;transition-duration:.14s,.14s,.14s,.14s,90ms}",
+  "[data-pagebar]:focus-visible .thumb{background:color-mix(in oklab,currentColor,transparent 30%)}",
+  "@media (min-width:40rem){[data-pagebar]{inset-block:7px;width:16px}[data-pagebar] .thumb{inset-inline:auto 0}}",
+  "@media (pointer:coarse){[data-pagebar] .thumb{min-height:48px;transition-property:width,background-color,opacity;transition-duration:.3s,.14s,.6s;transition-timing-function:cubic-bezier(.22,1,.36,1),cubic-bezier(.2,.8,.2,1),cubic-bezier(.2,.8,.2,1)}[data-pagebar][data-shown] .thumb{transition-duration:.3s,.14s,90ms}}",
+  "@media (prefers-reduced-motion:reduce){[data-pagebar] .thumb{transition-duration:.01ms!important}}",
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
 const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space.sectionContentGap.slice(4, -1))});window.__align()`;
+// The scrollbar must answer the first frame of scrolling, not the island script's module graph.
+const scrollbarScript = `(${pageScrollbar.toString()})()`;
 
 /**
  * Chrome prerenders a page of this site once a pointer rests on its link (about 200ms) or presses
@@ -100,10 +127,7 @@ export function Document({
   children: ComponentChildren;
 }) {
   return (
-    <html
-      lang="en"
-      {...stylex.props(rootMarker, styles.html, home && [styles.fixedViewport, styles.homeRoot])}
-    >
+    <html lang="en" {...stylex.props(rootMarker, styles.html, home && styles.fixedViewport)}>
       <head>
         <meta charset="UTF-8" />
         {/* `viewport-fit=cover`: Safari reports its bottom bar and the notch as safe-area insets,
@@ -157,6 +181,8 @@ export function Document({
         {children}
         {/* Align the layout before the first paint (see the render-blocking `expect` in <head>). */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: alignScript }} />
+        {/* The scrollbar lives before the first paint too, so scrolling on arrival finds it. */}
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: scrollbarScript }} />
         <div id="aligned" hidden />
       </body>
     </html>
@@ -362,23 +388,15 @@ const phoneInsetRight = `max(${phoneGutter}, env(safe-area-inset-right), ${phone
 const styles = stylex.create({
   // The background lives on <html> too, so the held first frame is already the theme color.
   html: {
-    scrollbarGutter: { default: null, [media.desktop]: "stable" },
     backgroundColor: colors.bg,
     colorScheme: colors.scheme,
   },
   /**
    * The homepage fits the viewport; only the project list scrolls. On phones it always does; on
    * desktop the content fits until `data-dense` (see `align.ts`) holds it to the viewport.
-   * Clipping covers heights too short for even its compact sidebar, so a scrollbar never appears.
+   * Clipping covers heights too short for even its compact sidebar.
    */
   fixedViewport: { height: "100dvh", overflow: "hidden" },
-  /**
-   * The homepage never scrolls, so the gutter that keeps it as wide as the scrolling pages is on
-   * <body>, under its own background, not on the root. The browser paints an empty root gutter
-   * apart from the page, and it can lag a theme change: a black or white strip flickers at the
-   * window's edge.
-   */
-  homeRoot: { scrollbarGutter: "auto" },
   body: {
     // Held hidden by the font gate until Inter is ready; see `fontGate`.
     visibility: "var(--first-paint, visible)",
@@ -394,10 +412,7 @@ const styles = stylex.create({
     WebkitTextSizeAdjust: "100%",
     textRendering: "optimizeLegibility",
   },
-  homeBody: {
-    minHeight: "100dvh",
-    scrollbarGutter: { default: null, [media.desktop]: "stable" },
-  },
+  homeBody: { minHeight: "100dvh" },
   caseBody: { minHeight: "100vh" },
   wrapper: {
     // A minimum margin: the layout keeps its full width until the viewport cannot fit it. Four
