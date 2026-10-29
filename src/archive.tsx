@@ -7,9 +7,9 @@ import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
 /**
- * The artwork's width as a percentage of its square, as CSS: the whole square for a screenshot
- * or recording, which fills and is cropped to it; 60% for a logo mark, a fifth of the square
- * clear on each side, so a mark and a screenshot read at one optical size.
+ * The artwork's width as a percentage of the column, as CSS: the whole column for a screenshot
+ * or recording, which shows whole at its own ratio; 60% for a logo mark, so a mark and a
+ * screenshot read at one optical size.
  */
 function share(item: Media): string {
   return item.mark ? "60" : "100";
@@ -52,8 +52,8 @@ export function collect(markdown: Readonly<Record<string, string>>): Work[] {
 }
 
 /**
- * The tile's label and where it leads: the case study, or the archive page opened on this very
- * work (first in the grid and enlarged, see `client.ts`).
+ * The work's label and where it leads: the case study, or the archive page opened on this very
+ * work (first in the stream and enlarged, see `client.ts`).
  */
 function destination(work: Work): { label: string; href: string } {
   switch (work.from.$) {
@@ -84,32 +84,31 @@ function sortData(work: Work) {
   }
 }
 
-// Two tiles a row in the content column, less half the gap between them; phones stop at the
-// column's 544px, where the page centres on it (`layout.tsx`).
-const tileSizes =
-  "(max-width: 767px) min(calc(50vw - 20px), 264px), (max-width: 876px) calc(50vw - 184px), 256px";
+// One work a row in the content column, each at its own ratio. Phones take the viewport less
+// the two 12px gutters, up to the column's 544px, where the page centres on it (`layout.tsx`);
+// tablets the viewport less the sidebar's room; desktop the column's 544px.
+const workSizes =
+  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(100vw - 336px), 544px";
 
 /**
- * How a tile's image loads: the archive's first image is its largest paint, so it comes first;
- * the rest of the first row loads with the page; everything below waits until it is near.
+ * How a work's image loads: the archive's first image is its largest paint, so it comes first;
+ * the next few load with the page; everything below waits until it is near.
  */
 type Load = "first" | "eager" | "lazy";
 
-/** A square cell with the artwork contained in it at its own ratio; it enlarges (`zoom.ts`). */
+/** One work in the stream: the artwork at its own ratio, enlarging in place (`zoom.ts`). */
 function Tile({ work, load }: { work: Work; load: Load }) {
   const item = artwork[work.id];
   if (item === undefined) throw new Error(`Unknown media id: ${work.id}`);
   const { label, href } = destination(work);
   const size = { width: `${share(item)}%` };
   const { src, srcset } = sources(work.id);
-  // A poster has no srcset; a tile is never wider than the smallest variant.
-  const poster = srcset?.split(" ")[0] ?? src;
   const art = item.video ? (
     <video
       {...stylex.props(ui.edge, styles.art)}
       width={item.width}
       height={item.height}
-      poster={poster}
+      poster={src}
       src={versioned(`/videos/gil-rodrigues-${work.id}.mp4`)}
       muted
       loop
@@ -128,23 +127,27 @@ function Tile({ work, load }: { work: Work; load: Load }) {
       {...(load === "first" && { fetchPriority: "high" })}
       {...(load === "lazy" && { loading: "lazy" })}
       src={src}
-      {...(srcset && { srcset, sizes: tileSizes })}
+      {...(srcset && { srcset, sizes: workSizes })}
     />
   );
   return (
     <figure {...stylex.props(styles.tile)} {...sortData(work)} data-work={work.id}>
-      <div {...stylex.props(styles.cell)}>
-        <button
-          type="button"
-          {...stylex.props(ui.reset, ui.focusRing, styles.frame, styles.zoom)}
-          style={size}
-          aria-label={`Enlarge: ${item.alt}`}
-          aria-expanded="false"
-          data-zoom
-        >
-          {art}
-        </button>
-      </div>
+      <button
+        type="button"
+        {...stylex.props(
+          ui.reset,
+          ui.focusRing,
+          styles.frame,
+          styles.zoom,
+          item.mark === "center" && styles.centered,
+        )}
+        style={size}
+        aria-label={`Enlarge: ${item.alt}`}
+        aria-expanded="false"
+        data-zoom
+      >
+        {art}
+      </button>
       <figcaption {...stylex.props(styles.caption)}>
         {work.from.$ === "Case" ? (
           <a {...stylex.props(ui.quiet, ui.respond, ui.focusRing)} href={href}>
@@ -158,7 +161,7 @@ function Tile({ work, load }: { work: Work; load: Load }) {
   );
 }
 
-/** The archive page's grid; `?sort=` from the homepage table reorders it (see `client.ts`). */
+/** The archive page's stream of work; `?sort=` from the homepage table reorders it (see `client.ts`). */
 export function ArchiveGrid({ work }: { work: readonly Work[] }) {
   return (
     <div {...stylex.props(styles.grid, styles.page)} data-all-cases>
@@ -182,8 +185,8 @@ export function ArchiveGrid({ work }: { work: readonly Work[] }) {
 const styles = stylex.create({
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: { default: space.tileGap, [media.mobile]: space.tableGap },
+    gridTemplateColumns: "minmax(0, 1fr)",
+    gap: space.layoutGap,
   },
   page: {
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
@@ -191,32 +194,24 @@ const styles = stylex.create({
   },
   tile: { minWidth: 0, margin: 0 },
   /**
-   * The square. A screenshot or recording fills it edge to edge and is cropped to it, so every
-   * tile is the same shape and shows only the work, never the page around it; the enlargement
-   * (`zoom.ts`) opens from the crop to the whole piece. A mark has no edges to crop to, so it
-   * stands centred at 60% of the square (`share`). The surface corner, `space.radius`.
+   * A work at its own ratio: nothing crops it to a cell, the column's width sets its size and a
+   * taller work simply runs further down the page. The corner, `space.radius`, is the
+   * enlargement's too (`zoom.ts`), which opens from the work's place in the stream.
    */
-  cell: {
-    display: "grid",
-    placeItems: "center",
-    aspectRatio: "1",
-    borderRadius: space.radius,
-    overflow: "hidden",
-  },
-  frame: { display: "grid", placeItems: "center", width: "100%", height: "100%" },
+  frame: { display: "block", width: "100%" },
+  /** A centred mark: the button is narrower than the column, so it centres itself. */
+  centered: { marginInline: "auto" },
   zoom: { cursor: { default: "auto", [media.desktop]: "zoom-in" } },
-  /** Takes the corner too, so `zoom.ts` opens the enlargement from it. */
   art: {
     display: "block",
     width: "100%",
-    height: "100%",
-    objectFit: "cover",
+    height: "auto",
     borderRadius: space.radius,
     userSelect: "none",
     WebkitUserDrag: "none",
   },
-  /** Marks (logos): whole, at their own ratio; the page's ink in light mode. */
-  mark: { height: "auto", objectFit: "fill", filter: colors.artworkFilter },
+  /** Marks (logos): the page's ink in light mode. */
+  mark: { filter: colors.artworkFilter },
   caption: {
     display: "block",
     marginTop: space.unit,

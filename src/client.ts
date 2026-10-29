@@ -236,7 +236,7 @@ if (allCases && isSortKey(sortKey) && isSortDirection(sortDirection)) {
   allCases.append(...articles.toSorted((left, right) => compare(sortRow(left), sortRow(right))));
 }
 
-// /all?open=<id>, from an archive tile elsewhere: that work comes first, top left, and opens
+// /all?open=<id>, from an archive work elsewhere: that work comes first, at the top, and opens
 // enlarged; sending it back shows the whole archive around it.
 const opened = allCases?.querySelector<HTMLElement>(
   `:scope > figure[data-work="${CSS.escape(params.get("open") ?? "")}"]`,
