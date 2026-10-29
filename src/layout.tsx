@@ -331,41 +331,38 @@ export function Links({ home = false }: { home?: boolean }) {
         </p>
         {profiles.map((item) => link(item, styles.profileGroup, true))}
       </div>
+      <Metadata />
     </nav>
   );
 }
 
 /**
- * src, humans.txt and llms.txt, one above the other in the project table's first column: the
- * footer is desktop-only, where the table's columns are fixed (see `space.projectColumns`).
+ * src and llms.txt, what agents read: the sidebar's third group, under Links. Desktop only —
+ * on phones the homepage keeps its links under the name.
  */
-export function Metadata({ style }: { style?: Style }) {
+function Metadata() {
   return (
-    <footer {...stylex.props(style)}>
-      <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Metadata">
-        <a
-          {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, styles.file)}
-          href="https://github.com/gildrb/gildrb.com"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          src
-        </a>
-        {[
-          { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
-          { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
-        ].map(({ href, label, rel, type }) => (
-          <a
-            {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, styles.file)}
-            href={href}
-            rel={rel}
-            type={type}
-          >
-            {label}
-          </a>
-        ))}
-      </nav>
-    </footer>
+    <div {...stylex.props(styles.profileGroup, styles.metadata)}>
+      <p {...stylex.props(ui.label, styles.label, styles.profileLabel)}>
+        <span data-nosnippet>Agents</span>
+      </p>
+      <a
+        {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link)}
+        href="https://github.com/gildrb/gildrb.com"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        src
+      </a>
+      <a
+        {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link)}
+        href="/llms.txt"
+        rel="alternate"
+        type="text/markdown"
+      >
+        llms.txt
+      </a>
+    </div>
   );
 }
 
@@ -624,17 +621,12 @@ const styles = stylex.create({
   },
   label: { width: "fit-content" },
   profileLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
-  /** The project table's columns, so the links line up with its Project column. */
+  /** The agents' group: its own stack; phones meet the site through its pages, not its plumbing. */
   metadata: {
-    display: "grid",
-    gridTemplateColumns: space.projectColumns,
-    columnGap: space.tableGap,
+    display: { default: "flex", [media.mobile]: "none" },
+    flexDirection: "column",
     rowGap: space.linkGap,
-    alignItems: "baseline",
-    // Centers the last line on the theme toggle beside it.
-    paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
   },
-  file: { gridColumn: 1, justifySelf: "start" },
   /** Compact (a dense homepage too short for the whole sidebar, see `align.ts`): contact stays. */
   profileGroup: {
     display: {

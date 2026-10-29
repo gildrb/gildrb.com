@@ -3,19 +3,9 @@ import type { Work } from "../archive.tsx";
 import { profile } from "../files.ts";
 import { Island } from "../island.tsx";
 import { Portfolio } from "../islands/portfolio.tsx";
-import {
-  type Assets,
-  Document,
-  JsonLd,
-  Links,
-  Main,
-  Metadata,
-  Name,
-  Shell,
-  Sidebar,
-} from "../layout.tsx";
+import { type Assets, Document, JsonLd, Links, Main, Name, Shell, Sidebar } from "../layout.tsx";
 import { developers, origin, person, profiles, projects } from "../site.ts";
-import { media, rootMarker, space } from "../tokens.stylex.ts";
+import { media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
@@ -96,7 +86,6 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
             component={Portfolio}
             props={{ more: work.filter(({ from }) => from.$ === "Archive").length }}
           />
-          <Metadata style={styles.footer} />
         </Main>
       </Shell>
     </Document>
@@ -113,17 +102,4 @@ const styles = stylex.create({
     marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
   },
   heading: { marginBottom: space.sectionContentGap },
-  footer: {
-    display: {
-      default: null,
-      [media.mobile]: "none",
-      // Too short a viewport: the table matters more than the metadata.
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "none" },
-    },
-    gridRow: { default: null, [media.desktop]: 3 },
-    alignSelf: { default: null, [media.desktop]: "center" },
-    position: { default: null, [media.desktop]: "sticky" },
-    bottom: { default: null, [media.desktop]: space.pageInset },
-    minHeight: { default: null, [media.desktop]: space.toggleSize },
-  },
 });
