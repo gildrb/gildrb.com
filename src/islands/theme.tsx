@@ -130,10 +130,9 @@ export function ThemeToggle({ style }: { style?: Style }) {
 
 const styles = stylex.create({
   toggle: {
-    // Desktop: fixed to the bottom of the viewport, level with the homepage metadata. When the
-    // viewport is too short for that (see `align.ts`), it moves to the top-right corner of its
-    // positioning box, level with the name: the layout on the homepage, where it lines up with
-    // the table's right edge as on phones, and the sidebar on inner pages.
+    // Desktop: fixed to the bottom of the viewport, on the sidebar's axis. When the viewport is
+    // too short for the sidebar links (see `align.ts`), it docks to the top of its positioning
+    // box (the sidebar), level with the name.
     position: {
       default: null,
       [media.mobile]: "sticky",

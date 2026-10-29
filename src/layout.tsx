@@ -127,7 +127,7 @@ export function Document({
   children: ComponentChildren;
 }) {
   return (
-    <html lang="en" {...stylex.props(rootMarker, styles.html, home && styles.fixedViewport)}>
+    <html lang="en" {...stylex.props(rootMarker, styles.html)}>
       <head>
         <meta charset="UTF-8" />
         {/* `viewport-fit=cover`: Safari reports its bottom bar and the notch as safe-area insets,
@@ -163,11 +163,7 @@ export function Document({
         />
       </head>
       <body
-        {...stylex.props(
-          ui.sans,
-          styles.body,
-          home ? [styles.homeBody, styles.fixedViewport] : styles.caseBody,
-        )}
+        {...stylex.props(ui.sans, styles.body, home ? styles.homeBody : styles.caseBody)}
         id="top"
         data-intro={person.about}
       >
@@ -213,7 +209,7 @@ export function Sidebar({
   children: ComponentChildren;
 }) {
   return (
-    <aside {...stylex.props(styles.sidebar, home && styles.homeColumn)} {...label}>
+    <aside {...stylex.props(styles.sidebar)} {...label}>
       <a {...stylex.props(ui.heading, ui.focusRing, styles.skip)} href="#content">
         <span data-nosnippet>Skip to content</span>
       </a>
@@ -226,10 +222,7 @@ export function Sidebar({
 export function Main({ home = false, children }: { home?: boolean; children: ComponentChildren }) {
   return (
     <main
-      {...stylex.props(
-        styles.content,
-        home ? [styles.homeColumn, styles.homeContent] : [ui.text, styles.caseContent],
-      )}
+      {...stylex.props(styles.content, home ? styles.homeContent : [ui.text, styles.caseContent])}
     >
       {/* The skip link's target. `<main>` itself cannot take focus on phones, where it is
           `display: contents`; this marker can, and being out of flow it takes no grid cell. */}
@@ -326,10 +319,10 @@ export function Links({ home = false }: { home?: boolean }) {
         {contacts.map((item) => link(item, null, false))}
       </div>
       <div {...stylex.props(styles.linkGroup, styles.profiles)}>
-        <p {...stylex.props(ui.label, styles.label, styles.profileLabel, styles.profileGroup)}>
+        <p {...stylex.props(ui.label, styles.label, styles.profileLabel)}>
           <span data-nosnippet>Links</span>
         </p>
-        {profiles.map((item) => link(item, styles.profileGroup, true))}
+        {profiles.map((item) => link(item, null, true))}
       </div>
     </nav>
   );
@@ -393,12 +386,6 @@ const styles = stylex.create({
     backgroundColor: colors.bg,
     colorScheme: colors.scheme,
   },
-  /**
-   * The homepage fits the viewport; only the project list scrolls. On phones it always does; on
-   * desktop the content fits until `data-dense` (see `align.ts`) holds it to the viewport.
-   * Clipping covers heights too short for even its compact sidebar.
-   */
-  fixedViewport: { height: "100dvh", overflow: "hidden" },
   body: {
     // Held hidden by the font gate until Inter is ready; see `fontGate`.
     visibility: "var(--first-paint, visible)",
@@ -450,27 +437,9 @@ const styles = stylex.create({
       [media.mobile]: `calc(${space.sectionGap} + env(safe-area-inset-bottom))`,
     },
   },
-  homeLayout: {
-    gridTemplateRows: {
-      default: null,
-      [media.desktop]: "auto minmax(min-content, 1fr) auto",
-      [media.mobile]: "auto auto auto minmax(0, 1fr)",
-      // Dense: like on phones, the page holds to the viewport and the project list scrolls. The
-      // list's row still grows to fit the sidebar links, so those are never cut off.
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "auto 1fr auto" },
-    },
-    rowGap: 0,
-    paddingBlock: { default: null, [media.desktop]: space.pageInset },
-    height: {
-      default: null,
-      [media.mobile]: "100dvh",
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "100dvh" },
-    },
-    // The positioning box for the theme toggle once the viewport is dense.
-    position: { default: null, [media.desktop]: "relative" },
-    minHeight: "100dvh",
-    alignContent: { default: null, [media.mobile]: "start" },
-  },
+  // The homepage scrolls like every page; only phones keep explicit grid rows, ordering the
+  // dissolved sidebar and content (name, links, summary, table).
+  homeLayout: { rowGap: 0 },
   sidebar: {
     position: { default: "sticky", [media.mobile]: "relative" },
     top: 0,
@@ -479,16 +448,6 @@ const styles = stylex.create({
     padding: { default: `${space.pageInset} 0`, [media.mobile]: 0 },
     display: { default: "flex", [media.mobile]: "contents" },
     flexDirection: "column",
-  },
-  /** Homepage desktop: sidebar and content share three subgrid rows (intro, lists, footer). */
-  homeColumn: {
-    position: { default: null, [media.desktop]: "static" },
-    display: { default: null, [media.desktop]: "grid", [media.mobile]: "contents" },
-    gridRow: { default: null, [media.desktop]: "1 / 4" },
-    gridTemplateRows: { default: null, [media.desktop]: "subgrid" },
-    height: { default: null, [media.desktop]: "auto" },
-    minHeight: { default: null, [media.desktop]: 0 },
-    padding: { default: null, [media.desktop]: 0 },
   },
   content: {
     minWidth: 0,
@@ -517,16 +476,7 @@ const styles = stylex.create({
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
   /** Case pages' text: `ui.text`, so it follows the reader's font size from tablets up. */
   caseContent: { minHeight: "100vh" },
-  homeToggle: {
-    gridRow: { default: null, [media.mobile]: 1 },
-    // Dense: centered over the table's arrows, whose column ends at the layout's right edge.
-    right: {
-      default: null,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: `calc((${space.toggleAxis} - ${space.toggleSize}) / 2)`,
-      },
-    },
-  },
+  homeToggle: { gridRow: { default: null, [media.mobile]: 1 } },
   name: {
     lineHeight: space.linkLineHeight,
     // JavaScript measures the homepage intro and publishes its height, so the sidebar
@@ -635,13 +585,6 @@ const styles = stylex.create({
     paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
   },
   file: { gridColumn: 1, justifySelf: "start" },
-  /** Compact (a dense homepage too short for the whole sidebar, see `align.ts`): contact stays. */
-  profileGroup: {
-    display: {
-      default: null,
-      [stylex.when.ancestor("[data-compact]", rootMarker)]: { [media.desktop]: "none" },
-    },
-  },
   link: {
     paddingBlock: `calc(${space.linkGap} / 2)`,
     marginBlock: `calc(${space.linkGap} / -2)`,

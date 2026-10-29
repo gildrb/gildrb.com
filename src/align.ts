@@ -3,9 +3,8 @@
  *
  * - Desktop: sizes the sidebar intro to the homepage summary as it wraps in the content column,
  *   on every page, so the sidebar links line up with the project table and stay put across pages.
- *   Marks short viewports as dense (see below).
- * - Phones: shows the project list's bottom fade in the first frame when it overflows (the
- *   scroll-driven animation takes over from the next frame).
+ * - Desktop, short viewports: marks the page dense when the sidebar links would run under the
+ *   fixed theme toggle, which then docks beside the name (see `theme.tsx`).
  *
  * Self-contained on purpose: `alignScript` inlines its source at the end of `<body>`.
  */
@@ -38,39 +37,15 @@ export function align(gapProperty: string): void {
     body.style.removeProperty("--desktop-intro-height");
   }
 
-  // Desktop, short viewports: the footer metadata and the theme toggle hang from the bottom of the
-  // viewport, so once the content reaches them `data-dense` drops the metadata, moves the toggle
-  // up level with the name and, on the homepage, holds the page to the viewport and scrolls the
-  // project list instead, as on phones. When even the sidebar links outgrow the dense homepage,
-  // `data-compact` drops the profile links too, keeping contact.
-  // Each step is measured in the layout before it, so neither flip-flops.
+  // Desktop, short viewports: the sidebar is sticky, so its links can run under the fixed theme
+  // toggle. `data-dense` then docks the toggle beside the name (see `theme.tsx`).
   const root = document.documentElement;
   const toggle = document.querySelector<HTMLElement>("aside [data-island=theme] button");
-  const home = document.querySelector("main > footer");
   delete root.dataset.dense;
-  delete root.dataset.compact;
   if (matchMedia("(min-width: 768px)").matches && sidebarLinks && toggle) {
-    const dense = home
-      ? // Homepage: <body> is the viewport's height (see `layout.tsx`), so the content fits
-        // until it overflows <body>.
-        body.scrollHeight > body.clientHeight
-      : // Inner pages: the sidebar is sticky, so its links and the toggle hold still on screen;
-        // keep a toggle's height of clearance between them.
-        sidebarLinks.getBoundingClientRect().bottom + toggle.offsetHeight >
-        toggle.getBoundingClientRect().top;
+    const dense =
+      sidebarLinks.getBoundingClientRect().bottom + toggle.offsetHeight >
+      toggle.getBoundingClientRect().top;
     if (dense) root.dataset.dense = "";
-    // The dense homepage layout is the viewport's height; the links must end above its padding.
-    const layout = sidebarLinks.closest("aside")?.parentElement;
-    if (dense && home && layout) {
-      const box = layout.getBoundingClientRect();
-      const end = box.bottom - Number.parseFloat(getComputedStyle(layout).paddingBottom);
-      if (sidebarLinks.getBoundingClientRect().bottom > end + 0.5) root.dataset.compact = "";
-    }
   }
-
-  const list = document.querySelector<HTMLElement>("[data-scroll-list]");
-  list?.parentElement?.style.setProperty(
-    "--list-overflows",
-    list.scrollHeight - list.clientHeight - list.scrollTop > 1 ? "1" : "0",
-  );
 }

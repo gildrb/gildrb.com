@@ -354,8 +354,8 @@ export const space = stylex.defineVars({
 export const rowMarker = stylex.defineMarker();
 
 /**
- * Put on <html>, which carries page-wide state: `data-dense` and `data-compact` when a desktop
- * viewport is too short for the full layout (see `align.ts`).
+ * Put on <html>, which carries page-wide state: `data-dense` when a desktop viewport is too short
+ * for the sidebar links and the fixed theme toggle (see `align.ts`).
  */
 export const rootMarker = stylex.defineMarker();
 

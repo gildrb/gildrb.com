@@ -15,7 +15,7 @@ import {
   Sidebar,
 } from "../layout.tsx";
 import { developers, origin, person, profiles, projects } from "../site.ts";
-import { media, rootMarker, space } from "../tokens.stylex.ts";
+import { media, space } from "../tokens.stylex.ts";
 import { ui } from "../ui.tsx";
 import { shareFrame } from "../og.tsx";
 
@@ -105,25 +105,10 @@ export function Home({ assets, work }: { assets: Assets; work: readonly Work[] }
 
 const styles = stylex.create({
   summary: {
-    maxWidth: space.contentColumn,
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
-    gridRow: { default: null, [media.desktop]: 1, [media.mobile]: 3 },
-    alignSelf: { default: null, [media.desktop]: "start" },
-    minHeight: { default: null, [media.desktop]: "var(--desktop-intro-height, 0px)" },
+    gridRow: { default: null, [media.mobile]: 3 },
     marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
   },
   heading: { marginBottom: space.sectionContentGap },
-  footer: {
-    display: {
-      default: null,
-      [media.mobile]: "none",
-      // Too short a viewport: the table matters more than the metadata.
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "none" },
-    },
-    gridRow: { default: null, [media.desktop]: 3 },
-    alignSelf: { default: null, [media.desktop]: "center" },
-    position: { default: null, [media.desktop]: "sticky" },
-    bottom: { default: null, [media.desktop]: space.pageInset },
-    minHeight: { default: null, [media.desktop]: space.toggleSize },
-  },
+  footer: { display: { default: null, [media.mobile]: "none" } },
 });
