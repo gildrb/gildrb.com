@@ -242,9 +242,9 @@ export function CasePage({
             )
           }
           sourcesLine={item.links.length > 0 ? <SourcesLine links={item.links} /> : null}
+          tail={<MoreProjects projects={others} />}
         />
       </article>
-      <Next projects={others} />
     </Frame>
   );
 }
@@ -263,9 +263,14 @@ function next(href: string): Project[] {
     .filter((project): project is Project => project !== undefined && project.href !== href);
 }
 
-function Next({ projects: list }: { projects: readonly Project[] }) {
+/**
+ * The drum's closing face: the three projects after this one in the homepage's order, wrapping
+ * round to the newest; external projects are left out unless they are products, whose pages
+ * live on their own hosts. The reader turns from a case study straight to the next work.
+ */
+function MoreProjects({ projects: list }: { projects: readonly Project[] }) {
   return (
-    <nav {...stylex.props(styles.column, styles.phoneItem, styles.next)} aria-label="More projects">
+    <nav {...stylex.props(styles.next)} aria-label="More projects">
       <div {...stylex.props(styles.nextList)}>
         {list.map((project, index) => (
           <Row key={project.href} project={project} first={index === 0} home={false} />
@@ -449,9 +454,9 @@ export function ProductPage({
           tool={
             item.converter ? <Island name="archetypon" component={Converter} props={{}} /> : null
           }
+          tail={<MoreProjects projects={others} />}
         />
       </article>
-      <Next projects={others} />
     </Frame>
   );
 }

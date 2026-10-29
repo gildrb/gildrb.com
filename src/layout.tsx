@@ -6,6 +6,7 @@ import { Email } from "./islands/email.tsx";
 import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { pageScrollbar } from "./scrollbar.ts";
+import { wheel } from "./wheel.ts";
 import { contacts, type Link, origin, person, profiles } from "./site.ts";
 import { themeColor, themeCss, themeScript } from "./theme.ts";
 import { colors, fontFeatures, media, rootMarker, space, typeScale } from "./tokens.stylex.ts";
@@ -29,7 +30,10 @@ const interRanges = `${monoRanges},U+0100-017F`;
 const interUrl = versioned("/fonts/inter.woff2");
 const monoUrl = versioned("/fonts/commit-mono.woff2");
 
-/** The few rules StyleX cannot attach to an element, layered beneath StyleX's own layers. */
+// Plain CSS cannot read StyleX's hashed custom properties, so the two values the drum's row
+// faces need mirror the desktop `space.projectColumns` and `space.tableGap` (tokens.stylex.ts).
+const wheelColumns = "112px minmax(max-content, 1fr) max-content";
+const wheelGap = "16px";
 const globalCss = [
   "@layer reset;",
   `@font-face{font-family:"Inter";font-weight:380 600;font-display:swap;src:url("${interUrl}") format("woff2");unicode-range:${interRanges}}`,
@@ -70,12 +74,26 @@ const globalCss = [
   "@media (min-width:40rem){[data-pagebar]{inset-block:7px;width:16px}[data-pagebar] .thumb{inset-inline:auto 0}}",
   "@media (pointer:coarse){[data-pagebar] .thumb{min-height:48px;transition-property:width,background-color,opacity;transition-duration:.3s,.14s,.6s;transition-timing-function:cubic-bezier(.22,1,.36,1),cubic-bezier(.2,.8,.2,1),cubic-bezier(.2,.8,.2,1)}[data-pagebar][data-shown] .thumb{transition-duration:.3s,.14s,90ms}}",
   "@media (prefers-reduced-motion:reduce){[data-pagebar] .thumb{transition-duration:.01ms!important}}",
+  // The wheel (`wheel.ts`): every layer is the plain flow — `display: contents` — until the
+  // script turns a drum on (`data-wheel-ready`, a desktop viewport with motion allowed). The
+  // stage then holds still while the page scrolls under it, the world carries the drum's one
+  // rotation, and each face keeps its own angle on the cylinder, hidden once it faces away.
+  "[data-wheel],[data-wheel] [data-wheel-stage],[data-wheel] [data-wheel-world],[data-wheel] [data-wheel-face]{display:contents}",
+  "@media (min-width:768px) and (prefers-reduced-motion:no-preference){",
+  "[data-wheel][data-wheel-ready]{display:block;position:relative;grid-column:1/-1}",
+  `[data-wheel][data-wheel-ready] [data-wheel-stage]{display:block;position:sticky;top:0;height:100dvh;perspective:var(--wheel-perspective,4200px);overflow:clip;overflow-clip-margin:${space.layoutGap}}`,
+  `[data-wheel][data-wheel-ready] [data-wheel-world]{display:block;position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(var(--wheel-angle,0deg));will-change:transform}`,
+  `[data-wheel][data-wheel-ready] [data-wheel-face]{display:flex;flex-direction:column;justify-content:center;position:absolute;left:0;right:0;top:50%;transform:translateY(-50%) rotateX(var(--wheel-face-angle,0deg)) translateZ(var(--wheel-radius,850px));backface-visibility:hidden;-webkit-backface-visibility:hidden}`,
+  `[data-wheel][data-wheel-ready] [data-wheel-face=columns]{display:grid;grid-template-columns:${wheelColumns};column-gap:${wheelGap}}`,
+  "}",
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
 const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space.sectionContentGap.slice(4, -1))});window.__align()`;
 // The scrollbar must answer the first frame of scrolling, not the island script's module graph.
 const scrollbarScript = `(${pageScrollbar.toString()})()`;
+// The drum measures before the first paint too, so entries never arrive flat.
+const wheelScript = `(${wheel.toString()})()`;
 
 /**
  * Chrome prerenders a page of this site once a pointer rests on its link (about 200ms) or presses
@@ -179,6 +197,8 @@ export function Document({
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: alignScript }} />
         {/* The scrollbar lives before the first paint too, so scrolling on arrival finds it. */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: scrollbarScript }} />
+        {/* The drum measures before the first paint, so entries never arrive flat. */}
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: wheelScript }} />
         <div id="aligned" hidden />
       </body>
     </html>

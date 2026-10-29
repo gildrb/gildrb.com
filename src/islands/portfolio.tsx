@@ -86,18 +86,31 @@ export function Portfolio({ more }: { more: number }) {
           Projects
         </h2>
         <div data-rows {...stylex.props(styles.list)}>
-          {rows.map((project, index) => (
-            <Row key={project.href} project={project} first={index === 0} home />
-          ))}
-          <a
-            {...stylex.props(rowMarker, ui.respond, styles.archive)}
-            href={`/all?sort=${sort.key}&direction=${sort.direction}`}
-          >
-            <span {...stylex.props(ui.text, ui.emphasis, styles.title)}>Archive</span>
-            <span {...stylex.props(ui.text, ui.respond, styles.more)}>
-              <Figures text={String(more)} /> more
-            </span>
-          </a>
+          {/* The rows ride the wheel (`wheel.ts`): the plain table until a desktop viewport
+              with motion allowed turns them into a drum's faces, one entry in front of the
+              reader at a time and the rest tilted away above and below it. */}
+          <div data-wheel>
+            <div data-wheel-stage>
+              <div data-wheel-world>
+                {rows.map((project, index) => (
+                  <div key={project.href} data-wheel-face="columns">
+                    <Row project={project} first={index === 0} home />
+                  </div>
+                ))}
+                <div data-wheel-face="columns">
+                  <a
+                    {...stylex.props(rowMarker, ui.respond, styles.archive)}
+                    href={`/all?sort=${sort.key}&direction=${sort.direction}`}
+                  >
+                    <span {...stylex.props(ui.text, ui.emphasis, styles.title)}>Archive</span>
+                    <span {...stylex.props(ui.text, ui.respond, styles.more)}>
+                      <Figures text={String(more)} /> more
+                    </span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>

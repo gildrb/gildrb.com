@@ -451,8 +451,9 @@ function gap(kind: Kind, previous: Kind | null): Spacing | null {
  * it), then the blocks. The first paragraph is the opening, at full contrast, wherever it stands
  * (n0thing opens with an image and a part). `codeLine` (the source code) follows it, then `tool`
  * (Archetypon's converter), then the rest; `sourcesLine` (where else the work lives) ends the
- * page. `eager` gives the first image high fetch priority. `reading` (a page with contents): the
- * images a page opens with are a banner, framed by a hairline.
+ * text, and `tail` (a case study's next projects) ends the drum. `eager` gives the first image
+ * high fetch priority. `reading` (a page with contents): the images a page opens with are a
+ * banner, framed by a hairline.
  */
 export function Article({
   markdown,
@@ -461,6 +462,7 @@ export function Article({
   sourcesLine = null,
   tool = null,
   reading = false,
+  tail = null,
 }: {
   markdown: string;
   eager: boolean;
@@ -468,6 +470,8 @@ export function Article({
   sourcesLine?: ComponentChildren;
   tool?: ComponentChildren;
   reading?: boolean;
+  /** One more face after the text: a case study closes with its next projects. */
+  tail?: ComponentChildren;
 }) {
   const { title, blocks } = parse(markdown);
   const found = anchors(blocks);
@@ -485,7 +489,13 @@ export function Article({
     width: false | typeof styles.measure = styles.measure,
   ) => {
     const spacing = gap(kind, previous);
-    nodes.push(render([spacing !== null && styles[spacing], width]));
+    // Every block is a face of the page's wheel (`wheel.ts`); in the plain flow the wrapper
+    // takes no box, so the page reads exactly as it did before the drum.
+    nodes.push(
+      <div key={nodes.length} data-wheel-face>
+        {render([spacing !== null && styles[spacing], width])}
+      </div>,
+    );
     previous = kind;
   };
   const placeTool = () => {
@@ -582,7 +592,16 @@ export function Article({
       <h1 {...stylex.props(ui.prose, styles.heading, ui.srOnly)}>
         <Inline text={title} />
       </h1>
-      {nodes}
+      {/* The page's blocks ride the wheel (`wheel.ts`): the plain flow until a desktop viewport
+          with motion allowed turns them into a drum, one block in front of the reader. */}
+      <div data-wheel>
+        <div data-wheel-stage>
+          <div data-wheel-world>
+            {nodes}
+            {tail !== null && <div data-wheel-face>{tail}</div>}
+          </div>
+        </div>
+      </div>
     </>
   );
 }
