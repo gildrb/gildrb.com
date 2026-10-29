@@ -317,16 +317,11 @@ const styles = stylex.create({
     order: { default: null, [media.mobile]: 5 },
   },
   /**
-   * The next projects: one layout gap below the text. On desktop at the column's foot, their last
-   * line centred on the theme toggle beside it (half the toggle less half a line).
+   * The next projects: one layout gap below the text, on desktop at the column's foot.
    */
   next: {
     marginTop: { default: space.layoutGap, [media.desktop]: "auto" },
     paddingTop: { default: null, [media.desktop]: space.layoutGap },
-    paddingBottom: {
-      default: null,
-      [media.desktop]: `calc(${space.toggleSize} / 2 - ${space.linkLineHeight} / 2)`,
-    },
   },
   nextList: {
     display: "grid",

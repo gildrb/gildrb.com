@@ -7,11 +7,9 @@ import type { Specimen } from "./islands/curves.tsx";
 import type { Email } from "./islands/email.tsx";
 import type { Terminal } from "./islands/heph.tsx";
 import type { Portfolio } from "./islands/portfolio.tsx";
-import type { ThemeToggle } from "./islands/theme.tsx";
 
 /** Components that `client.ts` hydrates in the browser; everything else stays static HTML. */
 export type Islands = {
-  theme: typeof ThemeToggle;
   email: typeof Email;
   portfolio: typeof Portfolio;
   heph: typeof Terminal;

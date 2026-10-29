@@ -3,12 +3,19 @@ import type { ComponentChildren } from "preact";
 import { fontGate } from "./entry.ts";
 import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
-import { ThemeToggle } from "./islands/theme.tsx";
 import { align } from "./align.ts";
 import { pageScrollbar } from "./scrollbar.ts";
 import { contacts, type Link, origin, person, profiles } from "./site.ts";
-import { themeColor, themeCss, themeScript } from "./theme.ts";
-import { colors, fontFeatures, media, rootMarker, space, typeScale } from "./tokens.stylex.ts";
+import { previewScript, themeCss } from "./theme.ts";
+import {
+  colors,
+  fontFeatures,
+  media,
+  pageColor,
+  rootMarker,
+  space,
+  typeScale,
+} from "./tokens.stylex.ts";
 import { type Style, ui, untranslated } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -52,8 +59,7 @@ const globalCss = [
   "@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}",
   // The site's own scrollbar (`scrollbar.ts`): a thumb at rest only while the page scrolls, on
   // hover, in focus or dragged, fading out 0.6s after it stops; resting on it or dragging it
-  // widens it a little over 0.14s. States follow superlogical.com's; the resting width is the
-  // sun core in the theme toggle (radius 3 of a 20-unit box at 22px: 6.6px).
+  // widens it a little over 0.14s. States follow superlogical.com's; the resting width is 6.6px.
   "[data-pagebar]{position:fixed;inset-block:2px;inset-inline-end:4px;width:10px;z-index:200;opacity:0;pointer-events:none;touch-action:none;user-select:none;outline:none}",
   "[data-pagebar][data-scrollable]{opacity:1;pointer-events:auto}",
   "[data-pagebar][data-dragging]{cursor:ns-resize}",
@@ -134,11 +140,13 @@ export function Document({
             which the page's margins clear. */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         {/* The page color first, so no frame shows the browser's white canvas (see `themeCss`).
-            The theme script needs the favicon and theme-color tags, so they come before it. */}
+            The `theme-color` tags follow the system scheme; the preview script swaps the favicon,
+            so it comes after it. */}
         <style dangerouslySetInnerHTML={{ __html: themeCss }} />
-        <meta name="theme-color" content={themeColor.dark} />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content={pageColor.dark} />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content={pageColor.light} />
         <link id="favicon" rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
-        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: previewScript }} />
         {/* Hold the first paint until the whole page is parsed and aligned, so it never arrives
             in pieces or shifts. Preact's typings lack `blocking` on <link>, hence the spread. */}
         <link rel="expect" href="#aligned" {...{ blocking: "render" }} />
@@ -218,7 +226,6 @@ export function Sidebar({
         <span data-nosnippet>Skip to content</span>
       </a>
       {children}
-      <Island name="theme" component={ThemeToggle} props={{ style: home && styles.homeToggle }} />
     </aside>
   );
 }
@@ -430,7 +437,7 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: {
       default: `${space.sidebarColumn} 1fr`,
-      [media.mobile]: `minmax(0, 1fr) ${space.toggleSize}`,
+      [media.mobile]: "minmax(0, 1fr)",
     },
     maxWidth: `calc(${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn})`,
     margin: "0 auto",
@@ -463,8 +470,6 @@ const styles = stylex.create({
       [media.mobile]: "100dvh",
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "100dvh" },
     },
-    // The positioning box for the theme toggle once the viewport is dense.
-    position: { default: null, [media.desktop]: "relative" },
     minHeight: "100dvh",
     alignContent: { default: null, [media.mobile]: "start" },
   },
@@ -514,16 +519,6 @@ const styles = stylex.create({
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
   /** Case pages' text: `ui.text`, so it follows the reader's font size from tablets up. */
   caseContent: { minHeight: "100vh" },
-  homeToggle: {
-    gridRow: { default: null, [media.mobile]: 1 },
-    // Dense: centered over the table's arrows, whose column ends at the layout's right edge.
-    right: {
-      default: null,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: `calc((${space.toggleAxis} - ${space.toggleSize}) / 2)`,
-      },
-    },
-  },
   name: {
     lineHeight: space.linkLineHeight,
     // JavaScript measures the homepage intro and publishes its height, so the sidebar

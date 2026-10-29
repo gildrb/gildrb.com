@@ -3,7 +3,6 @@ import { align } from "./align.ts";
 import type { Islands } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { Portfolio } from "./islands/portfolio.tsx";
-import { ThemeToggle } from "./islands/theme.tsx";
 import { compareRows, origin, products, type SortDirection, type SortKey } from "./site.ts";
 import { space } from "./tokens.stylex.ts";
 import { loadPagesAhead } from "./ahead.ts";
@@ -21,7 +20,6 @@ loopDescriptors();
 loadPagesAhead();
 
 const islands: { [Name in keyof Islands]: () => Promise<Islands[Name]> | Islands[Name] } = {
-  theme: () => ThemeToggle,
   email: () => Email,
   portfolio: () => Portfolio,
   // Only the Heph case study shows the terminal; keep it out of the homepage bundle.
@@ -51,8 +49,6 @@ function hydrateIsland(element: HTMLElement) {
 /** One case per island, so each component meets the props type it was rendered with. */
 async function hydrateNamed(name: keyof Islands, element: HTMLElement): Promise<void> {
   switch (name) {
-    case "theme":
-      return mount(await islands.theme(), element);
     case "email":
       return mount(await islands.email(), element);
     case "portfolio":
@@ -179,7 +175,7 @@ if (!liveHosts.has(location.host)) {
   );
 }
 
-// Homepage: arrow keys step through the links, the theme toggle and the table. Only the homepage
+// Homepage: arrow keys step through the links and the table. Only the homepage
 // has the site-title heading; product pages are also served at `/`, on their own hosts.
 if (document.getElementById("site-title")) {
   document.addEventListener("keydown", (event) => {

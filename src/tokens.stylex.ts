@@ -172,7 +172,7 @@ export const pageColor = { dark: "oklch(17% 0.005 25)", light: "oklch(97.5% 0.00
 export const colors = stylex.defineVars({
   /**
    * Tells the browser which way the page is lit, for scrollbars, overscroll and other built-in
-   * controls: either, following the system, unless the toggle forces one (`dark`, `lightTheme`).
+   * controls: either, following the system.
    */
   scheme: "light dark",
   bg: { default: pageColor.dark, [light]: pageColor.light },
@@ -208,50 +208,6 @@ export const colors = stylex.defineVars({
    */
   underlineRest: { default: "50%", [light]: "25%" },
   artworkFilter: { default: "none", [light]: "brightness(0)" },
-  sunDisplay: { default: "block", [light]: "none" },
-  moonDisplay: { default: "none", [light]: "block" },
-});
-
-export const dark = stylex.createTheme(colors, {
-  scheme: "dark",
-  bg: pageColor.dark,
-  primary: "oklch(94% 0.005 25)",
-  secondary: "oklch(74% 0.006 25)",
-  tertiary: "oklch(62% 0.007 25)",
-  article: "oklch(86% 0.005 25)",
-  hairline: "oklch(94% 0.005 25 / 0.12)",
-  codeBg: "oklch(23% 0.006 25)",
-  terminalBg: "oklch(19.5% 0.006 25)",
-  glass: "oklch(19.5% 0.006 25 / 0.62)",
-  glint: "oklch(100% 0 0)",
-  shadow: "oklch(8% 0.005 25)",
-  terminalMuted: "oklch(60% 0.007 25)",
-  proseWeight: "380",
-  underlineRest: "50%",
-  artworkFilter: "none",
-  sunDisplay: "block",
-  moonDisplay: "none",
-});
-
-export const lightTheme = stylex.createTheme(colors, {
-  scheme: "light",
-  bg: pageColor.light,
-  primary: "oklch(18% 0.01 235)",
-  secondary: "oklch(42% 0.01 235)",
-  tertiary: "oklch(53% 0.01 235)",
-  article: "oklch(28% 0.01 235)",
-  hairline: "oklch(18% 0.01 235 / 0.12)",
-  codeBg: "oklch(92.5% 0.006 235)",
-  terminalBg: "oklch(95.5% 0.005 235)",
-  glass: "oklch(95.5% 0.005 235 / 0.82)",
-  glint: "oklch(100% 0 0)",
-  shadow: "oklch(12% 0.01 235)",
-  terminalMuted: "oklch(51% 0.01 235)",
-  proseWeight: "400",
-  underlineRest: "25%",
-  artworkFilter: "brightness(0)",
-  sunDisplay: "none",
-  moonDisplay: "block",
 });
 
 /**
@@ -296,13 +252,6 @@ export const space = stylex.defineVars({
   linkGap: { default: "calc(2rem - 1.5rem)", "@media (max-width: 767px)": "6px" },
   portfolioRowPadding: "calc((2.5rem - 1.5rem) / 2)",
   toggleSize: "32px",
-  /**
-   * Two units at the edge of a column that the theme toggle is centred on: its icon then stands
-   * at the column's edge, flush with the dates' right edge when it sits over the table (dense)
-   * and with the sidebar's left edge otherwise (`theme.tsx`).
-   */
-  toggleAxis: "16px",
-  toggleOpticalOffset: "2px",
   /** The page's inset from the viewport edge on desktop: top of the sidebar and content, bottom of the footer. */
   pageInset: "48px",
   sidebarColumn: `${30 * unit}px`,

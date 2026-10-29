@@ -38,30 +38,22 @@ export function align(gapProperty: string): void {
     body.style.removeProperty("--desktop-intro-height");
   }
 
-  // Desktop, short viewports: the footer metadata and the theme toggle hang from the bottom of the
-  // viewport, so once the content reaches them `data-dense` drops the metadata, moves the toggle
-  // up level with the name and, on the homepage, holds the page to the viewport and scrolls the
-  // project list instead, as on phones. When even the sidebar links outgrow the dense homepage,
-  // `data-compact` drops the profile links too, keeping contact.
-  // Each step is measured in the layout before it, so neither flip-flops.
+  // Desktop, short viewports: on the homepage the page holds to the viewport and the project
+  // list scrolls instead, as on phones, once its content would overflow it (`data-dense`). When
+  // even the sidebar links outgrow the dense homepage, `data-compact` drops the profile links,
+  // keeping contact. Each step is measured in the layout before it, so neither flip-flops.
   const root = document.documentElement;
-  const toggle = document.querySelector<HTMLElement>("aside [data-island=theme] button");
-  const home = document.querySelector("main > footer");
+  const home = document.getElementById("site-title");
   delete root.dataset.dense;
   delete root.dataset.compact;
-  if (matchMedia("(min-width: 768px)").matches && sidebarLinks && toggle) {
-    const dense = home
-      ? // Homepage: <body> is the viewport's height (see `layout.tsx`), so the content fits
-        // until it overflows <body>.
-        body.scrollHeight > body.clientHeight
-      : // Inner pages: the sidebar is sticky, so its links and the toggle hold still on screen;
-        // keep a toggle's height of clearance between them.
-        sidebarLinks.getBoundingClientRect().bottom + toggle.offsetHeight >
-        toggle.getBoundingClientRect().top;
+  if (matchMedia("(min-width: 768px)").matches && sidebarLinks && home) {
+    // <body> is the viewport's height on the homepage (see `layout.tsx`), so the content fits
+    // until it overflows <body>.
+    const dense = body.scrollHeight > body.clientHeight;
     if (dense) root.dataset.dense = "";
     // The dense homepage layout is the viewport's height; the links must end above its padding.
     const layout = sidebarLinks.closest("aside")?.parentElement;
-    if (dense && home && layout) {
+    if (dense && layout) {
       const box = layout.getBoundingClientRect();
       const end = box.bottom - Number.parseFloat(getComputedStyle(layout).paddingBottom);
       if (sidebarLinks.getBoundingClientRect().bottom > end + 0.5) root.dataset.compact = "";

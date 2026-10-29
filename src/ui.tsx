@@ -140,8 +140,7 @@ export const ui = stylex.create({
    * background) or an opacity; nothing moves. Entering the state is immediate, so a pointer
    * crossing a list lights each row as it passes; leaving it fades over `motion.response`. The
    * state is the element's own, or its row's (`rowMarker`), the only ancestor that carries hover
-   * for its descendants. The theme script turns transitions off
-   * while the whole page changes color (`theme.ts`).
+   * for its descendants.
    */
   respond: {
     transitionProperty: "color, text-decoration-color, background-color, opacity",
