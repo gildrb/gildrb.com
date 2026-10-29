@@ -187,13 +187,15 @@ export function Document({
 
 /**
  * Two columns on desktop (sidebar, content), one flowing grid on phones where the sidebar and
- * content dissolve (`display: contents`) so their children can be ordered together.
+ * content dissolve (`display: contents`) so their children can be ordered together. The wheel
+ * rides the content column (`Wheel`).
  */
 export function Shell({ home = false, children }: { home?: boolean; children: ComponentChildren }) {
   return (
     <div {...stylex.props(styles.wrapper)}>
       <div {...stylex.props(styles.layout, home ? styles.homeLayout : styles.caseLayout)}>
         {children}
+        <Wheel />
       </div>
     </div>
   );
@@ -214,6 +216,7 @@ export function Sidebar({
         <span data-nosnippet>Skip to content</span>
       </a>
       {children}
+      <Metadata />
       <Island name="theme" component={ThemeToggle} props={{ style: home && styles.homeToggle }} />
     </aside>
   );
@@ -229,6 +232,32 @@ export function Main({ home = false, children }: { home?: boolean; children: Com
       <span {...stylex.props(styles.skipTarget)} id="content" tabIndex={-1} />
       {children}
     </main>
+  );
+}
+
+/**
+ * The wheel: the name's letters stacked down a frosted pill that floats at the centre of the
+ * content column and holds still while the entries travel under it — the table's rows, a case
+ * study's figures (s.engineering's rotator). A sticky grid item in the content column, so it
+ * rides every page with nothing measured; `pointer-events: none`, so it never stands in front
+ * of a link; `aria-hidden`, the name already being the sidebar's heading; gone on phones, whose
+ * single column has no room for a strip through its text. The letters are 7px stretched four
+ * times across the pill's 24px — a wordmark, and the one deliberate step outside the type scale.
+ */
+export function Wheel() {
+  return (
+    <div {...stylex.props(styles.wheel)} aria-hidden="true">
+      <div {...stylex.props(styles.wheelPill)}>
+        {person.name
+          .replaceAll(" ", "")
+          .split("")
+          .map((letter, index) => (
+            <span key={index} {...stylex.props(styles.wheelLetter)}>
+              {letter}
+            </span>
+          ))}
+      </div>
+    </div>
   );
 }
 
@@ -329,36 +358,38 @@ export function Links({ home = false }: { home?: boolean }) {
 }
 
 /**
- * src, humans.txt and llms.txt, one above the other in the project table's first column: the
- * footer is desktop-only, where the table's columns are fixed (see `space.projectColumns`).
+ * Colophon: src, humans.txt and llms.txt, one list in the sidebar under Links, named like the
+ * sidebar's other groups. Desktop only: on phones the sidebar dissolves into the page's column,
+ * which already carries the name, contact and links.
  */
-export function Metadata({ style }: { style?: Style }) {
+function Metadata() {
   return (
-    <footer {...stylex.props(style)}>
-      <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Metadata">
+    <nav {...stylex.props(ui.text, styles.metadata)} aria-label="Colophon">
+      <p {...stylex.props(ui.label, styles.label, styles.metadataLabel)}>
+        <span data-nosnippet>Colophon</span>
+      </p>
+      <a
+        {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link)}
+        href="https://github.com/gildrb/gildrb.com"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        src
+      </a>
+      {[
+        { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
+        { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
+      ].map(({ href, label, rel, type }) => (
         <a
-          {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, styles.file)}
-          href="https://github.com/gildrb/gildrb.com"
-          rel="noopener noreferrer"
-          target="_blank"
+          {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link)}
+          href={href}
+          rel={rel}
+          type={type}
         >
-          src
+          {label}
         </a>
-        {[
-          { href: "/humans.txt", label: "humans.txt", rel: "author", type: "text/plain" },
-          { href: "/llms.txt", label: "llms.txt", rel: "alternate", type: "text/markdown" },
-        ].map(({ href, label, rel, type }) => (
-          <a
-            {...stylex.props(ui.quiet, ui.respond, ui.focusRing, styles.link, styles.file)}
-            href={href}
-            rel={rel}
-            type={type}
-          >
-            {label}
-          </a>
-        ))}
-      </nav>
-    </footer>
+      ))}
+    </nav>
   );
 }
 
@@ -476,6 +507,45 @@ const styles = stylex.create({
   homeContent: { gridColumn: { default: null, [media.desktop]: 2 } },
   /** Case pages' text: `ui.text`, so it follows the reader's font size from tablets up. */
   caseContent: { minHeight: "100vh" },
+  /**
+   * The wheel's rail: a sticky grid item in the content column, so it holds the column's centre
+   * while the page travels, one page inset clear of the viewport's edges.
+   */
+  wheel: {
+    display: { default: "flex", [media.mobile]: "none" },
+    gridColumn: 2,
+    gridRow: 1,
+    position: "sticky",
+    top: space.pageInset,
+    height: `calc(100dvh - 2 * ${space.pageInset})`,
+    width: `calc(3 * ${space.unit})`,
+    justifySelf: "center",
+    pointerEvents: "none",
+  },
+  /** The frosted glass the letters sit on: heph's one lifted surface, thinned to a strip. */
+  wheelPill: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    height: "100%",
+    padding: `calc(1.5 * ${space.unit}) 0`,
+    borderRadius: `calc(1.5 * ${space.unit})`,
+    background: colors.glass,
+    backdropFilter: "blur(4px)",
+    WebkitBackdropFilter: "blur(4px)",
+    color: colors.primary,
+  },
+  wheelLetter: {
+    display: "block",
+    flex: "none",
+    fontSize: "7px",
+    lineHeight: "14px",
+    fontWeight: typeScale.textWeight,
+    textTransform: "uppercase",
+    transform: "scaleX(4)",
+  },
   homeToggle: { gridRow: { default: null, [media.mobile]: 1 } },
   name: {
     lineHeight: space.linkLineHeight,
@@ -574,17 +644,13 @@ const styles = stylex.create({
   },
   label: { width: "fit-content" },
   profileLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
-  /** The project table's columns, so the links line up with its Project column. */
+  /** Colophon: one list under Links, its label pitched like the Links label above its group. */
   metadata: {
-    display: "grid",
-    gridTemplateColumns: space.projectColumns,
-    columnGap: space.tableGap,
+    display: { default: "flex", [media.mobile]: "none" },
+    flexDirection: "column",
     rowGap: space.linkGap,
-    alignItems: "baseline",
-    // Centers the last line on the theme toggle beside it.
-    paddingBottom: `calc((${space.toggleSize} - ${space.linkLineHeight}) / 2)`,
   },
-  file: { gridColumn: 1, justifySelf: "start" },
+  metadataLabel: { marginTop: { default: null, [media.desktop]: space.sidebarBaselinePitch } },
   link: {
     paddingBlock: `calc(${space.linkGap} / 2)`,
     marginBlock: `calc(${space.linkGap} / -2)`,
