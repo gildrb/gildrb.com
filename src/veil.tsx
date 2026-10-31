@@ -1,16 +1,18 @@
 import * as stylex from "@stylexjs/stylex";
-import { media, space } from "./tokens.stylex.ts";
+import { colors, media, space } from "./tokens.stylex.ts";
 
 /**
- * A veil across the top of the viewport on scrolling pages, after factory.com's: what scrolls up
- * under it dissolves into a heavy blur (64px, colors lifted 1.5x so they glow rather than grey
- * out), so the name over it stays readable. No tint: the blur alone carries it. A mask holds it
- * solid to just past the name, then eases it out in steps, so it has no visible lower edge.
+ * A veil across the top of the viewport on scrolling pages: what scrolls up under it sinks into
+ * shadow, as the top of Batoni's "Vulcan" falls into umber, so the name over it stays readable.
+ * A soft blur (16px) under the page color at 72%: text dims and softens as it rises; nothing
+ * glows. Over empty page the veil is the page itself, so it has no shape of its own: full width,
+ * with no side edges, and only text passing under it shows it is there.
  *
  * It starts above the viewport: 24px above it, plus the top safe area (the notch and status bar
  * that `viewport-fit=cover` lays the page under on phones). A blur ending exactly at the top edge
  * thins out there and leaves a sharp strip; started above, it stays full to the edge, and on a
- * phone it also covers what passes under the status bar.
+ * phone it also covers what passes under the status bar. A mask holds it solid to just past the
+ * name, then eases it out in factory.com's steps, so it has no visible lower edge.
  *
  * It rises in over the first 48px of scroll (the page's top inset), so at rest it covers nothing:
  * the page's first line starts below it. It is hidden unless the scroll timeline drives it: a page
@@ -39,18 +41,7 @@ const styles = stylex.create({
   veil: {
     display: { default: "none", [scrollDriven]: "block" },
     position: "fixed",
-    // Phones: the whole width, which is the text column. Desktop: the text column (the layout's
-    // block, centred in a wrapper with 32px margins: sidebar, gap, then the column), widened by a
-    // layout gap on each side so banners that break out of it are covered, and faded out over
-    // that gap so the blur has no side edge. The page beside the column stays untouched.
-    left: {
-      default: `calc(max(4 * ${space.unit}, 50% - (${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn}) / 2) + ${space.sidebarColumn})`,
-      [media.mobile]: 0,
-    },
-    width: {
-      default: `calc(min(${space.contentColumn}, 100% - 8 * ${space.unit} - ${space.sidebarColumn} - ${space.layoutGap}) + 2 * ${space.layoutGap})`,
-      [media.mobile]: "100%",
-    },
+    insetInline: 0,
     top: `calc(-1 * ${above})`,
     height: {
       default: `calc(${solidDesktop} + 121px)`,
@@ -64,11 +55,8 @@ const styles = stylex.create({
     animationFillMode: "both",
     animationTimeline: "scroll(root)",
     animationRange: `0 ${space.pageInset}`,
-    backdropFilter: "blur(64px) saturate(1.5)",
-    maskImage: {
-      default: `${fadeDesktop}, linear-gradient(to right, transparent, black ${space.layoutGap}, black calc(100% - ${space.layoutGap}), transparent)`,
-      [media.mobile]: fadePhone,
-    },
-    maskComposite: "intersect",
+    backdropFilter: "blur(16px)",
+    backgroundColor: `color-mix(in oklch, ${colors.bg} 72%, transparent)`,
+    maskImage: { default: fadeDesktop, [media.mobile]: fadePhone },
   },
 });
