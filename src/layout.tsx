@@ -1,6 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentChildren } from "preact";
 import { fontGate } from "./entry.ts";
+import { Haze } from "./haze.tsx";
 import { Island } from "./island.tsx";
 import { Email } from "./islands/email.tsx";
 import { align } from "./align.ts";
@@ -186,6 +187,8 @@ export function Document({
           aria-live="polite"
           aria-atomic="true"
         />
+        {/* Scrolling pages only: the homepage holds to the viewport. */}
+        {!home && <Haze />}
         {children}
         {/* Align the layout before the first paint (see the render-blocking `expect` in <head>). */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: alignScript }} />
