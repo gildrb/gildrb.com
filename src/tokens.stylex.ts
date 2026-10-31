@@ -146,28 +146,25 @@ export const typeScale = stylex.defineConsts({
  * <html> and in `theme-color` before any CSS loads, so the first frame and the browser chrome are
  * the page itself.
  */
-export const pageColor = { dark: "oklch(17% 0.005 25)", light: "oklch(97.5% 0.005 235)" };
+export const pageColor = { dark: "oklch(15.5% 0.013 55)", light: "oklch(96.5% 0.012 85)" };
 
 /**
- * Monochrome, tinted: an ember forge page in the dark, a cold paper page in the light. Each
- * theme sits on one hue with a trace of chroma, below the point where a reader names a color
- * and above the point where a page reads as the browser's own black and white; pure 0 and 100
- * lightness are what makes a monochrome page look unstyled.
+ * The forge's palette, sampled from Batoni's "Vulcan" (1750) and Flaxman's gilt Shield of
+ * Achilles (1817): umber shadow, bronze half-light, ivory where the fire catches. Measured in
+ * OKLCH, the paintings' shadows (L 15 to 25%) carry chroma 0.027 to 0.036 at hue 36 to 75, and
+ * the hue climbs with the light, from ember red in the dark (hue 40) to gilt yellow in the
+ * highlights (hue 90). A grey with a trace of one hue reads as dirt, not warmth.
  *
- * Dark: hue 25 (ember red, the forge), chroma 0.005 on surfaces and 0.005 to 0.007 on text.
- * Chroma reads stronger on a dark page, so it is held low there: at 0.006 the old blue read as
- * purple, and the red keeps the same ceiling. Light: hue 235 (the blue of a cold page), chroma
- * 0.005 on surfaces and 0.01 on text.
+ * So each ladder ramps both ways at once, like firelight: the darker a color, the redder and the
+ * more chromatic. Dark: an umber page (hue 55, chroma 0.013), bronze tertiary (hue 64, 0.042),
+ * sand secondary (hue 72, 0.035), ivory text (hue 85, 0.02). Light: the same scale read from the
+ * other end, ivory paper (hue 85, 0.012) under umber ink (hue 50 to 58, 0.018 to 0.036), held
+ * lower than the dark ladder's chroma: on paper the same chroma reads as sepia.
  *
- * Both ends are pulled in from the extremes: the dark page is 17% lightness (about #120f0e),
- * its text 94% (about #eeeae9), so white text no longer glares against true black; the light
- * page is 97.5% (about #f4f7fa), its text 18% (about #0d1215).
- *
- * The text ladder keeps its steps in APCA. Dark, on the page: primary Lc 94, article 78,
- * secondary 56, tertiary 37 (WCAG 5.3:1). Light: primary Lc 100, article 96, secondary 84,
- * tertiary 71 (WCAG 4.9:1). Light tertiary is the lightest gray WCAG still allows for text,
- * which is why light is not a mirror of dark: gray on a light page reads fainter than on a dark
- * one, the reason light prose is heavier too (`proseWeight`).
+ * The text ladder in APCA. Dark, on the page: primary Lc 97, article 82, secondary 63, tertiary
+ * 45 (WCAG 6.5:1). Light: primary Lc 98, article 93, secondary 84, tertiary 73 (WCAG 5.5:1).
+ * Light is not a mirror of dark: grey on a light page reads fainter than on a dark one, the
+ * reason light prose is heavier too (`proseWeight`).
  */
 export const colors = stylex.defineVars({
   /**
@@ -176,15 +173,15 @@ export const colors = stylex.defineVars({
    */
   scheme: "light dark",
   bg: { default: pageColor.dark, [light]: pageColor.light },
-  primary: { default: "oklch(94% 0.005 25)", [light]: "oklch(18% 0.01 235)" },
-  secondary: { default: "oklch(74% 0.006 25)", [light]: "oklch(42% 0.01 235)" },
+  primary: { default: "oklch(95% 0.02 85)", [light]: "oklch(21% 0.018 50)" },
+  secondary: { default: "oklch(78% 0.035 72)", [light]: "oklch(41% 0.03 55)" },
   /** One more step down the text ladder: labels, dates, descriptors, quiet links at rest. */
-  tertiary: { default: "oklch(62% 0.007 25)", [light]: "oklch(53% 0.01 235)" },
-  article: { default: "oklch(86% 0.005 25)", [light]: "oklch(28% 0.01 235)" },
+  tertiary: { default: "oklch(67% 0.042 64)", [light]: "oklch(50% 0.036 58)" },
+  article: { default: "oklch(88% 0.024 80)", [light]: "oklch(30% 0.022 52)" },
   /** Rules: the page's text at 12% opacity, so they take the tint of whatever is under them. */
-  hairline: { default: "oklch(94% 0.005 25 / 0.12)", [light]: "oklch(18% 0.01 235 / 0.12)" },
-  codeBg: { default: "oklch(23% 0.006 25)", [light]: "oklch(92.5% 0.006 235)" },
-  terminalBg: { default: "oklch(19.5% 0.006 25)", [light]: "oklch(95.5% 0.005 235)" },
+  hairline: { default: "oklch(95% 0.02 85 / 0.12)", [light]: "oklch(21% 0.018 50 / 0.12)" },
+  codeBg: { default: "oklch(21% 0.016 58)", [light]: "oklch(92% 0.018 82)" },
+  terminalBg: { default: "oklch(18% 0.015 56)", [light]: "oklch(94.5% 0.015 84)" },
   /**
    * Heph's glass window (`heph.tsx`), the one lifted surface on the site; flat surfaces take a
    * line (`ui.edge`), not a shadow. `glass` is the terminal colour the wallpaper shows through:
@@ -193,11 +190,11 @@ export const colors = stylex.defineVars({
    * the text it went near-black on the light page. `shadow` is the dark under the window, on
    * each theme's own hue rather than pure black, which reads as a hole in a tinted page.
    */
-  glass: { default: "oklch(19.5% 0.006 25 / 0.62)", [light]: "oklch(95.5% 0.005 235 / 0.82)" },
+  glass: { default: "oklch(18% 0.015 56 / 0.62)", [light]: "oklch(94.5% 0.015 84 / 0.82)" },
   glint: { default: "oklch(100% 0 0)", [light]: "oklch(100% 0 0)" },
-  shadow: { default: "oklch(8% 0.005 25)", [light]: "oklch(12% 0.01 235)" },
-  /** Muted text on terminal surfaces: 4.6:1 on the dark terminal, 5.0:1 on the light one. */
-  terminalMuted: { default: "oklch(60% 0.007 25)", [light]: "oklch(51% 0.01 235)" },
+  shadow: { default: "oklch(7% 0.012 50)", [light]: "oklch(15% 0.02 50)" },
+  /** Muted text on terminal surfaces: 5.6:1 on the dark terminal, 5.2:1 on the light one. */
+  terminalMuted: { default: "oklch(64% 0.04 64)", [light]: "oklch(50% 0.036 58)" },
   proseWeight: { default: "380", [light]: "400" },
   /**
    * How strong an underline is at rest, as a share of its link's text colour (`ui.outbound`); on
