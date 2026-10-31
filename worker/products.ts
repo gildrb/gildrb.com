@@ -1,20 +1,24 @@
-import { origin, type Product, products } from "../src/site.ts";
+import { builtProducts, origin, type Product, products } from "../src/site.ts";
 
 /**
- * Serves each product page on its own host (`Product.home`). The pages are built and deployed with
- * gildrb.com; this Worker reads them from the Pages deployment's own host, where gildrb.com's
- * redirect of `/<slug>` (see `functions/[[path]].ts`) does not apply.
+ * Serves each built product page on its own host (`Product.home`, `site: "Built"`). The pages are
+ * built and deployed with gildrb.com; this Worker reads them from the Pages deployment's own host,
+ * where gildrb.com's redirect of `/<slug>` (see `functions/[[path]].ts`) does not apply. Every
+ * product's alias hosts redirect to its home, including those with a site of their own.
  */
 const upstream = "https://web-2qb.pages.dev";
 
 type Site = { $: "Home"; product: Product } | { $: "Alias"; home: string };
 
-const sites = new Map<string, Site>(
-  products.flatMap((product): [string, Site][] => [
-    [new URL(product.home).hostname, { $: "Home", product }],
-    ...product.aliases.map((alias): [string, Site] => [alias, { $: "Alias", home: product.home }]),
+const sites = new Map<string, Site>([
+  ...builtProducts.map((product): [string, Site] => [
+    new URL(product.home).hostname,
+    { $: "Home", product },
   ]),
-);
+  ...products.flatMap((product) =>
+    product.aliases.map((alias): [string, Site] => [alias, { $: "Alias", home: product.home }]),
+  ),
+]);
 
 const text = (body: string, type: string) =>
   new Response(body, {

@@ -232,8 +232,14 @@ export type Product = Row & {
   name: string;
   /** The origin the page lives on; its canonical URL is this origin's root. */
   home: `https://${string}`;
-  /** Hosts that redirect to `home`, keeping the path. */
+  /** Hosts that redirect to `home`, keeping the path (`worker/products.ts`). */
   aliases: readonly string[];
+  /**
+   * Who serves `home`. `Built`: this site, from `src/content/<slug>.md`, through the products
+   * Worker. `Own`: a site of its own, elsewhere (eukhe.com is gildrb/eukhe-site); this site only
+   * links and redirects there.
+   */
+  site: "Built" | "Own";
   /** Tab and search title: what it does, in the words people search for. */
   headline: string;
   repository: `https://github.com/${string}`;
@@ -259,8 +265,8 @@ export const products: readonly Product[] = [
     group: { $: "Projects", platform: "macOS, Linux" },
     links: [],
     home: "https://eukhe.com",
-    // eukhe.com itself is the eukhe-site Worker (gildrb/eukhe-site), which also redirects www.
     aliases: ["eukhe.gildrb.com"],
+    site: "Own",
     headline: "Eukhe: a coding agent that remembers every chat",
     description: "Coding agent and gateway. One endless chat is its memory.",
     repository: "https://github.com/gildrb/eukhe",
@@ -282,6 +288,7 @@ export const products: readonly Product[] = [
     links: [],
     home: "https://archetypon.gildrb.com",
     aliases: [],
+    site: "Built",
     headline: "Archetypon: convert SVG to PNG, ICO, WebP, JPEG and PDF in your browser",
     description: "SVG to optimized SVG, PDF, PNG, WebP, JPEG and ICO, in the browser.",
     repository: "https://github.com/gildrb/archetypon",
@@ -300,6 +307,7 @@ export const products: readonly Product[] = [
     links: [],
     home: "https://poros.gildrb.com",
     aliases: [],
+    site: "Built",
     headline: "Poros: open your server's dev server on your Mac or phone over Tailscale",
     description: "One command, one private HTTPS link to a dev server on your tailnet.",
     repository: "https://github.com/gildrb/poros",
@@ -312,6 +320,9 @@ export const products: readonly Product[] = [
     },
   },
 ];
+
+/** The products whose pages this site builds and the products Worker serves (`site: "Built"`). */
+export const builtProducts = products.filter((product) => product.site === "Built");
 
 /** Projects that live elsewhere: their rows link out instead of to a case study. */
 const externals: readonly External[] = [];

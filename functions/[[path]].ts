@@ -1,4 +1,4 @@
-import { origin, pages, products, slugs } from "../src/site.ts";
+import { builtProducts, origin, pages, products, slugs } from "../src/site.ts";
 import {
   apiHeaders,
   canonicalHost,
@@ -12,7 +12,7 @@ import {
 const markdown = new Map([
   ["/", "/index.html.md"],
   ["/all", "/llms-full.txt"],
-  ...[...slugs, ...pages.map(({ slug }) => slug), ...products.map(({ slug }) => slug)].map(
+  ...[...slugs, ...pages.map(({ slug }) => slug), ...builtProducts.map(({ slug }) => slug)].map(
     (slug): [string, string] => [`/${slug}`, `/content/${slug}.md`],
   ),
 ]);

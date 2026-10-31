@@ -5,7 +5,7 @@ import { files } from "./files.ts";
 import type { Assets } from "./layout.tsx";
 import { AllPage, CasePage, DocPage, ProductPage } from "./pages/case.tsx";
 import { Home } from "./pages/home.tsx";
-import { type Case, cases, origin, pages, type Product, products } from "./site.ts";
+import { builtProducts, type Case, cases, origin, pages, type Product, products } from "./site.ts";
 
 // For the build (`vite.config.ts`): the share image comes first, since the pages link it, and the
 // stamped copies of `public/` files last, once rendering has named them all.
@@ -80,7 +80,7 @@ export function render(assets: Assets): Record<string, string> {
       ]),
     ),
     ...Object.fromEntries(
-      products.map((item) => [
+      builtProducts.map((item) => [
         `${item.slug}.html`,
         html(<ProductPage assets={assets} item={item} markdown={text(item.slug)} />),
       ]),
@@ -108,7 +108,7 @@ function fullText(): string {
       source: `/content/${slug}.md`,
       body: published(slug),
     })),
-    ...products.map(({ slug, name, home }) => ({
+    ...builtProducts.map(({ slug, name, home }) => ({
       heading: name,
       path: `${home}/`,
       source: `/content/${slug}.md`,

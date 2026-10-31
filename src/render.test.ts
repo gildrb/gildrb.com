@@ -47,7 +47,7 @@ describe("project pages", () => {
   });
 
   test("a page that fits a screen or two lists no contents", () => {
-    for (const file of ["archetypon.html", "eukhe.html"])
+    for (const file of ["archetypon.html", "poros.html"])
       expect(page(file), file).not.toContain("data-contents");
   });
 });
