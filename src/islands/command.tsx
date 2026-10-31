@@ -40,6 +40,7 @@ export function Command({ commands }: { commands: readonly string[] }) {
         {...stylex.props(
           ui.reset,
           ui.respond,
+          ui.key,
           ui.focusRing,
           styles.copy,
           state === "copied" && styles.done,
@@ -108,7 +109,10 @@ const styles = stylex.create({
   },
   prompt: { color: colors.tertiary, userSelect: "none" },
   command: { whiteSpace: "pre" },
-  /** A 32px target; hover and focus raise the icon to full contrast, as a quiet link (`ui.quiet`). */
+  /**
+   * A 32px key (`ui.key`); hover and focus raise the icon to full contrast, as a quiet link
+   * (`ui.quiet`), and brighten the key.
+   */
   copy: {
     display: "flex",
     alignItems: "center",

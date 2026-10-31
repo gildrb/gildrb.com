@@ -181,6 +181,19 @@ export const colors = stylex.defineVars({
   /** Rules: the page's text at 12% opacity, so they take the tint of whatever is under them. */
   hairline: { default: "oklch(95% 0.02 85 / 0.12)", [light]: "oklch(21% 0.018 50 / 0.12)" },
   codeBg: { default: "oklch(21% 0.016 58)", [light]: "oklch(92% 0.018 82)" },
+  /**
+   * Depth without shadows, from light (after raycast.com): a surface is lit from above. Its fill
+   * runs from `surfaceTop` down to its own color, and `bevel`, a line of light, sits on its top
+   * edge inside the hairline. A key (a button on a surface: the shell block's copy button) stands
+   * one step brighter than its surface, with a brighter `keyBevel` on top and `keyBase`, a darker
+   * line, under it, so it reads as raised. Nothing casts a shadow onto the page.
+   */
+  surfaceTop: { default: "oklch(24% 0.017 60)", [light]: "oklch(94.5% 0.016 82)" },
+  bevel: { default: "oklch(100% 0 0 / 0.07)", [light]: "oklch(100% 0 0 / 0.75)" },
+  key: { default: "oklch(27% 0.018 62)", [light]: "oklch(97.5% 0.01 85)" },
+  keyHover: { default: "oklch(31% 0.02 64)", [light]: "oklch(99.5% 0.004 85)" },
+  keyBevel: { default: "oklch(100% 0 0 / 0.13)", [light]: "oklch(100% 0 0)" },
+  keyBase: { default: "oklch(7% 0.012 50 / 0.55)", [light]: "oklch(21% 0.018 50 / 0.16)" },
   terminalBg: { default: "oklch(18% 0.015 56)", [light]: "oklch(94.5% 0.015 84)" },
   /**
    * Heph's glass window (`heph.tsx`), the one lifted surface on the site; flat surfaces take a

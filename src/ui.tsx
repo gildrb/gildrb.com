@@ -49,11 +49,28 @@ export const ui = stylex.create({
   },
   /**
    * The code surface: inline code, code blocks, the shell block. The fill one step off the page
-   * (`colors.codeBg`), the surface corner (`space.radius`); set with `edge`.
+   * (`colors.codeBg`), lit from above: it brightens toward the top (`colors.surfaceTop`) and a
+   * line of light (`colors.bevel`) runs along its top edge. The bevel is two pixels tall so its
+   * lower pixel shows under the edge's outline. The surface corner (`space.radius`); set with
+   * `edge`.
    */
   codeSurface: {
     backgroundColor: colors.codeBg,
+    backgroundImage: `linear-gradient(${colors.surfaceTop}, ${colors.codeBg})`,
+    boxShadow: `inset 0 2px 0 ${colors.bevel}`,
     borderRadius: space.radius,
+  },
+  /**
+   * A key: a button that stands on a surface, raised by light alone (`colors.key`). Hover
+   * brightens it with the text (`respond` fades the fill as it fades the color).
+   */
+  key: {
+    backgroundColor: {
+      default: colors.key,
+      ":hover": { [media.hover]: colors.keyHover },
+      ":focus-visible": colors.keyHover,
+    },
+    boxShadow: `inset 0 1px 0 ${colors.keyBevel}, inset 0 -1px 0 ${colors.keyBase}, inset 0 0 0 1px ${colors.hairline}`,
   },
   /** Interface text: pixel-fixed on phones, `rem`-scaled from tablets up. */
   text: {
