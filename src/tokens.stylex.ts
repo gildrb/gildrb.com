@@ -74,13 +74,11 @@ export const underline = stylex.defineConsts({
 
 /**
  * How a state change shows. A hover, focus or current part changes a color or opacity.
- * - Entering is immediate (`ui.respond`): the row under the pointer is lit the moment it is
- *   reached, so nothing ever waits on an animation.
- * - Leaving fades over `response`, 200ms, on a decelerating curve (`ease-out`): the release
- *   starts quickly, then lingers and dissolves. A pointer sweeping a list leaves a short trail
- *   behind it, which shows the path the hand took. At 150ms on `ease` half the change was done in
- *   50ms and the fade read as an instant swap; past 400ms a sweep leaves four or five rows lit
- *   and the index turns to noise. 300ms was tried; 200ms is the owner's pick.
+ * - Entering and leaving both take `response`, 150ms, on the standard curve
+ *   (`cubic-bezier(0.4, 0, 0.2, 1)`): it starts fast, so half the change is done in about 50ms
+ *   and nothing waits on it, then settles, so the change is seen to happen rather than swap.
+ *   Measured on x.ai, whose links and buttons all move this way. An immediate entry read as a
+ *   pop; a 200ms `ease-out` exit lingered behind the pointer.
  * - Every element whose color changes takes part. One that changes on its row's or its parent's
  *   state inherits the color (`color: inherit`) rather than setting its own, or it switches at
  *   once while its row fades. Elements that set their own state color carry `ui.respond`.
@@ -89,8 +87,8 @@ export const underline = stylex.defineConsts({
  * `zoomDuration` (200ms) on its spring.
  */
 export const motion = stylex.defineConsts({
-  response: "200ms",
-  responseEasing: "ease-out",
+  response: "150ms",
+  responseEasing: "cubic-bezier(0.4, 0, 0.2, 1)",
 });
 
 /**

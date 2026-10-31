@@ -137,21 +137,13 @@ export const ui = stylex.create({
   },
   /**
    * The one way a state change shows. Hover, focus or selection changes a color (text, underline,
-   * background) or an opacity; nothing moves. Entering the state is immediate, so a pointer
-   * crossing a list lights each row as it passes; leaving it fades over `motion.response`. The
-   * state is the element's own, or its row's (`rowMarker`), the only ancestor that carries hover
-   * for its descendants.
+   * background) or an opacity; nothing moves. Entering and leaving the state both take
+   * `motion.response` on its curve. The state is the element's own, or its row's (`rowMarker`),
+   * the only ancestor that carries hover for its descendants.
    */
   respond: {
     transitionProperty: "color, text-decoration-color, background-color, opacity",
-    transitionDuration: {
-      default: motion.response,
-      ":hover": "0s",
-      ":focus-visible": "0s",
-      ":is([aria-current])": "0s",
-      [stylex.when.ancestor(":hover", rowMarker)]: "0s",
-      [stylex.when.ancestor(":focus-visible", rowMarker)]: "0s",
-    },
+    transitionDuration: motion.response,
     transitionTimingFunction: motion.responseEasing,
   },
   /**
