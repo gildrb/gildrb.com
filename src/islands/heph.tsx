@@ -1145,8 +1145,8 @@ const styles = stylex.create({
       "inset 0 0 0 0.5px rgb(0 90 0 / 0.2), inset 0 0.75px 0 rgb(255 255 255 / 0.3), inset 0 -0.75px 0 rgb(255 255 255 / 0.16)",
     "::after": { boxShadow: "inset 0 0 0 0.75px rgb(25 105 5 / 0.7)" },
   },
-  // Over the lights, their glyphs fade in and out (`ui.respond`); `shown` is set from the lights
-  // group's hover, not the glyph's own.
+  // Over the lights, their glyphs show at once and fade on leaving (`ui.respond`); `shown` holds
+  // the entry at 0s, since the hover is the lights group's, not the glyph's own.
   glyph: {
     position: "absolute",
     inset: 0,
@@ -1154,7 +1154,7 @@ const styles = stylex.create({
     height: "100%",
     opacity: 0,
   },
-  shown: { opacity: 1 },
+  shown: { opacity: 1, transitionDuration: "0s" },
   // Invisible grips on the window's edges and corners, a little outside the glass.
   handle: { position: "absolute", zIndex: 1, touchAction: "none" },
   n: { top: "-4px", left: "14px", right: "14px", height: "8px", cursor: "ns-resize" },
