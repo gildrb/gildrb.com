@@ -224,7 +224,8 @@ export const products: readonly Product[] = [
     descriptor: "Coding agent",
     links: [],
     home: "https://eukhe.com",
-    aliases: ["eukhe.gildrb.com", "www.eukhe.com"],
+    // eukhe.com itself is the eukhe-site Worker (gildrb/eukhe-site), which also redirects www.
+    aliases: ["eukhe.gildrb.com"],
     headline: "Eukhe: a coding agent that remembers every chat",
     description: "Coding agent and gateway. One endless chat is its memory.",
     repository: "https://github.com/gildrb/eukhe",
