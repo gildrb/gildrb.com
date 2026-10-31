@@ -39,7 +39,18 @@ const styles = stylex.create({
   veil: {
     display: { default: "none", [scrollDriven]: "block" },
     position: "fixed",
-    insetInline: 0,
+    // Phones: the whole width, which is the text column. Desktop: the text column (the layout's
+    // block, centred in a wrapper with 32px margins: sidebar, gap, then the column), widened by a
+    // layout gap on each side so banners that break out of it are covered, and faded out over
+    // that gap so the blur has no side edge. The page beside the column stays untouched.
+    left: {
+      default: `calc(max(4 * ${space.unit}, 50% - (${space.sidebarColumn} + ${space.layoutGap} + ${space.contentColumn}) / 2) + ${space.sidebarColumn})`,
+      [media.mobile]: 0,
+    },
+    width: {
+      default: `calc(min(${space.contentColumn}, 100% - 8 * ${space.unit} - ${space.sidebarColumn} - ${space.layoutGap}) + 2 * ${space.layoutGap})`,
+      [media.mobile]: "100%",
+    },
     top: `calc(-1 * ${above})`,
     height: {
       default: `calc(${solidDesktop} + 121px)`,
@@ -54,6 +65,10 @@ const styles = stylex.create({
     animationTimeline: "scroll(root)",
     animationRange: `0 ${space.pageInset}`,
     backdropFilter: "blur(64px) saturate(1.5)",
-    maskImage: { default: fadeDesktop, [media.mobile]: fadePhone },
+    maskImage: {
+      default: `${fadeDesktop}, linear-gradient(to right, transparent, black ${space.layoutGap}, black calc(100% - ${space.layoutGap}), transparent)`,
+      [media.mobile]: fadePhone,
+    },
+    maskComposite: "intersect",
   },
 });
