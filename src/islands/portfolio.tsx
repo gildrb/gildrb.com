@@ -1,34 +1,20 @@
 import * as stylex from "@stylexjs/stylex";
-import type { TargetedMouseEvent } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { announce } from "../announce.ts";
 import { Row } from "../row.tsx";
-import { compareRows, projects, type SortDirection, type SortKey } from "../site.ts";
+import { groups, projects } from "../site.ts";
 import { colors, media, rootMarker, rowMarker, space } from "../tokens.stylex.ts";
 import { Figures, ui } from "../ui.tsx";
 
-const columns = [
-  { key: "title", label: "Project" },
-  { key: "date", label: "Date" },
-] as const satisfies readonly { key: SortKey; label: string }[];
-
-function describe(key: SortKey, direction: SortDirection): string {
-  if (key === "date") return direction === "ascending" ? "oldest first" : "newest first";
-  return direction === "descending" ? "A to Z" : "Z to A";
-}
-
 /**
- * The homepage project table: project, subject, then the date set right. Project and date sort,
- * the subject is plain text. The archive is the table's footer, whatever the order: "Archive" in
- * the project column, the count in the subject column. Edge fades show while the list scrolls on
- * phones. The row under the pointer or in focus brightens; nothing else appears. Phones drop the
- * last column, and the date ends at the table's right edge.
+ * The homepage project table in two groups, each under its label: Projects (software Gil
+ * maintains: name and one line), then Design (client work and studies: name, what was made, year).
+ * The label sits where a table header would, with the header's hairline under it; the second
+ * label stands two row pitches below the last row before it, so rows stay on the 40px rhythm the
+ * sidebar aligns to. The archive closes the Design group: "Archive" in the title column, the
+ * count beside it. Edge fades show while the list scrolls on phones. The row under the pointer or
+ * in focus brightens; nothing else appears.
  */
 export function Portfolio({ more }: { more: number }) {
-  const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
-    key: "date",
-    direction: "descending",
-  });
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const section = useRef<HTMLElement>(null);
 
@@ -52,15 +38,6 @@ export function Portfolio({ more }: { more: number }) {
     };
   }, []);
 
-  function select(key: SortKey, event: TargetedMouseEvent<HTMLButtonElement>) {
-    const direction =
-      sort.key === key && sort.direction === "descending" ? "ascending" : "descending";
-    setSort({ key, direction });
-    announce(`Projects sorted by ${key}, ${describe(key, direction)}.`);
-    if (event.detail !== 0) event.currentTarget.blur();
-  }
-
-  const rows = projects.toSorted(compareRows(sort.key, sort.direction));
   return (
     <div
       {...stylex.props(
@@ -69,46 +46,6 @@ export function Portfolio({ more }: { more: number }) {
         edges.bottom && styles.fadeBottom,
       )}
     >
-      <table {...stylex.props(ui.label, ui.sans, styles.header)} aria-label="Project columns">
-        {/* The wrappers take no box, so the buttons stay on the subgrid. */}
-        <thead {...stylex.props(styles.contents)}>
-          <tr {...stylex.props(styles.contents)}>
-            {columns.map(({ key, label }) => {
-              const active = sort.key === key;
-              return (
-                <th
-                  key={key}
-                  {...stylex.props(styles.contents, styles.cellText)}
-                  scope="col"
-                  aria-sort={active ? sort.direction : undefined}
-                >
-                  <button
-                    {...stylex.props(
-                      stylex.defaultMarker(),
-                      ui.target,
-                      ui.reset,
-                      ui.focusRing,
-                      ui.respond,
-                      styles.sort,
-                      styles[key],
-                      active && styles.active,
-                    )}
-                    type="button"
-                    // Starts with the visible label, so voice control finds it by what it says.
-                    aria-label={`${label}, sort projects by ${key}`}
-                    onClick={(event) => select(key, event)}
-                  >
-                    {label}
-                  </button>
-                </th>
-              );
-            })}
-            <th {...stylex.props(styles.contents, styles.cellText)} scope="col">
-              <span {...stylex.props(styles.label, styles.descriptor)}>Subject</span>
-            </th>
-          </tr>
-        </thead>
-      </table>
       <section
         data-scroll-list
         ref={section}
@@ -116,21 +53,31 @@ export function Portfolio({ more }: { more: number }) {
         aria-labelledby="portfolio-title"
       >
         <h2 {...stylex.props(ui.srOnly)} id="portfolio-title">
-          Projects
+          Work
         </h2>
         <div data-rows {...stylex.props(styles.list)}>
-          {rows.map((project, index) => (
-            <Row key={project.href} project={project} first={index === 0} home />
+          {groups.map((group, index) => (
+            <div key={group} {...stylex.props(styles.group)}>
+              <h3
+                {...stylex.props(ui.label, ui.sans, styles.label, index > 0 && styles.laterLabel)}
+              >
+                {group}
+              </h3>
+              {projects
+                .filter((project) => project.group.$ === group)
+                .map((project, row) => (
+                  <Row key={project.href} project={project} first={row === 0} home />
+                ))}
+              {group === "Design" && (
+                <a {...stylex.props(rowMarker, ui.respond, styles.archive)} href="/all">
+                  <span {...stylex.props(ui.text, ui.emphasis, styles.title)}>Archive</span>
+                  <span {...stylex.props(ui.text, ui.respond, styles.more)}>
+                    <Figures text={String(more)} /> more
+                  </span>
+                </a>
+              )}
+            </div>
           ))}
-          <a
-            {...stylex.props(rowMarker, ui.respond, styles.archive)}
-            href={`/all?sort=${sort.key}&direction=${sort.direction}`}
-          >
-            <span {...stylex.props(ui.text, ui.emphasis, styles.title)}>Archive</span>
-            <span {...stylex.props(ui.text, ui.respond, styles.more)}>
-              <Figures text={String(more)} /> more
-            </span>
-          </a>
         </div>
       </section>
     </div>
@@ -146,14 +93,16 @@ const hideBottom = stylex.keyframes({ "0%, 96%": { opacity: 1 }, "100%": { opaci
 const styles = stylex.create({
   frame: {
     display: "grid",
+    // Both groups share these columns, so their descriptors start in one place on every screen.
     gridTemplateColumns: space.projectColumns,
-    // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls under
-    // the header, between edge fades.
+    columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
+    // Dense desktop viewports (see `align.ts`) borrow the phone layout: the list scrolls between
+    // edge fades.
     gridTemplateRows: {
       default: null,
-      [media.mobile]: "auto minmax(0, 1fr)",
+      [media.mobile]: "minmax(0, 1fr)",
       [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-        [media.desktop]: "auto minmax(0, 1fr)",
+        [media.desktop]: "minmax(0, 1fr)",
       },
     },
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
@@ -163,7 +112,6 @@ const styles = stylex.create({
       [media.desktop]: "start",
       [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: "stretch" },
     },
-    columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
     containerType: "inline-size",
     position: {
       default: null,
@@ -188,13 +136,8 @@ const styles = stylex.create({
         [media.mobile]: '""',
         [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: '""' },
       },
-      // Just below the header: one touch target on phones.
-      top: {
-        default: space.touchTarget,
-        [stylex.when.ancestor("[data-dense]", rootMarker)]: {
-          [media.desktop]: `calc(${space.linkLineHeight} + ${space.portfolioRowPadding})`,
-        },
-      },
+      // At the list's top edge.
+      top: 0,
       backgroundImage: `linear-gradient(to bottom, ${colors.bg}, transparent)`,
       opacity: 0,
       position: "absolute",
@@ -230,42 +173,44 @@ const styles = stylex.create({
   },
   fadeTop: { "::before": { opacity: 1 } },
   fadeBottom: { "::after": { opacity: 1 } },
-  header: {
+  /**
+   * One group: its label and rows on the table's shared columns: the title column, then what
+   * fills the rest; Design sets its full date right, its last figure on the table's edge where the
+   * hairlines end. Client work keeps when it was made; Projects, which are ongoing, show no date,
+   * and their descriptor takes the date's column too.
+   */
+  group: {
     display: "grid",
     gridColumn: "1 / -1",
-    gridRow: {
-      default: null,
-      [media.mobile]: 1,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 1 },
-    },
     gridTemplateColumns: "subgrid",
-    alignItems: "baseline",
+  },
+  /**
+   * A group's label, where a table header would be: the label's size, grey, a hairline under it
+   * drawn inside, so it never adds to the height. Desktop: 32px, the old header's box (its line
+   * and a row padding below), so Contact still sits on it. Phones: one touch target.
+   */
+  label: {
+    gridColumn: "1 / -1",
+    margin: 0,
     paddingBlock: { default: space.touchInset, [media.desktop]: `0 ${space.portfolioRowPadding}` },
-    position: { default: null, [media.mobile]: "relative" },
-    zIndex: { default: null, [media.mobile]: 3 },
-    backgroundColor: { default: null, [media.mobile]: colors.bg },
     color: colors.tertiary,
-    // A hairline drawn inside the header, so it never adds to the header's height.
+    fontWeight: "inherit",
     boxShadow: `inset 0 -1px ${colors.hairline}`,
   },
-  /** The sorted column reads full contrast, the other stays grey and lights on hover. */
-  sort: {
-    gridRow: 1,
-    justifySelf: "start",
-    color: {
-      default: colors.tertiary,
-      ":hover": { [media.hover]: colors.primary },
+  /**
+   * A later group's label stands one empty line below the last row, as every group does. Desktop:
+   * `groupGap` from the last line's box, less the row padding already there. Phones: its baseline
+   * two line intervals (64px) below the last row's, as the first label stands below the About
+   * line; the row's touch inset and the label's own count toward it.
+   */
+  laterLabel: {
+    paddingTop: {
+      default: `calc(8 * ${space.unit} - ${space.linkLineHeight} - ${space.touchInset})`,
+      [media.desktop]: `calc(${space.groupGap} - ${space.portfolioRowPadding})`,
     },
   },
-  active: { color: colors.primary },
   title: { gridColumn: 1 },
-  descriptor: { gridColumn: 2 },
-  date: { gridColumn: 3, justifySelf: "end" },
-  contents: { display: "contents" },
-  /** Header cells read as the row's text, not bold and centred. */
-  cellText: { fontWeight: "inherit", textAlign: "start" },
-  label: { gridRow: 1, justifySelf: "start" },
-  /** The table's footer: "Archive" under the projects, the count under the subjects. */
+  /** The Design group's footer: "Archive" in the title column, the count beside it. */
   archive: {
     display: "grid",
     gridColumn: "1 / -1",
@@ -300,8 +245,8 @@ const styles = stylex.create({
     gridColumn: "1 / -1",
     gridRow: {
       default: null,
-      [media.mobile]: 2,
-      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 2 },
+      [media.mobile]: 1,
+      [stylex.when.ancestor("[data-dense]", rootMarker)]: { [media.desktop]: 1 },
     },
     minWidth: 0,
     minHeight: {

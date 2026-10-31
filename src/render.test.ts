@@ -53,22 +53,24 @@ describe("project pages", () => {
 });
 
 describe("project table", () => {
-  test("names each row by what it shows: title, descriptor, date", () => {
+  test("names each row by what it shows: title, descriptor, then its date or platform", () => {
     const html = page("index.html");
     const labelled = [...html.matchAll(/aria-labelledby="([^"]+)"/g)].map(([, ids]) => ids);
-    expect(labelled.length).toBeGreaterThan(0);
-    for (const ids of labelled.filter((value) => value?.startsWith("P"))) {
-      const parts = ids?.split(" ") ?? [];
-      expect(parts.map((id) => id.replace(/^.*-/, ""))).toEqual(["title", "descriptor", "date"]);
-      for (const id of parts) expect(html).toContain(`id="${id}"`);
+    const rows = labelled.filter((value) => value?.startsWith("P"));
+    expect(rows.length).toBeGreaterThan(0);
+    for (const ids of rows) {
+      const parts = (ids?.split(" ") ?? []).map((id) => id.replace(/^.*-/, ""));
+      expect(parts).toEqual(["title", "descriptor", "end"]);
+      for (const id of ids?.split(" ") ?? []) expect(html).toContain(`id="${id}"`);
     }
   });
 
-  test("sort buttons are named starting with their visible label", () => {
+  test("lists maintained projects before design work, whatever their dates", () => {
     const html = page("index.html");
-    for (const label of ["Date", "Project"]) {
-      expect(html).toMatch(new RegExp(`aria-label="${label}, sort projects by`));
-    }
+    const at = (text: string) => html.indexOf(text);
+    const order = [">Projects</h3>", ">Heph</h4>", ">Design</h3>", ">Local Studio</h4>"].map(at);
+    for (const index of order) expect(index).toBeGreaterThan(-1);
+    expect(order).toEqual(order.toSorted((left, right) => left - right));
   });
 });
 

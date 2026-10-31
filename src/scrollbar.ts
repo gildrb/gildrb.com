@@ -42,6 +42,13 @@ export function pageScrollbar(): void {
     return { travel: track.clientHeight - height, height, max };
   };
 
+  /**
+   * Where the page's scroll drives the thumb itself (scroll-driven animations, `globalCss`), it
+   * moves in the same frame as the page, even under a phone's momentum scrolling; script set on
+   * the scroll event arrives a frame or more late. Elsewhere the script places it.
+   */
+  const driven = CSS.supports("animation-timeline: scroll()");
+
   /** Places the thumb where the page is, and marks the track only when something scrolls. */
   const place = (): void => {
     const measured = measure();
@@ -50,7 +57,10 @@ export function pageScrollbar(): void {
     const { travel, height, max } = measured;
     // The height is also the size the thumb grows from when hovered (`globalCss`).
     track.style.setProperty("--pagebar-thumb", `${height}px`);
-    thumb.style.transform = `translateY(${travel * Math.min(1, Math.max(0, scrollY / max))}px)`;
+    track.style.setProperty("--pagebar-travel", `${travel}px`);
+    if (!driven) {
+      thumb.style.transform = `translateY(${travel * Math.min(1, Math.max(0, scrollY / max))}px)`;
+    }
     track.ariaValueNow = String(Math.round((scrollY / max) * 100));
   };
 

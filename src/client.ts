@@ -98,7 +98,7 @@ requestAnimationFrame(() => {
 });
 
 // The first alignment already ran inline before the first paint; keep it current afterwards.
-const updateLayout = () => align(space.sectionContentGap.slice(4, -1));
+const updateLayout = () => align(space.linkGap.slice(4, -1));
 const resized = new ResizeObserver(() => setTimeout(updateLayout, 0));
 for (const target of [
   document.querySelector("main"),

@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { parse, sources } from "./markdown.tsx";
 import { type Media, media as artwork } from "./media.ts";
 import { type Case, cases } from "./site.ts";
-import { colors, media, space, typeScale } from "./tokens.stylex.ts";
+import { baseline, colors, media, space, typeScale } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -85,10 +85,10 @@ function sortData(work: Work) {
 }
 
 // One work a row in the content column, each at its own ratio. Phones take the viewport less
-// the two 12px gutters, up to the column's 544px, where the page centres on it (`layout.tsx`);
-// tablets the viewport less the sidebar's room; desktop the column's 544px.
+// the two 12px gutters, up to the column's 624px, where the page centres on it (`layout.tsx`);
+// tablets the viewport less the sidebar's room; desktop the column's 624px.
 const workSizes =
-  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(100vw - 336px), 544px";
+  "(max-width: 767px) min(calc(100vw - 24px), 624px), (max-width: 943px) calc(100vw - 320px), 624px";
 
 /**
  * How a work's image loads: the archive's first image is its largest paint, so it comes first;
@@ -101,7 +101,7 @@ function Tile({ work, load }: { work: Work; load: Load }) {
   const item = artwork[work.id];
   if (item === undefined) throw new Error(`Unknown media id: ${work.id}`);
   const { label, href } = destination(work);
-  const size = { width: `${share(item)}%` };
+  const size = { width: `${share(item)}%`, "--ratio": String(item.height / item.width) };
   const { src, srcset } = sources(work.id);
   const art = item.video ? (
     <video
@@ -186,7 +186,8 @@ const styles = stylex.create({
   grid: {
     display: "grid",
     gridTemplateColumns: "minmax(0, 1fr)",
-    gap: space.layoutGap,
+    // One empty line between works, as between any two groups (`groupGap`).
+    gap: space.groupGap,
   },
   page: {
     gridColumn: { default: null, [media.mobile]: "1 / -1" },
@@ -195,17 +196,20 @@ const styles = stylex.create({
   tile: { minWidth: 0, margin: 0 },
   /**
    * A work at its own ratio: nothing crops it to a cell, the column's width sets its size and a
-   * taller work simply runs further down the page. The corner, `space.radius`, is the
-   * enlargement's too (`zoom.ts`), which opens from the work's place in the stream.
+   * taller work simply runs further down the page. Its height is rounded to the nearest unit
+   * (`--ratio`, set per work), cropping at most half a unit, so the caption and every work below
+   * stay on the baseline grid. The corner, `space.radius`, is the enlargement's too (`zoom.ts`),
+   * which opens from the work's place in the stream.
    */
-  frame: { display: "block", width: "100%" },
+  frame: { display: "block", width: "100%", containerType: "inline-size" },
   /** A centred mark: the button is narrower than the column, so it centres itself. */
   centered: { marginInline: "auto" },
   zoom: { cursor: { default: "auto", [media.desktop]: "zoom-in" } },
   art: {
     display: "block",
     width: "100%",
-    height: "auto",
+    height: `round(nearest, calc(100cqi * var(--ratio)), ${space.unit})`,
+    objectFit: "cover",
     borderRadius: space.radius,
     userSelect: "none",
     WebkitUserDrag: "none",
@@ -216,7 +220,10 @@ const styles = stylex.create({
     display: "block",
     marginTop: space.unit,
     fontSize: typeScale.labelSize,
-    lineHeight: typeScale.labelLeading,
+    lineHeight: space.linkLineHeight,
+    // A label's size on the text's line: onto the text's baseline, as `ui.label`.
+    position: "relative",
+    top: baseline.label,
     letterSpacing: typeScale.labelTracking,
   },
   plain: { color: colors.tertiary },

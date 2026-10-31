@@ -99,7 +99,15 @@ const styles = stylex.create({
     gridRow: { default: null, [media.desktop]: 1, [media.mobile]: 3 },
     alignSelf: { default: null, [media.desktop]: "start" },
     minHeight: { default: null, [media.desktop]: "var(--desktop-intro-height, 0px)" },
-    marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
+    // Phones: the table's label baseline two line intervals (64px) below the About line's, as on
+    // desktop; the label's own touch inset is part of that distance.
+    marginBottom: {
+      default: space.groupGap,
+      [media.mobile]: `calc(8 * ${space.unit} - ${space.linkLineHeight} - ${space.touchInset})`,
+    },
   },
-  heading: { marginBottom: space.sectionContentGap },
+  /** Desktop: the About line one line interval below its label (`linkGap`, as in the sidebar). */
+  heading: {
+    marginBottom: { default: space.sectionContentGap, [media.desktop]: space.linkGap },
+  },
 });

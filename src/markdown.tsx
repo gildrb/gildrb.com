@@ -7,7 +7,7 @@ import { Fold } from "./islands/ben-davis.tsx";
 import { Specimen } from "./islands/curves.tsx";
 import { Terminal } from "./islands/heph.tsx";
 import { media } from "./media.ts";
-import { colors, media as breakpoints, space, typeScale } from "./tokens.stylex.ts";
+import { baseline, colors, media as breakpoints, space, typeScale } from "./tokens.stylex.ts";
 import { ui } from "./ui.tsx";
 import { versioned } from "./versioned.ts";
 
@@ -142,9 +142,11 @@ function Image({
         {...stylex.props(
           !item.mark && ui.edge,
           styles.image,
+          item.mark ? styles.markOnGrid : styles.onGrid,
           item.mark && styles.markImage,
           fill && (item.mark ? styles.contain : styles.cover),
         )}
+        style={{ "--ratio": String(item.height / item.width) }}
         alt={item.alt}
         width={item.width}
         height={item.height}
@@ -174,7 +176,8 @@ function Video({ id, fill }: { id: string; fill: boolean }) {
       data-zoom
     >
       <video
-        {...stylex.props(ui.edge, styles.image, fill && styles.cover)}
+        {...stylex.props(ui.edge, styles.image, styles.onGrid, fill && styles.cover)}
+        style={{ "--ratio": String(item.height / item.width) }}
         width={item.width}
         height={item.height}
         poster={sources(id).src}
@@ -190,22 +193,18 @@ function Video({ id, fill }: { id: string; fill: boolean }) {
   );
 }
 
-// The case pages' column, 544px. Two images in a row share it, less their 24px gap. From 944px
-// (`media.banner`) a banner is one layout gap wider on each side (`space.bannerColumn`), 640px.
+// The case pages' column: five fields, 624px from 944px up (the 880px layout and its 32px
+// margins); between 768px and 943px the viewport less the margins, the sidebar and its gutter.
+// Two images in a row share it, less their 24px gap. A banner spans the same fields as the text.
 // Phones (`media.mobile`, to 767px) take the viewport less the two 12px gutters, up to the
-// column's 544px, where the page centres on it (`layout.tsx`).
+// column's 624px, where the page centres on it (`layout.tsx`).
 const singleSizes =
-  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(100vw - 336px), 544px";
+  "(max-width: 767px) min(calc(100vw - 24px), 624px), (max-width: 943px) calc(100vw - 320px), 624px";
 const gridSizes =
-  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(50vw - 178px), 260px";
-const bannerSizes =
-  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(100vw - 336px), (max-width: 943px) 544px, 640px";
-const bannerGridSizes =
-  "(max-width: 767px) min(calc(100vw - 24px), 544px), (max-width: 876px) calc(50vw - 178px), (max-width: 943px) 260px, 308px";
+  "(max-width: 767px) min(calc(100vw - 24px), 624px), (max-width: 943px) calc(50vw - 172px), 300px";
 
-/** The `sizes` of an image in a banner or not, alone or one of a row of two. */
-export function sizesFor(banner: boolean, grid: boolean): string {
-  if (banner) return grid ? bannerGridSizes : bannerSizes;
+/** The `sizes` of an image alone or one of a row of two. */
+export function sizesFor(grid: boolean): string {
   return grid ? gridSizes : singleSizes;
 }
 
@@ -237,7 +236,7 @@ function Figures({
 }) {
   const grid = items.length > 1;
   return (
-    <div {...stylex.props(styles.media, grid && styles.grid, banner && styles.bleed)}>
+    <div {...stylex.props(styles.media, grid && styles.grid)}>
       {items.map(({ id, caption }, index) => (
         <figure
           {...stylex.props(
@@ -253,7 +252,7 @@ function Figures({
               component={Terminal}
               props={{
                 fill: banner,
-                wallpaper: { ...sources("heph-forge"), sizes: sizesFor(banner, grid) },
+                wallpaper: { ...sources("heph-forge"), sizes: sizesFor(grid) },
               }}
             />
           ) : id === "curves-demo" ? (
@@ -275,12 +274,7 @@ function Figures({
           ) : media[id]?.video ? (
             <Video id={id} fill={banner} />
           ) : (
-            <Image
-              id={id}
-              sizes={sizesFor(banner, grid)}
-              eager={eager && index === 0}
-              fill={banner}
-            />
+            <Image id={id} sizes={sizesFor(grid)} eager={eager && index === 0} fill={banner} />
           )}
           {caption && (
             <figcaption {...stylex.props(styles.small, styles.caption)}>
@@ -620,8 +614,8 @@ export const styles = stylex.create({
   /** Set with `ui.outbound` and `ui.respond`. */
   link: { color: { default: colors.article, ":focus-visible": colors.primary } },
   /**
-   * Inline code: the code size on its sentence's line (`line-height: inherit`), so it never spreads
-   * the lines. On `ui.codeSurface` with `ui.edge`. An inline box is as tall as its font's glyph
+   * Inline code: the code size on its sentence's line, never spreading the lines (`lineHeight: 1`).
+   * On `ui.codeSurface` with `ui.edge`. An inline box is as tall as its font's glyph
    * box: Commit Mono's ascent and descent are 0.9em and 0.2em, which browsers round to whole
    * pixels at 16px (14.4 → 14, 3.2 → 3), so 17px, and the descenders of g and y would touch the
    * edge. The padding fills it to the label's line, 20px: (20 - 17) / 2 = 1.5px each way, which
@@ -632,8 +626,10 @@ export const styles = stylex.create({
   code: {
     fontSize: typeScale.monoSize,
     fontWeight: typeScale.textWeight,
-    lineHeight: "inherit",
-    paddingBlock: `calc((${typeScale.labelLeading} - 17px) / 2)`,
+    // A box shorter than the line, so the mono face's own ascent and descent never push the line
+    // past 24px and the lines below off the baseline grid; padding and fill are unaffected.
+    lineHeight: 1,
+    paddingBlock: "calc((20px - 17px) / 2)",
     paddingInline: `calc(${space.unit} / 2)`,
     borderRadius: `calc(${space.radius} / 2)`,
     boxDecorationBreak: "clone",
@@ -644,15 +640,14 @@ export const styles = stylex.create({
   small: {
     color: colors.tertiary,
     fontSize: typeScale.labelSize,
-    lineHeight: typeScale.labelLeading,
+    lineHeight: space.linkLineHeight,
+    // A label's size on the text's line: onto the text's baseline, as `ui.label`.
+    position: "relative",
+    top: baseline.label,
     letterSpacing: typeScale.labelTracking,
   },
-  media: { width: "100%" },
-  /** A banner where it fits (`media.banner`): one layout gap past the text on each side. */
-  bleed: {
-    width: { default: null, [breakpoints.banner]: space.bannerColumn },
-    marginInline: { default: null, [breakpoints.banner]: `calc(-1 * ${space.layoutGap})` },
-  },
+  /** A row of figures; its width is what a banner's window height is taken from. */
+  media: { width: "100%", containerType: "inline-size" },
   grid: {
     display: "grid",
     gridTemplateColumns: {
@@ -661,15 +656,19 @@ export const styles = stylex.create({
     },
     gap: space.sectionGap,
   },
-  figure: { minWidth: 0 },
+  /** A figure's width is what its image's rounded height is taken from (`onGrid`). */
+  figure: { minWidth: 0, containerType: "inline-size" },
   /**
    * A banner's window on desktop: 4:3, but never so tall that the first heading leaves the first
-   * screen. Every case page's text starts at the same height; the artwork is cut at the window's
-   * edge and keeps going past it.
+   * screen, and rounded down to a unit so the text under it stays on the baseline grid. Every
+   * case page's text starts at the same height; the artwork is cut at the window's edge and keeps
+   * going past it.
    */
   window: {
-    aspectRatio: { default: null, [breakpoints.desktop]: "4 / 3" },
-    maxHeight: { default: null, [breakpoints.desktop]: "calc(100svh - 240px)" },
+    height: {
+      default: null,
+      [breakpoints.desktop]: `round(down, min(calc(100cqi * 3 / 4), calc(100svh - 240px)), ${space.unit})`,
+    },
     overflow: "hidden",
     borderRadius: space.radius,
   },
@@ -688,12 +687,18 @@ export const styles = stylex.create({
   /** Fills the banner window on desktop: artwork is cropped, a mark is shown whole. */
   fill: { height: { default: null, [breakpoints.desktop]: "100%" } },
   cover: {
-    height: { default: "auto", [breakpoints.desktop]: "100%" },
+    height: {
+      default: `round(nearest, calc(100cqi * var(--ratio)), ${space.unit})`,
+      [breakpoints.desktop]: "100%",
+    },
     objectFit: "cover",
     objectPosition: "50% 0",
   },
   contain: {
-    height: { default: "auto", [breakpoints.desktop]: "100%" },
+    height: {
+      default: `round(nearest, calc(88cqi * var(--ratio)), ${space.unit})`,
+      [breakpoints.desktop]: "100%",
+    },
     objectFit: "contain",
   },
   /** Every image and recording takes the surface corner; `zoom.ts` carries it into the enlargement. */
@@ -704,6 +709,19 @@ export const styles = stylex.create({
     borderRadius: space.radius,
     userSelect: "none",
     WebkitUserDrag: "none",
+  },
+  /**
+   * An image or recording at its own ratio (`--ratio`), its height rounded to the nearest unit,
+   * cropping at most half a unit, so the caption and the text below stay on the baseline grid.
+   */
+  onGrid: {
+    height: `round(nearest, calc(100cqi * var(--ratio)), ${space.unit})`,
+    objectFit: "cover",
+  },
+  /** The same for a mark, which is 88% of its figure's width (`mark`). */
+  markOnGrid: {
+    height: `round(nearest, calc(88cqi * var(--ratio)), ${space.unit})`,
+    objectFit: "contain",
   },
   /** The button around each image; `zoom.ts` enlarges it on click where there is room. */
   zoom: {

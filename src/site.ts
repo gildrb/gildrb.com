@@ -35,13 +35,26 @@ export const contacts: readonly Link[] = [
   { label: "X", href: "https://x.com/gildrb_" },
 ];
 
+/**
+ * Which homepage group a row belongs to. Projects are software Gil makes and maintains: the table
+ * shows what each is (`descriptor`) and where it runs (`platform`), set right where a date would
+ * be; no date. Design is work for clients and older studies: the table shows what was made
+ * (`work`) and the date. The full `description` is every row's link description, for screen
+ * readers and agents.
+ */
+export type Group = { $: "Projects"; platform: string } | { $: "Design"; work: string };
+
+/** The homepage's groups, in order. */
+export const groups: readonly Group["$"][] = ["Projects", "Design"];
+
 type Row = {
   date: string;
   title: string;
-  /** What the client or product is, in at most four words: the table's Subject column. */
+  /** What the client or product is, in at most four words: feeds, llms.txt and JSON-LD. */
   descriptor: string;
-  /** Facts, no tense, no narration; homepage and "View next" rows carry it as the link's description. */
+  /** Facts, no tense, no narration; a project's line in the homepage table, every row's link description. */
   description: string;
+  group: Group;
   /** The source code, shown right under the opening: it says the work is open source. */
   repository: `https://github.com/${string}` | null;
   /** Where else the work lives or was posted (site, posts, people): the end of the page. */
@@ -69,6 +82,7 @@ export const cases: readonly Case[] = [
     name: "Local Studio",
     headline: "Local Studio: brand and website for private AI on your Mac",
     descriptor: "On-device AI for Mac",
+    group: { $: "Design", work: "Brand and website" },
     repository: null,
     links: [{ label: "Site", href: "https://localstudio.gildrb.com/" }],
     description: "Brand and website for Local Studio, private AI on a Mac.",
@@ -82,6 +96,7 @@ export const cases: readonly Case[] = [
     name: "T3",
     headline: "T3: logomark studies by Gil Rodrigues",
     descriptor: "Coding agent client",
+    group: { $: "Design", work: "Logomark studies" },
     repository: null,
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2080990301208952994" }],
     description: "T3 logomark studies: product marks, icons and rejected directions.",
@@ -95,6 +110,7 @@ export const cases: readonly Case[] = [
     name: "Ben Davis",
     headline: "Ben Davis: a db monogram and the davis7.sh website",
     descriptor: "Developer and YouTuber",
+    group: { $: "Design", work: "Logo and website" },
     repository: null,
     links: [
       { label: "Site", href: "https://davis7.gildrb.com/" },
@@ -113,12 +129,26 @@ export const cases: readonly Case[] = [
     name: "Heph",
     headline: "Heph: answers from your files, with every quote checked",
     descriptor: "Local document agent",
+    group: { $: "Projects", platform: "macOS, Linux" },
     repository: "https://github.com/gildrb/heph-agent",
     links: [],
-    description:
-      "Answers from the files in a folder. Every cited quote is checked against its source.",
+    description: "Answers from the files in a folder, every quote checked against its source.",
     ogDescription: "Answers from the files in a folder, every quote checked.",
     ogImage: "gil-rodrigues-heph-answer-1600.webp",
+  },
+  {
+    slug: "elpis",
+    date: "2026-09-03",
+    title: "Elpis",
+    name: "Elpis",
+    headline: "Elpis: the fastest 4-bit Qwen3.8-27B on one RTX 3090",
+    descriptor: "Local LLM inference",
+    group: { $: "Projects", platform: "Linux, RTX 3090" },
+    repository: "https://github.com/gildrb/elpis",
+    links: [],
+    description: "The fastest 4-bit Qwen3.8-27B on one RTX 3090, every speedup quality gated.",
+    ogDescription:
+      "Qwen3.8-27B on one RTX 3090: 1,221 tok/s prefill, 126 tok/s decode, 262K context, every speedup gated on quality.",
   },
   {
     slug: "filen",
@@ -127,6 +157,7 @@ export const cases: readonly Case[] = [
     name: "Filen",
     headline: "Filen: identity concept by Gil Rodrigues",
     descriptor: "Encrypted cloud storage",
+    group: { $: "Design", work: "Identity concept" },
     repository: null,
     links: [{ label: "X", href: "https://x.com/gildrb_/status/2021242178727452998" }],
     description: "Identity concept for Filen: wordmark, app icon and campaign.",
@@ -136,10 +167,11 @@ export const cases: readonly Case[] = [
   {
     slug: "n0thing",
     date: "2019-11-15",
-    title: "Jordan Gilbert",
+    title: "n0thing",
     name: "Jordan Gilbert",
     headline: "Jordan Gilbert: a pixel wordmark for n0thing",
     descriptor: "Counter-Strike player",
+    group: { $: "Design", work: "Pixel wordmark" },
     repository: null,
     links: [{ label: "n0thing", href: "https://www.n0thing.gg/" }],
     description:
@@ -154,6 +186,7 @@ export const cases: readonly Case[] = [
     name: "CURVES",
     headline: "CURVES: a free geometric display typeface by Gil Rodrigues",
     descriptor: "Geometric display typeface",
+    group: { $: "Design", work: "Display typeface" },
     repository: null,
     links: [
       { label: "DaFont", href: "https://www.dafont.com/curves.font" },
@@ -166,10 +199,11 @@ export const cases: readonly Case[] = [
   {
     slug: "ml7",
     date: "2018-11-13",
-    title: "Mihai Lupascu",
+    title: "mL7",
     name: "Mihai Lupascu",
     headline: "Mihai Lupascu: a compact channel logo by Gil Rodrigues",
     descriptor: "Overwatch streamer",
+    group: { $: "Design", work: "Channel logo" },
     repository: null,
     links: [{ label: "Twitch", href: "https://www.twitch.tv/ml7support" }],
     description: "Channel logo for Overwatch streamer mL7.",
@@ -222,6 +256,7 @@ export const products: readonly Product[] = [
     title: "Eukhe",
     name: "Eukhe",
     descriptor: "Coding agent",
+    group: { $: "Projects", platform: "macOS, Linux" },
     links: [],
     home: "https://eukhe.com",
     // eukhe.com itself is the eukhe-site Worker (gildrb/eukhe-site), which also redirects www.
@@ -243,6 +278,7 @@ export const products: readonly Product[] = [
     title: "Archetypon",
     name: "Archetypon",
     descriptor: "SVG asset converter",
+    group: { $: "Projects", platform: "Browser" },
     links: [],
     home: "https://archetypon.gildrb.com",
     aliases: [],
@@ -260,12 +296,12 @@ export const products: readonly Product[] = [
     title: "Poros",
     name: "Poros",
     descriptor: "Remote dev servers",
+    group: { $: "Projects", platform: "macOS, Linux" },
     links: [],
     home: "https://poros.gildrb.com",
     aliases: [],
     headline: "Poros: open your server's dev server on your Mac or phone over Tailscale",
-    description:
-      "A server's dev server on a Mac, phone or tablet: one command, one private HTTPS link on the tailnet.",
+    description: "One command, one private HTTPS link to a dev server on your tailnet.",
     repository: "https://github.com/gildrb/poros",
     category: "DeveloperApplication",
     operatingSystem: "macOS, Linux",
@@ -286,12 +322,31 @@ const externals: readonly External[] = [];
  */
 export type Project = Row & { href: string; external: boolean };
 
-/** Homepage rows, newest first. */
+/**
+ * Homepage rows: Projects first, then Design, each newest first. Software Gil maintains comes
+ * before client work and studies, whatever their dates.
+ */
 export const projects: readonly Project[] = [
   ...cases.map((item) => ({ ...item, href: `/${item.slug}`, external: false })),
   ...products.map((item) => ({ ...item, href: `${item.home}/`, external: false })),
   ...externals.map((item) => ({ ...item, external: true })),
-].toSorted((left, right) => right.date.localeCompare(left.date));
+].toSorted(
+  (left, right) =>
+    groupRank(left.group) - groupRank(right.group) || right.date.localeCompare(left.date),
+);
+
+function groupRank(group: Group): number {
+  switch (group.$) {
+    case "Projects":
+      return 0;
+    case "Design":
+      return 1;
+    default: {
+      const _: never = group;
+      return _;
+    }
+  }
+}
 
 export const slugs = cases.map((item) => item.slug);
 

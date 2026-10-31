@@ -3,34 +3,47 @@ import * as stylex from "@stylexjs/stylex";
 const light = "@media (prefers-color-scheme: light)";
 
 /**
- * The layout's one unit, in px: every desktop width and gap is a whole multiple of it, and a
- * line (24px) is three. The title column takes 14 units, enough for a person's full name at the
- * emphasis weight ("Mihai Lupascu" is 108px); the descriptor column is the remainder, 28 units
- * at full width.
+ * The layout's one unit, in px: every width and gap is a whole multiple of it, and a line (24px)
+ * is three.
+ *
+ * Columns come from one field grid: fields of 14 units (112px) with gutters of 2 units (16px),
+ * seven across the desktop layout (880px). The sidebar takes fields 1 and 2, the text fields 3
+ * to 7. In the tables the title takes a field and the descriptor starts on the next one, so every
+ * left edge on a page lands on a field: the name and sidebar, About and the project names, the
+ * descriptors; the dates end on the last field's right edge. 112px fits a project's name at the
+ * emphasis weight ("Local Studio" is 99px).
  */
 const unit = 8;
+const field = 14 * unit;
+const gutter = 2 * unit;
 /** The share image's date column (`og.tsx`), which cannot size to its figures as the page does. */
 const dateColumn = `${12 * unit}px`;
-const titleColumn = `${14 * unit}px`;
-const tableGap = `${2 * unit}px`;
+const titleColumn = `${field}px`;
+const tableGap = `${gutter}px`;
 
 /**
- * Text cut by its box's right edge fades out over the last table gap instead: a looping
- * descriptor (`row.tsx`), a command wider than its block (`command.tsx`). A `mask-image`.
+ * Text cut by its box's edge fades out instead. `end`: over the last table gap, for a command
+ * wider than its block (`command.tsx`). `both`: also over a unit at the start, for a scrolling
+ * descriptor (`row.tsx`). A `mask-image`.
  */
 export const fade = stylex.defineConsts({
   end: `linear-gradient(to right, black calc(100% - ${tableGap}), transparent)`,
+  both: `linear-gradient(to right, transparent, black ${unit}px, black calc(100% - ${tableGap}), transparent)`,
 });
 
+/**
+ * Shifts that put a label's and a heading's baseline on the text's (`ui.label`, `ui.heading`).
+ * In a 24px line box, Inter's baseline sits `(line - (ascent + descent) × size) / 2 + ascent ×
+ * size` from the top (ascent 1984/2048, descent 494/2048): 17.81px at 16px, 17.08px at 14px,
+ * 19.99px at 22px. The difference is `(16 - size) × 0.36377`.
+ */
+export const baseline = stylex.defineConsts({
+  label: "0.7275px",
+  heading: "-2.1826px",
+});
 export const media = stylex.defineConsts({
   mobile: "@media (max-width: 767px)",
   desktop: "@media (min-width: 768px)",
-  /**
-   * Room for the banner to break out (`space.bannerColumn`): the centred block (832px) plus one
-   * layout gap on each side (928px) plus the 16px a classic scrollbar once took. Narrower, the
-   * banner keeps the text's width rather than running past the viewport.
-   */
-  banner: "@media (min-width: 944px)",
   hover: "@media (hover: hover)",
   motion: "@media screen and (prefers-reduced-motion: no-preference)",
 });
@@ -119,7 +132,6 @@ export const motion = stylex.defineConsts({
 export const typeScale = stylex.defineConsts({
   /** Labels: section names (About, Contact, Links), table headers, captions, small print. */
   labelSize: "14px",
-  labelLeading: "20px",
   labelTracking: "-0.006em",
   /** Interface and running text: links, table rows, paragraphs. */
   textSize: "16px",
@@ -241,38 +253,44 @@ export const space = stylex.defineVars({
    */
   focusOffset: `${unit / 2}px`,
   sectionGap: "24px",
-  sectionContentGap: "6px",
-  /** Intro to lists: the name to the links, About to the table. One sidebar pitch. */
+  sectionContentGap: "8px",
+  /**
+   * Desktop: the gap between two groups, from the last line's box to the next group's first line:
+   * one empty line on the line interval (`sidebarBaselinePitch`), plus the interval's own gap.
+   * About to the table, Projects to Design, Contact to Links: every baseline stays on one grid.
+   */
+  groupGap: "calc(2rem + 2rem - 1.5rem)",
+  /** Below the project table on desktop: one sidebar pitch. */
   textMediaGap: "32px",
   linkLineHeight: { default: "24px", "@media (min-width: 768px)": "1.5rem" },
-  /** The sidebar's line-to-line distance, and the gap between its two groups. */
+  /**
+   * Desktop: the one line interval of the homepage, 32px, in both columns: sidebar links, table
+   * rows, labels and the About lines all stand a whole interval apart.
+   */
   sidebarBaselinePitch: "2rem",
   /**
-   * The smallest thing a finger should have to hit. On phones every table row and the table
-   * header is exactly this tall.
+   * The smallest thing a finger should have to hit, on the 8px grid: six units. On phones every
+   * table row and group label is exactly this tall, so phone lines stay on the grid too.
    */
-  touchTarget: "44px",
+  touchTarget: "48px",
   /** Pads a phone line (24px) out to a touch target. */
-  touchInset: "calc((44px - 24px) / 2)",
+  touchInset: "calc((48px - 24px) / 2)",
   /**
-   * Between two lines of a link list: the sidebar pitch less a line on desktop; on phones the
-   * compact list's own gap (the section content gap), which keeps the whole table on screen.
+   * Between two lines of a link list: the line interval less a line, one unit on every screen.
    * Links pad into half of it, so their hit areas meet with no dead space between them.
    */
-  linkGap: { default: "calc(2rem - 1.5rem)", "@media (max-width: 767px)": "6px" },
-  portfolioRowPadding: "calc((2.5rem - 1.5rem) / 2)",
+  linkGap: "calc(2rem - 1.5rem)",
+  /** Pads a line (24px) out to the line interval (32px) on desktop: a table row. */
+  portfolioRowPadding: "calc((2rem - 1.5rem) / 2)",
   toggleSize: "32px",
   /** The page's inset from the viewport edge on desktop: top of the sidebar and content, bottom of the footer. */
   pageInset: "48px",
-  sidebarColumn: `${30 * unit}px`,
-  contentColumn: `${68 * unit}px`,
-  layoutGap: `${6 * unit}px`,
-  /**
-   * Case pages' banner where it fits (`media.banner`): the content column plus one layout gap on
-   * each side, so it stands out from the text while staying symmetric about it and clear of the
-   * sidebar. 80 units.
-   */
-  bannerColumn: `${(68 + 2 * 6) * unit}px`,
+  /** Two fields and their gutter. */
+  sidebarColumn: `${2 * field + gutter}px`,
+  /** Five fields and their gutters. */
+  contentColumn: `${5 * field + 4 * gutter}px`,
+  /** One gutter: the text starts on the field after the sidebar's. */
+  layoutGap: `${gutter}px`,
   /**
    * One unit: the corner of every surface: archive tiles, case images and banners (the demos'
    * frames too), code blocks, the shell block and Archetypon's previews. One corner, so the
@@ -294,17 +312,16 @@ export const space = stylex.defineVars({
    * what is left.
    */
   projectColumns: {
-    default: `${titleColumn} minmax(max-content, 1fr) max-content`,
+    default: `${titleColumn} minmax(0, 1fr) max-content`,
     "@media (max-width: 767px)": "max-content minmax(0, 1fr) max-content",
   },
   /**
-   * A settings table (Archetypon's formats): the name in the title column, so it lines up with
-   * the project names; then three equal columns, the last value set right on the table's edge.
-   * Desktop: 112px, then 128px each with the 16px gaps, so every column starts on a unit (0, 128,
-   * 272, 416). A column never gets narrower than its values.
+   * A settings table (Archetypon's formats) on the fields: the name in the title field, so it
+   * lines up with the project names; then one field per setting, the last taking the rest, its
+   * value set right on the table's edge. A column never gets narrower than its values.
    */
   settingsColumns: {
-    default: `${titleColumn} repeat(3, minmax(max-content, 1fr))`,
+    default: `${titleColumn} ${field}px ${field}px minmax(max-content, 1fr)`,
     "@media (max-width: 767px)": "max-content repeat(3, minmax(max-content, 1fr))",
   },
 });

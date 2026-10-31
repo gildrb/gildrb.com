@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import {
+  baseline,
   colors,
   figureUnits,
   fontFeatures,
@@ -81,7 +82,9 @@ export const ui = stylex.create({
   },
   /**
    * A label over a group: section names, table headers, captions. The label size on the text's
-   * line box, so a label row keeps the rhythm of the rows under it.
+   * line box, so a label row keeps the rhythm of the rows under it. In the same line box a
+   * smaller size sets its baseline higher: `baseline.label` moves it down onto the text's
+   * baseline, so every line on a page shares one baseline grid.
    */
   label: {
     fontSize: typeScale.labelSize,
@@ -89,13 +92,16 @@ export const ui = stylex.create({
     lineHeight: space.linkLineHeight,
     letterSpacing: typeScale.labelTracking,
     color: colors.tertiary,
+    position: "relative",
+    top: baseline.label,
   },
   /** The thing named, against what is said about it: project titles, the page in the breadcrumb. */
   emphasis: { fontWeight: typeScale.emphasisWeight },
   /**
    * The step above text, on the text's line: the name (on every page, in one place), the page's
    * title under it, and a page's part headings. Pixel-fixed on phones, `rem`-scaled from tablets
-   * up, as `text` is.
+   * up, as `text` is. A larger size in the same line box sets its baseline lower: `baseline.heading`
+   * lifts it onto the text's baseline.
    */
   heading: {
     fontSize: { default: typeScale.headingSize, [media.desktop]: "1.375rem" },
@@ -104,6 +110,8 @@ export const ui = stylex.create({
     letterSpacing: typeScale.headingTracking,
     color: colors.primary,
     textWrap: "balance",
+    position: "relative",
+    top: baseline.heading,
   },
   /** Running text: no line ends on a lone word, and hyphens sit among lowercase letters. */
   prose: { textWrap: "pretty", fontFeatureSettings: fontFeatures.prose },

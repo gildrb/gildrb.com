@@ -13,16 +13,20 @@ import {
 import { Figures, ui, untranslated } from "./ui.tsx";
 
 /**
- * One project in a three-column subgrid: title, descriptor, and the date set right, which closes
- * the row on its right edge. The parent grid owns the columns; `home` rows live in the homepage
- * table, the others in the case pages' next-project lists, and both look the same: no glyph, the
- * row under the pointer or in focus brightens (`ui.respond`). A row that leaves the site
- * underlines its title, as the article links do. The link is named by its title, descriptor and
- * date, and described by its description.
+ * One project in a three-column subgrid. The parent grid owns the columns; `home` rows live in
+ * the homepage table, the others in the case pages' next-project lists, and both look the same:
+ * no glyph, the row under the pointer or in focus brightens (`ui.respond`). A row that leaves the
+ * site underlines its title, as the article links do. Every row: the title, a short noun phrase,
+ * and a fact set right, closing the row on its right edge.
+ * - Projects: what it is (`descriptor`) and where it runs (`platform`). No date: what it does
+ *   matters, not when it started.
+ * - Design: what was made (`work`) and the date.
+ * Named by what it shows; the full `description` describes it.
  */
 export function Row({ project, first, home }: { project: Project; first: boolean; home: boolean }) {
-  const Title = home ? "h3" : "span";
+  const Title = home ? "h4" : "span";
   const id = useId();
+  const { group } = project;
   return (
     <a
       {...stylex.props(
@@ -33,8 +37,8 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         !home && styles.next,
       )}
       href={project.href}
-      // Named by what it shows, in reading order (title, descriptor, date); the sentence describes.
-      aria-labelledby={`${id}-title ${id}-descriptor ${id}-date`}
+      // Named by what it shows, in reading order; the full sentence describes it.
+      aria-labelledby={`${id}-title ${id}-descriptor ${id}-end`}
       aria-describedby={`${id}-description`}
     >
       <Title
@@ -50,38 +54,44 @@ export function Row({ project, first, home }: { project: Project; first: boolean
         {project.title}
       </Title>
       <span
-        {...stylex.props(ui.text, descriptorMarker, styles.descriptor)}
+        {...stylex.props(
+          ui.text,
+          descriptorMarker,
+          styles.descriptor,
+          group.$ === "Projects" && styles.wideOnPhones,
+        )}
         id={`${id}-descriptor`}
         data-descriptor
       >
-        {/* The loop's copy is the track's `::after`, drawn from `data-copy`, which `descriptor.ts`
-            sets only when the descriptor loops: page text, crawlers and screen readers get it once. */}
-        <span {...stylex.props(styles.track, styles.copy)}>{project.descriptor}</span>
-      </span>
-      <time
-        {...stylex.props(ui.text, styles.cell, styles.date)}
-        id={`${id}-date`}
-        dateTime={project.date}
-      >
-        <Figures text={project.date.slice(0, 7)} />
-        <span {...stylex.props(home ? styles.dayHome : styles.dayNext)}>
-          <Figures text={project.date.slice(7)} />
+        <span {...stylex.props(styles.track)}>
+          {group.$ === "Design" ? group.work : project.descriptor}
         </span>
-      </time>
+      </span>
+      {group.$ === "Design" ? (
+        <time
+          {...stylex.props(ui.text, styles.cell, styles.date)}
+          id={`${id}-end`}
+          dateTime={project.date}
+        >
+          <Figures text={project.date.slice(0, 4)} />
+          <span {...stylex.props(styles.monthDay)}>
+            <Figures text={project.date.slice(4)} />
+          </span>
+        </time>
+      ) : (
+        <span
+          {...stylex.props(ui.text, styles.cell, styles.date, styles.platform)}
+          id={`${id}-end`}
+        >
+          {group.platform}
+        </span>
+      )}
       <span {...stylex.props(ui.srOnly)} id={`${id}-description`}>
         {project.description}
       </span>
     </a>
   );
 }
-
-const narrowTable = "@container (max-width: 25rem)";
-
-/** One round: rest a moment, then move left by one text and gap, where the copy takes over. */
-const marquee = stylex.keyframes({
-  "0%, 20%": { transform: "translateX(0)" },
-  "100%": { transform: "translateX(calc(-1 * var(--marquee-distance)))" },
-});
 
 const styles = stylex.create({
   row: {
@@ -130,32 +140,21 @@ const styles = stylex.create({
     paddingInlineEnd: 0,
   },
   /**
-   * Narrow rows show the month; the day stays readable to assistive tech. The hidden day is pinned
-   * inside the date: placed after the month, it would stand 1px past the row, which on phones is
-   * the scrolling list's edge, and the list would scroll sideways.
+   * Phones show the year alone, so the description keeps its room; the month and day stay in the
+   * row's accessible name (`aria-labelledby` reads hidden text) and in `dateTime`.
    */
-  dayHome: {
-    position: { default: null, [media.mobile]: "absolute", [narrowTable]: "absolute" },
-    insetInlineEnd: { default: null, [media.mobile]: 0, [narrowTable]: 0 },
-    width: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
-    height: { default: null, [media.mobile]: "1px", [narrowTable]: "1px" },
-    overflow: { default: null, [media.mobile]: "hidden", [narrowTable]: "hidden" },
-    clipPath: { default: null, [media.mobile]: "inset(50%)", [narrowTable]: "inset(50%)" },
-  },
-  dayNext: {
-    position: { default: null, [media.mobile]: "absolute" },
-    width: { default: null, [media.mobile]: "1px" },
-    height: { default: null, [media.mobile]: "1px" },
-    overflow: { default: null, [media.mobile]: "hidden" },
-    clipPath: { default: null, [media.mobile]: "inset(50%)" },
-  },
+  monthDay: { display: { default: "inline", [media.mobile]: "none" } },
+  /** Where a project runs: desktop only; on a phone the descriptor takes its room. */
+  platform: { display: { default: "block", [media.mobile]: "none" } },
+  /** Phones: a project's descriptor takes the hidden platform's column too. */
+  wideOnPhones: { gridColumn: { default: 2, [media.mobile]: "2 / -1" } },
   /** The thing named, at the emphasis weight; the descriptor and date beside it stay at the text's. */
   title: { gridColumn: 1, margin: 0, color: colors.primary, fontWeight: typeScale.emphasisWeight },
   descriptor: {
     gridColumn: 2,
     gridRow: 1,
-    // Phones are too narrow for the longest pair beside a full row. A descriptor that does not fit
-    // runs past in a loop (`descriptor.ts`); until then, or with motion reduced, it ellipsizes.
+    // A descriptor that still does not fit scrolls to its end, fades and starts over
+    // (`descriptor.ts`); until then, or with motion reduced, it ellipsizes.
     minWidth: { default: null, [media.mobile]: 0 },
     overflow: { default: null, [media.mobile]: "hidden" },
     whiteSpace: { default: null, [media.mobile]: "nowrap" },
@@ -164,21 +163,28 @@ const styles = stylex.create({
       [media.mobile]: "ellipsis",
       ":is([data-marquee])": { [media.motion]: "clip" },
     },
-    // While it loops, the text fades in and out at the cell's right edge instead of being cut.
+    // While it scrolls, the text fades at both edges instead of being cut: on the right over the
+    // last table gap, on the left over a unit reaching into the gap beside the title, so the
+    // text's resting place does not move.
     maskImage: {
       default: null,
-      ":is([data-marquee])": {
-        [media.motion]: fade.end,
-      },
+      ":is([data-marquee])": { [media.motion]: fade.both },
+    },
+    marginInlineStart: {
+      default: null,
+      ":is([data-marquee])": { [media.motion]: `calc(-1 * ${space.unit})` },
+    },
+    paddingInlineStart: {
+      default: null,
+      ":is([data-marquee])": { [media.motion]: space.unit },
     },
     // The row's own colour (grey, full contrast on its hover or focus), inherited, so the subject
     // fades with the row on leaving; a colour of its own here would switch at once.
     color: "inherit",
   },
   /**
-   * Phones, a descriptor wider than its cell (`descriptor.ts` sets `data-marquee` and the distance): the
-   * text and its copy (`::after`) run left in a loop, one gap apart, resting a moment between rounds, so the
-   * title keeps its room and the descriptor is read in full by waiting. Motion reduced, it stays
+   * A descriptor wider than its cell (`descriptor.ts` sets `data-marquee` and runs the round):
+   * the text as one box, so it can move as one. Motion reduced, it never moves and stays
    * ellipsized.
    */
   track: {
@@ -186,30 +192,7 @@ const styles = stylex.create({
       default: "inline",
       [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
         default: "inline",
-        [media.motion]: "inline-flex",
-      },
-    },
-    columnGap: "var(--marquee-gap, 0px)",
-    animationName: {
-      default: null,
-      [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
-        default: null,
-        [media.motion]: marquee,
-      },
-    },
-    animationDuration: "var(--marquee-time, 0s)",
-    animationTimingFunction: "linear",
-    animationIterationCount: "infinite",
-  },
-  copy: {
-    "::after": {
-      content: "attr(data-copy)",
-      display: {
-        default: "none",
-        [stylex.when.ancestor("[data-marquee]", descriptorMarker)]: {
-          default: "none",
-          [media.motion]: "inline",
-        },
+        [media.motion]: "inline-block",
       },
     },
   },

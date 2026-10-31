@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import { decompress } from "wawoff2";
-import { contacts, email, person, profiles, projects } from "./site.ts";
+import { contacts, email, groups, person, profiles, projects } from "./site.ts";
 import { colors, figureUnits, space, typeScale } from "./tokens.stylex.ts";
 
 /**
@@ -163,38 +163,90 @@ function Page({ css }: { css: string }) {
   const link = (label: string) => (
     <span style={{ ...text, color: color(colors.tertiary) }}>{label}</span>
   );
-  // One column per table column, at the page's widths: project and the end slot are fixed,
-  // subject takes the rest, the date sets its cells flush right. Date is the active sort, so its
-  // head is full contrast. The end slot is empty, as on the page.
-  const column = (
-    head: preact.ComponentChildren,
-    headColor: string,
-    cells: preact.ComponentChildren[],
-    width: number | "grow",
-    end = false,
-  ) => {
-    const cell = {
-      display: "flex",
-      ...(end && { justifyContent: "flex-end" }),
-      ...text,
-    };
-    return (
+  // One line per row, at the page's widths: the title column, then what fills the rest; a design
+  // row sets its year flush right in the date column. Hairlines drawn inside, as on the page:
+  // under a group's label, and at the top of every row after a group's first.
+  const cell = { display: "flex", ...text };
+  const table = groups.flatMap((group, groupIndex) => [
+    <div
+      key={group}
+      style={{
+        ...cell,
+        position: "relative",
+        height: header + (groupIndex > 0 ? length(space.groupGap) - rowPadding : 0),
+        paddingTop: groupIndex > 0 ? length(space.groupGap) - rowPadding : 0,
+        color: color(colors.secondary),
+      }}
+    >
+      {group}
       <div
         style={{
-          display: "flex",
-          flexDirection: "column",
-          ...(width === "grow" ? { flexGrow: 1, minWidth: 0 } : { width, flexShrink: 0 }),
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 1,
+          backgroundColor: hairline,
         }}
-      >
-        <div style={{ ...cell, height: header, color: headColor }}>{head}</div>
-        {cells.map((content, index) => (
-          <div key={index} style={{ ...cell, height: row, paddingTop: rowPadding }}>
-            {content}
-          </div>
-        ))}
-      </div>
-    );
-  };
+      />
+    </div>,
+    ...projects
+      .filter((project) => project.group.$ === group)
+      .map((project, index) => (
+        <div
+          key={project.href}
+          style={{
+            display: "flex",
+            position: "relative",
+            height: row,
+            paddingTop: rowPadding,
+            gap: tableGap,
+          }}
+        >
+          {index > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 1,
+                backgroundColor: hairline,
+              }}
+            />
+          )}
+          <span style={{ ...cell, width: length(space.titleColumn), flexShrink: 0 }}>
+            {project.title}
+          </span>
+          <span
+            style={{
+              ...cell,
+              flexGrow: 1,
+              minWidth: 0,
+              color: color(colors.tertiary),
+              whiteSpace: "nowrap",
+            }}
+          >
+            {project.group.$ === "Design" ? project.group.work : project.descriptor}
+          </span>
+          <span
+            style={{
+              ...cell,
+              flexShrink: 0,
+              justifyContent: "flex-end",
+              color: color(colors.tertiary),
+              whiteSpace: "nowrap",
+            }}
+          >
+            {project.group.$ === "Design" ? (
+              <IsoDate text={project.date} />
+            ) : (
+              project.group.platform
+            )}
+          </span>
+        </div>
+      )),
+  ]);
   return (
     <div
       style={{
@@ -213,7 +265,7 @@ function Page({ css }: { css: string }) {
         style={{
           display: "flex",
           gap: length(space.layoutGap),
-          marginBottom: length(space.textMediaGap),
+          marginBottom: length(space.groupGap),
         }}
       >
         {/* The heading size, as on the page; the weight stays 400, the one instance the share font carries. */}
@@ -235,7 +287,7 @@ function Page({ css }: { css: string }) {
             style={{
               ...text,
               color: color(colors.secondary),
-              marginBottom: length(space.sectionContentGap),
+              marginBottom: length(space.linkGap),
             }}
           >
             About
@@ -259,58 +311,11 @@ function Page({ css }: { css: string }) {
           <span style={{ ...text, color: color(colors.secondary), marginTop: pitch }}>Links</span>
           {profiles.map(({ label }) => link(label))}
         </div>
-        {/* Table, hairlines drawn inside each row as on the page. */}
+        {/* The table: Projects, then Design. */}
         <div
-          style={{
-            display: "flex",
-            position: "relative",
-            width: length(space.contentColumn),
-            gap: tableGap,
-          }}
+          style={{ display: "flex", flexDirection: "column", width: length(space.contentColumn) }}
         >
-          {/* Under the header, and at the top of every row after the first. */}
-          {[header - 1, ...projects.slice(1).map((_, index) => header + (index + 1) * row)].map(
-            (top) => (
-              <div
-                key={top}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top,
-                  height: 1,
-                  backgroundColor: hairline,
-                }}
-              />
-            ),
-          )}
-          {column(
-            "Project",
-            color(colors.secondary),
-            projects.map(({ title, href }) => <span key={href}>{title}</span>),
-            length(space.titleColumn),
-          )}
-          {column(
-            "Subject",
-            color(colors.secondary),
-            projects.map(({ descriptor, href }) => (
-              <span key={href} style={{ color: color(colors.tertiary), whiteSpace: "nowrap" }}>
-                {descriptor}
-              </span>
-            )),
-            "grow",
-          )}
-          {column(
-            "Date",
-            color(colors.primary),
-            projects.map(({ date, href }) => (
-              <span key={href} style={{ color: color(colors.tertiary) }}>
-                <IsoDate text={date} />
-              </span>
-            )),
-            length(space.dateColumn),
-            true,
-          )}
+          {table}
         </div>
       </div>
     </div>

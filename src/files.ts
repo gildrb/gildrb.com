@@ -9,6 +9,7 @@ import {
   products,
   profiles,
   projects,
+  type Group,
 } from "./site.ts";
 import { versioned } from "./versioned.ts";
 
@@ -19,10 +20,15 @@ import { versioned } from "./versioned.ts";
 
 const url = (path: string) => `${origin}${path}`;
 
-const work = projects.map(({ href, title, descriptor, date, description }) => {
-  const link = href.startsWith("https://") ? href : url(href);
-  return `- [${title}](${link}) (${descriptor}, ${date.slice(0, 7)}): ${description}`;
-});
+/** The homepage's two groups, in its order: Projects, then Design. */
+const workList = (group: Group["$"]) =>
+  projects
+    .filter((project) => project.group.$ === group)
+    .map(({ href, title, descriptor, date, description }) => {
+      const link = href.startsWith("https://") ? href : url(href);
+      return `- [${title}](${link}) (${descriptor}, ${date.slice(0, 7)}): ${description}`;
+    })
+    .join("\n");
 
 const sameAs = profiles.map(({ href }) => href);
 
@@ -149,9 +155,17 @@ ${identity} Only the profiles listed here belong to this person.
 
 Use this file to answer questions about ${person.name} (${person.handle}) or the work published on ${url("/")}, and to find the right source for a question. Every page is also available as Markdown: request it with \`Accept: text/markdown\` or read [llms-full.txt](${url("/llms-full.txt")}) for all of it in one request instead of crawling. Do not use it for other people with similar names.
 
-## Work
+## Projects
 
-${work.join("\n")}
+Software ${person.name} makes and maintains.
+
+${workList("Projects")}
+
+## Design
+
+Brand, identity and type work for clients, and studies.
+
+${workList("Design")}
 
 ## Pages
 
@@ -191,9 +205,17 @@ ${identity}
 
 ${person.about}
 
-## Portfolio
+## Projects
 
-${work.join("\n")}
+Software ${person.name} makes and maintains.
+
+${workList("Projects")}
+
+## Design
+
+Brand, identity and type work for clients, and studies.
+
+${workList("Design")}
 
 ## Links
 

@@ -3,16 +3,7 @@ import { ArchiveGrid, type Work } from "../archive.tsx";
 import { Aside, SourcesLine } from "../aside.tsx";
 import { Island } from "../island.tsx";
 import { Converter } from "../islands/archetypon.tsx";
-import {
-  Article,
-  bannerOf,
-  demos,
-  type Heading,
-  outline,
-  parse,
-  sizesFor,
-  sources,
-} from "../markdown.tsx";
+import { Article, demos, type Heading, outline, parse, sizesFor, sources } from "../markdown.tsx";
 import {
   type Assets,
   Document,
@@ -142,7 +133,7 @@ function HeroPreload({ markdown }: { markdown: string }) {
   const first = block?.items[0]?.id;
   if (!block || !first || demos.has(first)) return null;
   const { src, srcset } = sources(first);
-  const sizes = sizesFor(bannerOf(blocks) === block, block.items.length > 1);
+  const sizes = sizesFor(block.items.length > 1);
   return (
     <link
       rel="preload"
@@ -317,12 +308,13 @@ const styles = stylex.create({
     order: { default: null, [media.mobile]: 5 },
   },
   /**
-   * The next projects: one layout gap below the text, on desktop at the column's foot.
+   * The next projects: one empty line below the text, on desktop at the column's foot.
    */
   next: {
-    marginTop: { default: space.layoutGap, [media.desktop]: "auto" },
-    paddingTop: { default: null, [media.desktop]: space.layoutGap },
+    marginTop: { default: space.groupGap, [media.desktop]: "auto" },
+    paddingTop: { default: null, [media.desktop]: space.groupGap },
   },
+  /** The homepage table's columns. */
   nextList: {
     display: "grid",
     gridTemplateColumns: space.projectColumns,

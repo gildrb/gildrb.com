@@ -8,6 +8,7 @@ import { pageScrollbar } from "./scrollbar.ts";
 import { contacts, type Link, origin, person, profiles } from "./site.ts";
 import { previewScript, themeCss } from "./theme.ts";
 import {
+  baseline,
   colors,
   fontFeatures,
   media,
@@ -77,10 +78,13 @@ const globalCss = [
   "@media (min-width:40rem){[data-pagebar]{inset-block:7px;width:16px}[data-pagebar] .thumb{inset-inline:auto 0}}",
   "@media (pointer:coarse){[data-pagebar] .thumb{min-height:48px;transition-property:width,background-color,opacity;transition-duration:.3s,.14s,.6s;transition-timing-function:cubic-bezier(.22,1,.36,1),cubic-bezier(.2,.8,.2,1),cubic-bezier(.2,.8,.2,1)}[data-pagebar][data-shown] .thumb{transition-duration:.3s,.14s,90ms}}",
   "@media (prefers-reduced-motion:reduce){[data-pagebar] .thumb{transition-duration:.01ms!important}}",
+  // Where supported, the page's own scroll moves the thumb (`scrollbar.ts`), in step with it.
+  "@keyframes pagebar-travel{from{transform:translateY(0)}to{transform:translateY(var(--pagebar-travel,0px))}}",
+  "@supports (animation-timeline:scroll()){[data-pagebar] .thumb{animation:pagebar-travel linear both;animation-timeline:scroll(root block)}}",
 ].join("\n");
 
 // Also exposed for the font gate, which realigns with the final font before revealing.
-const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space.sectionContentGap.slice(4, -1))});window.__align()`;
+const alignScript = `window.__align=()=>(${align.toString()})(${scriptJson(space.linkGap.slice(4, -1))});window.__align()`;
 // The scrollbar must answer the first frame of scrolling, not the island script's module graph.
 const scrollbarScript = `(${pageScrollbar.toString()})()`;
 
@@ -527,19 +531,26 @@ const styles = stylex.create({
     // JavaScript measures the homepage intro and publishes its height, so the sidebar
     // lines up with the content column on every page.
     minHeight: { default: `calc(${space.linkLineHeight} * 2)`, [media.mobile]: 0 },
-    marginBottom: { default: space.textMediaGap, [media.mobile]: space.sectionGap },
+    marginBottom: { default: space.groupGap, [media.mobile]: space.sectionGap },
     alignContent: "start",
     gridColumn: { default: null, [media.mobile]: 1 },
     order: { default: null, [media.mobile]: 1 },
-    position: { default: null, [media.mobile]: "sticky" },
-    top: { default: null, [media.mobile]: 0 },
+    // Desktop keeps the heading's baseline shift (`ui.heading`); phones pin the name bar on top.
+    position: { default: "relative", [media.mobile]: "sticky" },
+    top: { default: baseline.heading, [media.mobile]: 0 },
     zIndex: { default: null, [media.mobile]: 100 },
     // iOS Safari tints its top bar from a fixed or sticky element at least 90% of the viewport
     // wide, then keeps that color after any tap, so the bar is only as wide as its text. It has
     // no background of its own: content passes behind it and the top bar follows the page.
     width: { default: null, [media.mobile]: "fit-content" },
     maxWidth: { default: null, [media.mobile]: "100%" },
-    padding: { default: null, [media.mobile]: `${space.sectionGap} 0 ${space.unit}` },
+    // Phones: the bar's top padding takes the heading's baseline shift (`baseline.heading`, which
+    // `top` cannot carry on a sticky bar) and the bottom padding gives it back, so the bar's
+    // height and everything under it stay put.
+    padding: {
+      default: null,
+      [media.mobile]: `calc(${space.sectionGap} + ${baseline.heading}) 0 calc(${space.unit} - ${baseline.heading})`,
+    },
   },
   homeName: {
     minHeight: {
@@ -564,9 +575,12 @@ const styles = stylex.create({
     flexDirection: "column",
     alignItems: "start",
     whiteSpace: "nowrap",
+    // Desktop: the page's title one line interval under the name, as the About line under its
+    // label on the homepage, so both columns keep one baseline grid on every page.
+    rowGap: { default: null, [media.desktop]: space.linkGap },
     minHeight: {
       default: null,
-      [media.desktop]: `var(--desktop-intro-height, calc(${space.linkLineHeight} * 2 + ${space.sectionContentGap}))`,
+      [media.desktop]: `var(--desktop-intro-height, calc(${space.linkLineHeight} * 2 + ${space.linkGap}))`,
       [media.mobile]: 0,
     },
   },

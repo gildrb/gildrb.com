@@ -944,6 +944,9 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: space.settingsColumns,
     columnGap: { default: space.tableGap, [media.mobile]: space.mobileTableGap },
+    // The header is a row padding short of a row (its line starts at the top), so the table ends
+    // a row padding early; this gives it back and keeps what follows on the baseline grid.
+    paddingBottom: { default: space.portfolioRowPadding, [media.mobile]: 0 },
   },
   /** A row on the table's columns and pitch, as the homepage's (`row.tsx`): a line and its padding. */
   row: {
@@ -1083,7 +1086,7 @@ const styles = stylex.create({
     padding: 0,
     listStyle: "none",
     fontSize: typeScale.labelSize,
-    lineHeight: typeScale.labelLeading,
+    lineHeight: space.linkLineHeight,
     letterSpacing: typeScale.labelTracking,
   },
   file: {
