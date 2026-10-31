@@ -17,6 +17,7 @@ import {
   typeScale,
 } from "./tokens.stylex.ts";
 import { type Style, ui, untranslated } from "./ui.tsx";
+import { Veil } from "./veil.tsx";
 import { versioned } from "./versioned.ts";
 
 export type Assets = {
@@ -186,6 +187,8 @@ export function Document({
           aria-live="polite"
           aria-atomic="true"
         />
+        {/* Scrolling pages only: the homepage holds to the viewport. */}
+        {!home && <Veil />}
         {children}
         {/* Align the layout before the first paint (see the render-blocking `expect` in <head>). */}
         <script data-cfasync="false" dangerouslySetInnerHTML={{ __html: alignScript }} />
